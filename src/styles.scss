@@ -1,1 +1,28 @@
-/* You can add global styles to this file, and also import other style files */
+// ── Global SCSS ───────────────────────────────────────────────────────────────
+@use 'theme/palette';
+
+// Login page: gradient background on the host ion-page
+app-login.ion-page {
+  background: linear-gradient(135deg, var(--color-frost-light) 0%, var(--color-mint-light) 45%, var(--color-green-light) 100%);
+}
+
+// Dashboard: subtle palette tint
+app-dashboard ion-content {
+  --background: var(--color-surface-alt);
+}
+
+// Ionic shadow DOM: flex-center the scroll container for vertical centering
+ion-content.login-content::part(scroll) {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100%;
+}
+
+// Global resets / base
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}

@@ -1,0 +1,108 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-title>
+      <div class="toolbar-title">
+        <span class="toolbar-title__greeting">Good morning,</span>
+        <span class="toolbar-title__name">{{ userName() }} 👋</span>
+      </div>
+    </ion-title>
+    <ion-buttons slot="end">
+      <ion-button>
+        <ion-icon slot="icon-only" name="notifications-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="dashboard-content">
+
+  <!-- Stats Row -->
+  <div class="stats-grid">
+    @for (stat of stats(); track stat.label) {
+      <ion-card class="stat-card">
+        <ion-card-content class="stat-card__content">
+          <div class="stat-icon {{ stat.color }}">
+            <ion-icon [name]="stat.icon" style="font-size: 1.25rem;"></ion-icon>
+          </div>
+          <p class="stat-value">{{ stat.value }}</p>
+          <p class="stat-label">{{ stat.label }}</p>
+        </ion-card-content>
+      </ion-card>
+    }
+  </div>
+
+  <!-- Today's Appointments -->
+  <div class="section-header">
+    <div class="section-header__row">
+      <h2 class="section-title">Today's Appointments</h2>
+      <button class="see-all-btn">See all</button>
+    </div>
+  </div>
+
+  <div class="appointments-scroll">
+    @for (appt of upcomingAppointments(); track appt.id) {
+      <ion-card class="appt-card">
+        <ion-card-content class="appt-card__content">
+          <div class="appt-card__header">
+            <div class="appt-avatar">
+              {{ appt.initials }}
+            </div>
+            <div class="appt-info">
+              <p class="appt-client-name">{{ appt.clientName }}</p>
+              <p class="appt-service">{{ appt.title }}</p>
+            </div>
+          </div>
+          <div class="appt-card__footer">
+            <ion-icon name="time-outline" class="appt-time-icon"></ion-icon>
+            <span class="appt-time-text">{{ appt.time }}</span>
+            <ion-chip color="success" class="appt-status-chip">{{ appt.status }}</ion-chip>
+          </div>
+        </ion-card-content>
+      </ion-card>
+    }
+  </div>
+
+  <!-- Clients -->
+  <div class="section-header">
+    <div class="section-header__row">
+      <h2 class="section-title">Clients</h2>
+      <ion-badge color="primary">{{ recentClients().length }}</ion-badge>
+    </div>
+    <ion-searchbar
+      placeholder="Search clients..."
+      [debounce]="200"
+      (ionInput)="onSearch($event)"
+      class="search-bar">
+    </ion-searchbar>
+  </div>
+
+  <ion-list lines="inset" class="clients-list">
+    @for (client of filteredClients(); track client.id) {
+      <ion-item [routerLink]="['/clients', client.id]" detail="true" button>
+        <ion-avatar slot="start">
+          <div class="client-avatar {{ client.color }}">
+            {{ client.initials }}
+          </div>
+        </ion-avatar>
+        <ion-label>
+          <h3 class="client-name">{{ client.firstName }} {{ client.lastName }}</h3>
+          <p class="client-email">{{ client.email }}</p>
+          <p class="client-phone">{{ client.phone }}</p>
+        </ion-label>
+      </ion-item>
+    }
+    @empty {
+      <ion-item>
+        <ion-label class="empty-label">No clients found</ion-label>
+      </ion-item>
+    }
+  </ion-list>
+
+  <!-- FAB -->
+  <ion-fab slot="fixed" vertical="bottom" horizontal="end">
+    <ion-fab-button color="primary">
+      <ion-icon name="add-outline"></ion-icon>
+    </ion-fab-button>
+  </ion-fab>
+
+</ion-content>

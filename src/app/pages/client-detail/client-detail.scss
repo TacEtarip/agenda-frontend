@@ -1,0 +1,233 @@
+// ── Client Detail Page ────────────────────────────────────────────────────────
+
+// Hero card
+.hero-card {
+  margin: 1rem;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 10%), 0 2px 4px -2px rgb(0 0 0 / 10%);
+
+  &__content {
+    padding: 1.25rem;
+  }
+}
+
+.client-hero {
+  &__row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  &__avatar {
+    width: 4rem;
+    height: 4rem;
+    border-radius: 9999px;
+    background-color: #3b82f6;
+    color: #fff;
+    font-size: 1.25rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    box-shadow: 0 1px 3px rgb(0 0 0 / 20%);
+  }
+
+  &__info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__name {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #1f2937;
+    margin: 0 0 0.125rem;
+  }
+
+  &__email {
+    font-size: 0.875rem;
+    color: #6b7280;
+    margin: 0 0 0.125rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__phone {
+    font-size: 0.875rem;
+    color: #6b7280;
+    margin: 0;
+  }
+
+  &__since {
+    font-size: 0.75rem;
+    color: #9ca3af;
+    margin: 0.25rem 0 0;
+  }
+}
+
+// Quick action buttons
+.quick-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1rem;
+
+  &__btn {
+    flex: 1;
+  }
+}
+
+// Segment tabs
+.detail-segment {
+  margin: 1rem;
+  border-radius: 0.75rem;
+  overflow: hidden;
+}
+
+.segment-badge {
+  margin-left: 0.25rem;
+}
+
+// Tab content container (notes & appointments)
+.tab-content {
+  padding: 1rem;
+  margin-bottom: 6rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.tab-card {
+  margin: 0;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 10%);
+
+  &__content {
+    padding: 1rem;
+  }
+}
+
+// Notes
+.note-text {
+  font-size: 0.875rem;
+  color: #374151;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.note-date {
+  font-size: 0.75rem;
+}
+
+.note-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 0.75rem;
+}
+
+.note-actions {
+  display: flex;
+  gap: 0.25rem;
+}
+
+// Appointments
+.appt-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.appt-title {
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0;
+}
+
+.appt-status-chip {
+  flex-shrink: 0;
+  height: 1.5rem;
+  font-size: 0.75rem;
+}
+
+.appt-desc {
+  font-size: 0.75rem;
+  color: #6b7280;
+  margin: 0.25rem 0 0;
+}
+
+.appt-time-row {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  margin-top: 0.75rem;
+}
+
+.time-icon {
+  color: #9ca3af;
+  font-size: 0.875rem;
+}
+
+.appt-time-text {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+// Empty state
+.empty-state {
+  text-align: center;
+  padding: 3rem 0;
+  color: #9ca3af;
+
+  &__text {
+    margin: 0.5rem 0 0;
+    font-size: 0.875rem;
+  }
+}
+
+// Attachments list
+.attachments-list {
+  border-radius: 0.75rem;
+  margin: 1rem;
+  overflow: hidden;
+  margin-bottom: 6rem;
+}
+
+.file-icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 0.5rem;
+  background-color: #f3f4f6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &__inner {
+    color: #6b7280;
+    font-size: 1.125rem;
+  }
+}
+
+.file-name {
+  font-weight: 500;
+  font-size: 0.875rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.file-meta {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+.file-date {
+  font-size: 0.75rem;
+  color: #9ca3af;
+}
+
+.empty-label {
+  text-align: center;
+  color: #9ca3af;
+  padding: 2rem 0;
+}

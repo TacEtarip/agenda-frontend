@@ -1,0 +1,105 @@
+// ── App Colour Palette ────────────────────────────────────────────────────────
+// Derived from the analogous colour wheel (base: #059669 leaf green).
+//
+//  Name        Hex       Role
+//  ─────────── ───────── ─────────────────────────────
+//  green       #059669   Primary actions / brand
+//  sky         #63C5F7   Informational / secondary
+//  cyan        #63F4F7   Highlights / accents
+//  mint        #63F796   Success / positive states
+//  indigo      #6396F7   Links / interactive elements
+//  frost       #B5F6F7   Backgrounds / subtle tints
+// ─────────────────────────────────────────────────────────────────────────────
+
+:root {
+  // ── Green (primary) ──────────────────────────────────────────────────────
+  --color-green:          #059669;
+  --color-green-shade:    #047857;
+  --color-green-tint:     #34d399;
+  --color-green-light:    #d1fae5;
+  --color-green-contrast: #ffffff;
+  --color-green-rgb:      5, 150, 105;
+
+  // ── Sky ──────────────────────────────────────────────────────────────────
+  --color-sky:          #63C5F7;
+  --color-sky-shade:    #3ab3f5;
+  --color-sky-tint:     #82d1f9;
+  --color-sky-light:    #e0f4fe;
+  --color-sky-contrast: #0f172a;
+  --color-sky-rgb:      99, 197, 247;
+
+  // ── Cyan ─────────────────────────────────────────────────────────────────
+  --color-cyan:          #63F4F7;
+  --color-cyan-shade:    #22e9ed;
+  --color-cyan-tint:     #8af6f8;
+  --color-cyan-light:    #ecfeff;
+  --color-cyan-contrast: #0f172a;
+  --color-cyan-rgb:      99, 244, 247;
+
+  // ── Mint ─────────────────────────────────────────────────────────────────
+  --color-mint:          #63F796;
+  --color-mint-shade:    #22f072;
+  --color-mint-tint:     #8af9ae;
+  --color-mint-light:    #ecfdf5;
+  --color-mint-contrast: #0f172a;
+  --color-mint-rgb:      99, 247, 150;
+
+  // ── Indigo ───────────────────────────────────────────────────────────────
+  --color-indigo:          #6396F7;
+  --color-indigo-shade:    #3a7df5;
+  --color-indigo-tint:     #82aaf9;
+  --color-indigo-light:    #eff2fe;
+  --color-indigo-contrast: #0f172a;
+  --color-indigo-rgb:      99, 150, 247;
+
+  // ── Frost ────────────────────────────────────────────────────────────────
+  --color-frost:          #B5F6F7;
+  --color-frost-shade:    #82f1f4;
+  --color-frost-tint:     #c9f8f9;
+  --color-frost-light:    #f0feff;
+  --color-frost-contrast: #0f172a;
+  --color-frost-rgb:      181, 246, 247;
+
+  // ── Neutrals ─────────────────────────────────────────────────────────────
+  --color-surface:      #ffffff;
+  --color-surface-alt:  #f8fffe;
+  --color-border:       rgb(167 243 208 / 60%);
+  --color-text:         #0f172a;
+  --color-text-muted:   #64748b;
+  --color-text-inverse: #ffffff;
+
+  // ── Ionic semantic overrides ─────────────────────────────────────────────
+  // Primary → green
+  --ion-color-primary:          var(--color-green);
+  --ion-color-primary-shade:    var(--color-green-shade);
+  --ion-color-primary-tint:     var(--color-green-tint);
+  --ion-color-primary-contrast: var(--color-green-contrast);
+  --ion-color-primary-rgb:      var(--color-green-rgb);
+
+  // Secondary → sky
+  --ion-color-secondary:          var(--color-sky);
+  --ion-color-secondary-shade:    var(--color-sky-shade);
+  --ion-color-secondary-tint:     var(--color-sky-tint);
+  --ion-color-secondary-contrast: var(--color-sky-contrast);
+  --ion-color-secondary-rgb:      var(--color-sky-rgb);
+
+  // Tertiary → indigo
+  --ion-color-tertiary:          var(--color-indigo);
+  --ion-color-tertiary-shade:    var(--color-indigo-shade);
+  --ion-color-tertiary-tint:     var(--color-indigo-tint);
+  --ion-color-tertiary-contrast: var(--color-indigo-contrast);
+  --ion-color-tertiary-rgb:      var(--color-indigo-rgb);
+
+  // Success → mint
+  --ion-color-success:          var(--color-mint);
+  --ion-color-success-shade:    var(--color-mint-shade);
+  --ion-color-success-tint:     var(--color-mint-tint);
+  --ion-color-success-contrast: var(--color-mint-contrast);
+  --ion-color-success-rgb:      var(--color-mint-rgb);
+
+  // Global page background
+  --ion-background-color:     var(--color-surface);
+  --ion-background-color-rgb: 255, 255, 255;
+  --ion-text-color:           var(--color-text);
+  --ion-text-color-rgb:       15, 23, 42;
+}

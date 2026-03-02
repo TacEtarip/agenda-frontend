@@ -1,0 +1,174 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/dashboard"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Client Details</ion-title>
+    <ion-buttons slot="end">
+      <ion-button>
+        <ion-icon slot="icon-only" name="create-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content color="light">
+
+  <!-- Client Hero Card -->
+  <ion-card class="hero-card">
+    <ion-card-content class="hero-card__content">
+      <div class="client-hero__row">
+
+        <!-- Avatar -->
+        <div class="client-hero__avatar">
+          {{ client().initials }}
+        </div>
+
+        <!-- Info -->
+        <div class="client-hero__info">
+          <h2 class="client-hero__name">{{ client().firstName }} {{ client().lastName }}</h2>
+          <p class="client-hero__email">{{ client().email }}</p>
+          <p class="client-hero__phone">{{ client().phone }}</p>
+          <p class="client-hero__since">Client since {{ client().createdAt }}</p>
+        </div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="quick-actions">
+        <ion-button fill="outline" color="success" size="small" class="quick-actions__btn">
+          <ion-icon slot="start" name="logo-whatsapp"></ion-icon>
+          WhatsApp
+        </ion-button>
+        <ion-button fill="outline" color="primary" size="small" class="quick-actions__btn">
+          <ion-icon slot="start" name="call-outline"></ion-icon>
+          Call
+        </ion-button>
+        <ion-button fill="outline" color="medium" size="small" class="quick-actions__btn">
+          <ion-icon slot="start" name="mail-outline"></ion-icon>
+          Email
+        </ion-button>
+      </div>
+    </ion-card-content>
+  </ion-card>
+
+  <!-- Segment Tabs -->
+  <ion-segment
+    [value]="activeSegment()"
+    (ionChange)="onSegmentChange($any($event))"
+    color="primary"
+    class="detail-segment">
+    <ion-segment-button value="notes">
+      <ion-label>
+        Notes
+        <ion-badge color="primary" class="segment-badge">{{ notes().length }}</ion-badge>
+      </ion-label>
+    </ion-segment-button>
+    <ion-segment-button value="appointments">
+      <ion-label>
+        Appts
+        <ion-badge color="primary" class="segment-badge">{{ appointments().length }}</ion-badge>
+      </ion-label>
+    </ion-segment-button>
+    <ion-segment-button value="attachments">
+      <ion-label>
+        Files
+        <ion-badge color="primary" class="segment-badge">{{ attachments().length }}</ion-badge>
+      </ion-label>
+    </ion-segment-button>
+  </ion-segment>
+
+  <!-- ── Notes Tab ── -->
+  @if (activeSegment() === 'notes') {
+    <div class="tab-content">
+      @for (note of notes(); track note.id) {
+        <ion-card class="tab-card">
+          <ion-card-content class="tab-card__content">
+            <p class="note-text">{{ note.content }}</p>
+            <div class="note-footer">
+              <ion-note class="note-date">{{ note.updatedAt }}</ion-note>
+              <div class="note-actions">
+                <ion-button fill="clear" size="small" color="primary">
+                  <ion-icon slot="icon-only" name="create-outline"></ion-icon>
+                </ion-button>
+                <ion-button fill="clear" size="small" color="danger">
+                  <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
+                </ion-button>
+              </div>
+            </div>
+          </ion-card-content>
+        </ion-card>
+      }
+      @empty {
+        <div class="empty-state">
+          <ion-icon name="document-outline" style="font-size: 3rem;"></ion-icon>
+          <p class="empty-state__text">No notes yet</p>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- ── Appointments Tab ── -->
+  @if (activeSegment() === 'appointments') {
+    <div class="tab-content">
+      @for (appt of appointments(); track appt.id) {
+        <ion-card class="tab-card">
+          <ion-card-content class="tab-card__content">
+            <div class="appt-header">
+              <h3 class="appt-title">{{ appt.title }}</h3>
+              <ion-chip [color]="statusColor(appt.status)" class="appt-status-chip">
+                {{ appt.status }}
+              </ion-chip>
+            </div>
+            @if (appt.description) {
+              <p class="appt-desc">{{ appt.description }}</p>
+            }
+            <div class="appt-time-row">
+              <ion-icon name="time-outline" class="time-icon"></ion-icon>
+              <span class="appt-time-text">{{ appt.startTime }} – {{ appt.endTime }}</span>
+            </div>
+          </ion-card-content>
+        </ion-card>
+      }
+      @empty {
+        <div class="empty-state">
+          <ion-icon name="time-outline" style="font-size: 3rem;"></ion-icon>
+          <p class="empty-state__text">No appointments yet</p>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- ── Attachments Tab ── -->
+  @if (activeSegment() === 'attachments') {
+    <ion-list lines="inset" class="attachments-list">
+      @for (file of attachments(); track file.id) {
+        <ion-item>
+          <div slot="start" class="file-icon">
+            <ion-icon [name]="file.icon" class="file-icon__inner"></ion-icon>
+          </div>
+          <ion-label>
+            <h3 class="file-name">{{ file.fileName }}</h3>
+            <p class="file-meta">{{ file.fileType }} · {{ file.fileSize }}</p>
+            <p class="file-date">{{ file.uploadedAt }}</p>
+          </ion-label>
+          <ion-button slot="end" fill="clear" color="primary">
+            <ion-icon slot="icon-only" name="cloud-download-outline"></ion-icon>
+          </ion-button>
+        </ion-item>
+      }
+      @empty {
+        <ion-item>
+          <ion-label class="empty-label">No files uploaded</ion-label>
+        </ion-item>
+      }
+    </ion-list>
+  }
+
+  <!-- FAB -->
+  <ion-fab slot="fixed" vertical="bottom" horizontal="end">
+    <ion-fab-button color="primary">
+      <ion-icon name="add-outline"></ion-icon>
+    </ion-fab-button>
+  </ion-fab>
+
+</ion-content>

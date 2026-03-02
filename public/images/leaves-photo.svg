@@ -1,0 +1,81 @@
+<svg width="1600" height="1200" viewBox="0 0 1600 1200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bgGrad" x1="0" y1="0" x2="1600" y2="1200" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0F3D2E"/>
+      <stop offset="0.45" stop-color="#1E6F4B"/>
+      <stop offset="1" stop-color="#2D8A5B"/>
+    </linearGradient>
+
+    <radialGradient id="lightA" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(260 180) rotate(26) scale(700 420)">
+      <stop stop-color="#B9FBC0" stop-opacity="0.5"/>
+      <stop offset="1" stop-color="#B9FBC0" stop-opacity="0"/>
+    </radialGradient>
+
+    <radialGradient id="lightB" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(1250 220) rotate(-14) scale(620 360)">
+      <stop stop-color="#D9F99D" stop-opacity="0.35"/>
+      <stop offset="1" stop-color="#D9F99D" stop-opacity="0"/>
+    </radialGradient>
+
+    <filter id="filmNoise" x="-20%" y="-20%" width="140%" height="140%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" stitchTiles="stitch" seed="8"/>
+      <feColorMatrix type="saturate" values="0"/>
+      <feComponentTransfer>
+        <feFuncA type="table" tableValues="0 0.08"/>
+      </feComponentTransfer>
+    </filter>
+
+    <filter id="softBlur" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="3"/>
+    </filter>
+
+    <linearGradient id="leafMain" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#6EE7B7"/>
+      <stop offset="0.55" stop-color="#22C55E"/>
+      <stop offset="1" stop-color="#166534"/>
+    </linearGradient>
+
+    <linearGradient id="leafDark" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#34D399"/>
+      <stop offset="1" stop-color="#14532D"/>
+    </linearGradient>
+
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="10" stdDeviation="12" flood-color="#052e16" flood-opacity="0.35"/>
+    </filter>
+
+    <g id="leafShape">
+      <path d="M0 -220C102 -142 142 -34 0 220C-142 -34 -102 -142 0 -220Z" fill="url(#leafMain)"/>
+      <path d="M0 -175V176" stroke="#ECFDF5" stroke-opacity="0.35" stroke-width="5" stroke-linecap="round"/>
+      <path d="M0 -80C28 -64 52 -42 68 -18" stroke="#ECFDF5" stroke-opacity="0.22" stroke-width="3" stroke-linecap="round"/>
+      <path d="M0 -20C30 -8 58 10 78 36" stroke="#ECFDF5" stroke-opacity="0.22" stroke-width="3" stroke-linecap="round"/>
+      <path d="M0 38C24 46 44 62 58 86" stroke="#ECFDF5" stroke-opacity="0.22" stroke-width="3" stroke-linecap="round"/>
+    </g>
+
+    <g id="leafShapeDark">
+      <path d="M0 -210C94 -132 130 -30 0 210C-130 -30 -94 -132 0 -210Z" fill="url(#leafDark)"/>
+      <path d="M0 -165V168" stroke="#DCFCE7" stroke-opacity="0.3" stroke-width="4" stroke-linecap="round"/>
+    </g>
+  </defs>
+
+  <rect width="1600" height="1200" fill="url(#bgGrad)"/>
+  <rect width="1600" height="1200" fill="url(#lightA)"/>
+  <rect width="1600" height="1200" fill="url(#lightB)"/>
+
+  <g filter="url(#shadow)">
+    <g transform="translate(260 170) rotate(-18) scale(1.05)"><use href="#leafShape"/></g>
+    <g transform="translate(420 340) rotate(14) scale(0.95)"><use href="#leafShapeDark"/></g>
+    <g transform="translate(150 520) rotate(-26) scale(1.15)"><use href="#leafShape"/></g>
+    <g transform="translate(520 640) rotate(9) scale(0.9)"><use href="#leafShape"/></g>
+
+    <g transform="translate(1280 180) rotate(22) scale(1.15)"><use href="#leafShape"/></g>
+    <g transform="translate(1440 420) rotate(-16) scale(0.95)"><use href="#leafShapeDark"/></g>
+    <g transform="translate(1240 640) rotate(28) scale(1.2)"><use href="#leafShape"/></g>
+    <g transform="translate(1030 800) rotate(-8) scale(0.9)"><use href="#leafShapeDark"/></g>
+
+    <g transform="translate(790 1040) rotate(6) scale(1.25)"><use href="#leafShape"/></g>
+    <g transform="translate(600 980) rotate(-12) scale(0.78)"><use href="#leafShapeDark"/></g>
+  </g>
+
+  <rect width="1600" height="1200" fill="white" filter="url(#filmNoise)"/>
+  <rect width="1600" height="1200" fill="#052e16" opacity="0.08" filter="url(#softBlur)"/>
+</svg>
