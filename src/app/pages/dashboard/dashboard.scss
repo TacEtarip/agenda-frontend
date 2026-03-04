@@ -145,6 +145,14 @@ ion-toolbar ion-button {
   }
 }
 
+.appointments-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 0 1rem 0.25rem;
+  margin-bottom: 1.25rem;
+}
+
 .appt-card {
   flex-shrink: 0;
   min-width: 200px;
@@ -169,6 +177,20 @@ ion-toolbar ion-button {
     align-items: center;
     gap: 0.375rem;
   }
+}
+
+.appointments-list .appt-card {
+  min-width: 0;
+  flex-shrink: 1;
+}
+
+.appt-card--expanded {
+  box-shadow: 0 8px 18px rgb(var(--color-green-rgb) / 10%);
+}
+
+.appt-card--expanded .appt-card__footer {
+  flex-wrap: wrap;
+  row-gap: 0.5rem;
 }
 
 .appt-avatar {

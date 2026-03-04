@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { ClientStage } from '../../enums/client-stage.enum';
 import { IClient } from '../../interfaces/client.interface';
@@ -17,6 +17,7 @@ import {
   swapHorizontalOutline,
 } from 'ionicons/icons';
 import {
+  AlertController,
   IonAvatar,
   IonSearchbar,
 } from '@ionic/angular/standalone';
@@ -34,8 +35,18 @@ import {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DashboardPage {
+  private readonly alertCtrl = inject(AlertController);
+  private readonly clientAvatarColors = [
+    'avatar--sky',
+    'avatar--green',
+    'avatar--indigo',
+    'avatar--cyan',
+    'avatar--mint',
+  ] as const;
+
   readonly userName = signal('Alex');
   readonly searchQuery = signal('');
+  readonly showAllAppointments = signal(false);
 
   readonly stats = signal([
     { label: 'Total Clients', value: 24, icon: 'people-outline', color: 'stat-icon--sky' },
@@ -100,5 +111,87 @@ export class DashboardPage {
 
   onSearch(event: CustomEvent) {
     this.searchQuery.set(event.detail.value ?? '');
+  }
+
+  toggleAppointmentsView() {
+    this.showAllAppointments.update((current) => !current);
+  }
+
+  async openAddClientAlert() {
+    const alert = await this.alertCtrl.create({
+      header: 'Add Client',
+      message: 'Create a client to add it to the dashboard list.',
+      inputs: [
+        {
+          name: 'firstName',
+          type: 'text',
+          placeholder: 'First name',
+        },
+        {
+          name: 'lastName',
+          type: 'text',
+          placeholder: 'Last name',
+        },
+        {
+          name: 'email',
+          type: 'email',
+          placeholder: 'Email address',
+        },
+        {
+          name: 'phone',
+          type: 'tel',
+          placeholder: 'Phone number',
+        },
+      ],
+      buttons: [
+        { text: 'Cancel', role: 'cancel' },
+        {
+          text: 'Add',
+          handler: (data: { firstName?: string; lastName?: string; email?: string; phone?: string }) => {
+            const firstName = data.firstName?.trim() ?? '';
+            const lastName = data.lastName?.trim() ?? '';
+            const email = data.email?.trim() ?? '';
+            const phone = data.phone?.trim() ?? '';
+
+            if (!firstName || !lastName || !email || !phone) {
+              return false;
+            }
+
+            const newClient: IClient = {
+              id: String(Date.now()),
+              firstName,
+              lastName,
+              email,
+              phone,
+              initials: this.buildInitials(firstName, lastName),
+              color: this.clientAvatarColors[this.recentClients().length % this.clientAvatarColors.length],
+              stage: ClientStage.FIRST_CONTACT,
+              createdAt: new Date().toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric',
+              }),
+            };
+
+            this.recentClients.update((clients) => [newClient, ...clients]);
+            this.stats.update((stats) =>
+              stats.map((stat) =>
+                stat.label === 'Total Clients'
+                  ? { ...stat, value: Number(stat.value) + 1 }
+                  : stat,
+              ),
+            );
+
+            return true;
+          },
+        },
+      ],
+    });
+
+    await alert.present();
+  }
+
+  private buildInitials(firstName: string, lastName: string): string {
+    return `${firstName[0] ?? ''}${lastName[0] ?? ''}`.toUpperCase();
   }
 }

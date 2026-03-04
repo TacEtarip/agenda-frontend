@@ -35,13 +35,21 @@
   <div class="section-header">
     <div class="section-header__row">
       <h2 class="section-title">Today's Appointments</h2>
-      <button class="see-all-btn">See all</button>
+      <button
+        type="button"
+        class="see-all-btn"
+        (click)="toggleAppointmentsView()"
+        [attr.aria-expanded]="showAllAppointments()">
+        {{ showAllAppointments() ? 'Show less' : 'See all' }}
+      </button>
     </div>
   </div>
 
-  <div class="appointments-scroll">
+  <div
+    [class.appointments-scroll]="!showAllAppointments()"
+    [class.appointments-list]="showAllAppointments()">
     @for (appt of upcomingAppointments(); track appt.id) {
-      <ion-card class="appt-card">
+      <ion-card class="appt-card" [class.appt-card--expanded]="showAllAppointments()">
         <ion-card-content class="appt-card__content">
           <div class="appt-card__header">
             <div class="appt-avatar">
@@ -103,7 +111,7 @@
 
   <!-- FAB -->
   <ion-fab slot="fixed" vertical="bottom" horizontal="end">
-    <ion-fab-button color="primary">
+    <ion-fab-button color="primary" (click)="openAddClientAlert()" aria-label="Add client">
       <ion-icon name="add-outline"></ion-icon>
     </ion-fab-button>
   </ion-fab>
