@@ -7,8 +7,17 @@ app-login.ion-page {
 }
 
 // Dashboard: subtle palette tint
+app-dashboard.ion-page {
+  background: var(--color-surface-alt);
+}
+
 app-dashboard ion-content {
   --background: var(--color-surface-alt);
+}
+
+// Client detail: solid page backdrop so transitions don't reveal the previous page
+app-client-detail.ion-page {
+  background: linear-gradient(180deg, var(--color-frost-light) 0%, var(--color-surface-alt) 36%, var(--color-surface) 100%);
 }
 
 // Ionic shadow DOM: flex-center the scroll container for vertical centering

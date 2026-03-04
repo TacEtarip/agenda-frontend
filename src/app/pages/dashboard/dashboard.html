@@ -1,5 +1,5 @@
 <ion-header>
-  <ion-toolbar color="primary">
+  <ion-toolbar>
     <ion-title>
       <div class="toolbar-title">
         <span class="toolbar-title__greeting">Good morning,</span>
@@ -88,6 +88,9 @@
           <h3 class="client-name">{{ client.firstName }} {{ client.lastName }}</h3>
           <p class="client-email">{{ client.email }}</p>
           <p class="client-phone">{{ client.phone }}</p>
+          <ion-chip [color]="stageColor(client.stage)" class="client-stage-chip">
+            {{ stageLabel(client.stage) }}
+          </ion-chip>
         </ion-label>
       </ion-item>
     }

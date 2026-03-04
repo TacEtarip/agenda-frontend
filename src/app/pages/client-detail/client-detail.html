@@ -1,9 +1,14 @@
 <ion-header>
-  <ion-toolbar color="primary">
+  <ion-toolbar>
     <ion-buttons slot="start">
       <ion-back-button defaultHref="/dashboard"></ion-back-button>
     </ion-buttons>
-    <ion-title>Client Details</ion-title>
+    <ion-title>
+      <div class="toolbar-title">
+        <span class="toolbar-title__greeting">Client profile</span>
+        <span class="toolbar-title__name">{{ client().firstName }} {{ client().lastName }}</span>
+      </div>
+    </ion-title>
     <ion-buttons slot="end">
       <ion-button>
         <ion-icon slot="icon-only" name="create-outline"></ion-icon>
@@ -12,7 +17,7 @@
   </ion-toolbar>
 </ion-header>
 
-<ion-content color="light">
+<ion-content class="client-detail-content">
 
   <!-- Client Hero Card -->
   <ion-card class="hero-card">
@@ -30,16 +35,37 @@
           <p class="client-hero__email">{{ client().email }}</p>
           <p class="client-hero__phone">{{ client().phone }}</p>
           <p class="client-hero__since">Client since {{ client().createdAt }}</p>
+          <!-- Stage badge + selector -->
+          <div class="stage-row">
+            <ion-chip [color]="stageColor(client().stage)" class="stage-chip">
+              <ion-icon name="swap-horizontal-outline"></ion-icon>
+              <ion-label>{{ stageLabel(client().stage) }}</ion-label>
+            </ion-chip>
+            <ion-select
+              class="stage-select"
+              [value]="client().stage"
+              interface="action-sheet"
+              placeholder="Change stage"
+              (ionChange)="onStageChange($any($event))"
+              aria-label="Change client stage">
+              @for (s of allStages; track s.value) {
+                <ion-select-option [value]="s.value">{{ s.label }}</ion-select-option>
+              }
+            </ion-select>
+          </div>
         </div>
       </div>
 
       <!-- Quick Actions -->
       <div class="quick-actions">
-        <ion-button fill="outline" color="success" size="small" class="quick-actions__btn">
+        <ion-button
+          fill="outline" color="success" size="small" class="quick-actions__btn"
+          [href]="'https://wa.me/' + client().phone.replaceAll(' ', '')"
+          target="_blank">
           <ion-icon slot="start" name="logo-whatsapp"></ion-icon>
           WhatsApp
         </ion-button>
-        <ion-button fill="outline" color="primary" size="small" class="quick-actions__btn">
+        <ion-button fill="outline" color="tertiary" size="small" class="quick-actions__btn">
           <ion-icon slot="start" name="call-outline"></ion-icon>
           Call
         </ion-button>
@@ -73,6 +99,12 @@
       <ion-label>
         Files
         <ion-badge color="primary" class="segment-badge">{{ attachments().length }}</ion-badge>
+      </ion-label>
+    </ion-segment-button>
+    <ion-segment-button value="messages">
+      <ion-label>
+        <ion-icon name="chatbubbles-outline" style="font-size:1rem;"></ion-icon>
+        Msgs
       </ion-label>
     </ion-segment-button>
   </ion-segment>
@@ -164,11 +196,114 @@
     </ion-list>
   }
 
-  <!-- FAB -->
-  <ion-fab slot="fixed" vertical="bottom" horizontal="end">
-    <ion-fab-button color="primary">
-      <ion-icon name="add-outline"></ion-icon>
-    </ion-fab-button>
-  </ion-fab>
+  <!-- ── Messages / Templates Tab ── -->
+  @if (activeSegment() === 'messages') {
+    <div class="tab-content">
+
+      <!-- Current Stage Summary -->
+      <div class="stage-summary">
+        <ion-icon name="sparkles-outline" class="stage-summary__icon"></ion-icon>
+        <span class="stage-summary__text">
+          Templates for <strong>{{ stageLabel(client().stage) }}</strong> stage
+        </span>
+      </div>
+
+      <!-- Template Card -->
+      @if (currentTemplate(); as tpl) {
+        <ion-card class="template-card">
+          <ion-card-header class="template-card__header">
+            <ion-card-title class="template-card__title">
+              <ion-chip [color]="stageColor(tpl.stage)" class="template-stage-chip">
+                {{ stageLabel(tpl.stage) }}
+              </ion-chip>
+            </ion-card-title>
+            <div class="template-header-actions">
+              <ion-button fill="clear" size="small" color="primary"
+                (click)="openEditTemplateAlert(tpl)"
+                (keydown.enter)="openEditTemplateAlert(tpl)">
+                <ion-icon slot="icon-only" name="create-outline"></ion-icon>
+              </ion-button>
+              <ion-button fill="clear" size="small" color="danger"
+                (click)="deleteTemplate(tpl)"
+                (keydown.enter)="deleteTemplate(tpl)">
+                <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
+              </ion-button>
+            </div>
+          </ion-card-header>
+          <ion-card-content class="template-card__body">
+            <p class="template-message">{{
+              tpl.messageBody.replace('{{name}}', client().firstName)
+            }}</p>
+            <div class="template-footer">
+              <ion-note class="template-date">Updated {{ tpl.updatedAt }}</ion-note>
+              <ion-button
+                fill="solid"
+                color="success"
+                size="small"
+                class="template-wa-btn"
+                [href]="generateWhatsAppLink(tpl)"
+                target="_blank">
+                <ion-icon slot="start" name="logo-whatsapp"></ion-icon>
+                Send via WhatsApp
+              </ion-button>
+            </div>
+          </ion-card-content>
+        </ion-card>
+      } @else {
+        <!-- No template for this stage -->
+        <div class="empty-state">
+          <ion-icon name="chatbubbles-outline" style="font-size: 3rem;"></ion-icon>
+          <p class="empty-state__text">No template for {{ stageLabel(client().stage) }}</p>
+          <ion-button fill="outline" color="primary" size="small" class="empty-state__cta"
+            (click)="openEditTemplateAlert(null)"
+            (keydown.enter)="openEditTemplateAlert(null)">
+            <ion-icon slot="start" name="add-outline"></ion-icon>
+            Create Template
+          </ion-button>
+        </div>
+      }
+
+      <!-- All Other Templates -->
+      <h4 class="all-templates-title">All Stage Templates</h4>
+      @for (tpl of messageTemplates(); track tpl.id) {
+        @if (tpl.stage !== client().stage) {
+          <ion-card class="template-card template-card--other">
+            <ion-card-header class="template-card__header">
+              <ion-chip [color]="stageColor(tpl.stage)" class="template-stage-chip">
+                {{ stageLabel(tpl.stage) }}
+              </ion-chip>
+              <div class="template-header-actions">
+                <ion-button fill="clear" size="small" color="primary"
+                  (click)="openEditTemplateAlert(tpl)"
+                  (keydown.enter)="openEditTemplateAlert(tpl)">
+                  <ion-icon slot="icon-only" name="create-outline"></ion-icon>
+                </ion-button>
+                <ion-button fill="clear" size="small" color="danger"
+                  (click)="deleteTemplate(tpl)"
+                  (keydown.enter)="deleteTemplate(tpl)">
+                  <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
+                </ion-button>
+              </div>
+            </ion-card-header>
+            <ion-card-content class="template-card__body">
+              <p class="template-message template-message--muted">{{ tpl.messageBody }}</p>
+              <div class="template-footer">
+                <ion-note class="template-date">Updated {{ tpl.updatedAt }}</ion-note>
+              </div>
+            </ion-card-content>
+          </ion-card>
+        }
+      }
+    </div>
+  }
+
+  <!-- FAB (hidden on messages tab) -->
+  @if (activeSegment() !== 'messages') {
+    <ion-fab slot="fixed" vertical="bottom" horizontal="end">
+      <ion-fab-button color="primary">
+        <ion-icon name="add-outline"></ion-icon>
+      </ion-fab-button>
+    </ion-fab>
+  }
 
 </ion-content>
