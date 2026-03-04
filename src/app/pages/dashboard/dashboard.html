@@ -2,7 +2,7 @@
   <ion-toolbar>
     <ion-title>
       <div class="toolbar-title">
-        <span class="toolbar-title__greeting">Good morning,</span>
+        <span class="toolbar-title__greeting">Buenos días,</span>
         <span class="toolbar-title__name">{{ userName() }} 👋</span>
       </div>
     </ion-title>
@@ -34,13 +34,13 @@
   <!-- Today's Appointments -->
   <div class="section-header">
     <div class="section-header__row">
-      <h2 class="section-title">Today's Appointments</h2>
+      <h2 class="section-title">Citas de hoy</h2>
       <button
         type="button"
         class="see-all-btn"
         (click)="toggleAppointmentsView()"
         [attr.aria-expanded]="showAllAppointments()">
-        {{ showAllAppointments() ? 'Show less' : 'See all' }}
+        {{ showAllAppointments() ? 'Ver menos' : 'Ver todas' }}
       </button>
     </div>
   </div>
@@ -63,7 +63,7 @@
           <div class="appt-card__footer">
             <ion-icon name="time-outline" class="appt-time-icon"></ion-icon>
             <span class="appt-time-text">{{ appt.time }}</span>
-            <ion-chip color="success" class="appt-status-chip">{{ appt.status }}</ion-chip>
+            <ion-chip color="success" class="appt-status-chip">{{ appointmentStatusLabel(appt.status) }}</ion-chip>
           </div>
         </ion-card-content>
       </ion-card>
@@ -73,11 +73,11 @@
   <!-- Clients -->
   <div class="section-header">
     <div class="section-header__row">
-      <h2 class="section-title">Clients</h2>
+      <h2 class="section-title">Clientes</h2>
       <ion-badge color="primary">{{ recentClients().length }}</ion-badge>
     </div>
     <ion-searchbar
-      placeholder="Search clients..."
+      placeholder="Buscar clientes..."
       [debounce]="200"
       (ionInput)="onSearch($event)"
       class="search-bar">
@@ -104,14 +104,14 @@
     }
     @empty {
       <ion-item>
-        <ion-label class="empty-label">No clients found</ion-label>
+        <ion-label class="empty-label">No se encontraron clientes</ion-label>
       </ion-item>
     }
   </ion-list>
 
   <!-- FAB -->
   <ion-fab slot="fixed" vertical="bottom" horizontal="end">
-    <ion-fab-button color="primary" (click)="openAddClientAlert()" aria-label="Add client">
+    <ion-fab-button color="primary" (click)="openAddClientAlert()" aria-label="Agregar cliente">
       <ion-icon name="add-outline"></ion-icon>
     </ion-fab-button>
   </ion-fab>

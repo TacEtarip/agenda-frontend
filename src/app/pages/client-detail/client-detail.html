@@ -1,11 +1,11 @@
 <ion-header>
   <ion-toolbar>
     <ion-buttons slot="start">
-      <ion-back-button defaultHref="/dashboard"></ion-back-button>
+      <ion-back-button defaultHref="/dashboard" text="Atrás"></ion-back-button>
     </ion-buttons>
     <ion-title>
       <div class="toolbar-title">
-        <span class="toolbar-title__greeting">Client profile</span>
+        <span class="toolbar-title__greeting">Perfil del cliente</span>
         <span class="toolbar-title__name">{{ client().firstName }} {{ client().lastName }}</span>
       </div>
     </ion-title>
@@ -34,7 +34,7 @@
           <h2 class="client-hero__name">{{ client().firstName }} {{ client().lastName }}</h2>
           <p class="client-hero__email">{{ client().email }}</p>
           <p class="client-hero__phone">{{ client().phone }}</p>
-          <p class="client-hero__since">Client since {{ client().createdAt }}</p>
+          <p class="client-hero__since">Cliente desde {{ client().createdAt }}</p>
           <!-- Stage badge + selector -->
           <div class="stage-row">
             <ion-chip [color]="stageColor(client().stage)" class="stage-chip">
@@ -45,9 +45,9 @@
               class="stage-select"
               [value]="client().stage"
               interface="action-sheet"
-              placeholder="Change stage"
+              placeholder="Cambiar etapa"
               (ionChange)="onStageChange($any($event))"
-              aria-label="Change client stage">
+              aria-label="Cambiar etapa del cliente">
               @for (s of allStages; track s.value) {
                 <ion-select-option [value]="s.value">{{ s.label }}</ion-select-option>
               }
@@ -67,11 +67,11 @@
         </ion-button>
         <ion-button fill="outline" color="tertiary" size="small" class="quick-actions__btn">
           <ion-icon slot="start" name="call-outline"></ion-icon>
-          Call
+          Llamar
         </ion-button>
         <ion-button fill="outline" color="medium" size="small" class="quick-actions__btn">
           <ion-icon slot="start" name="mail-outline"></ion-icon>
-          Email
+          Correo
         </ion-button>
       </div>
     </ion-card-content>
@@ -85,26 +85,26 @@
     class="detail-segment">
     <ion-segment-button value="notes">
       <ion-label>
-        Notes
+        Notas
         <ion-badge color="primary" class="segment-badge">{{ notes().length }}</ion-badge>
       </ion-label>
     </ion-segment-button>
     <ion-segment-button value="appointments">
       <ion-label>
-        Appts
+        Citas
         <ion-badge color="primary" class="segment-badge">{{ appointments().length }}</ion-badge>
       </ion-label>
     </ion-segment-button>
     <ion-segment-button value="attachments">
       <ion-label>
-        Files
+        Archivos
         <ion-badge color="primary" class="segment-badge">{{ attachments().length }}</ion-badge>
       </ion-label>
     </ion-segment-button>
     <ion-segment-button value="messages">
       <ion-label>
         <ion-icon name="chatbubbles-outline" style="font-size:1rem;"></ion-icon>
-        Msgs
+        Mensajes
       </ion-label>
     </ion-segment-button>
   </ion-segment>
@@ -133,7 +133,7 @@
       @empty {
         <div class="empty-state">
           <ion-icon name="document-outline" style="font-size: 3rem;"></ion-icon>
-          <p class="empty-state__text">No notes yet</p>
+          <p class="empty-state__text">Aún no hay notas</p>
         </div>
       }
     </div>
@@ -148,7 +148,7 @@
             <div class="appt-header">
               <h3 class="appt-title">{{ appt.title }}</h3>
               <ion-chip [color]="statusColor(appt.status)" class="appt-status-chip">
-                {{ appt.status }}
+                {{ appointmentStatusLabel(appt.status) }}
               </ion-chip>
             </div>
             @if (appt.description) {
@@ -164,7 +164,7 @@
       @empty {
         <div class="empty-state">
           <ion-icon name="time-outline" style="font-size: 3rem;"></ion-icon>
-          <p class="empty-state__text">No appointments yet</p>
+          <p class="empty-state__text">Aún no hay citas</p>
         </div>
       }
     </div>
@@ -190,7 +190,7 @@
       }
       @empty {
         <ion-item>
-          <ion-label class="empty-label">No files uploaded</ion-label>
+          <ion-label class="empty-label">No hay archivos cargados</ion-label>
         </ion-item>
       }
     </ion-list>
@@ -204,7 +204,7 @@
       <div class="stage-summary">
         <ion-icon name="sparkles-outline" class="stage-summary__icon"></ion-icon>
         <span class="stage-summary__text">
-          Templates for <strong>{{ stageLabel(client().stage) }}</strong> stage
+          Plantillas para la etapa <strong>{{ stageLabel(client().stage) }}</strong>
         </span>
       </div>
 
@@ -235,7 +235,7 @@
               tpl.messageBody.replace('{{name}}', client().firstName)
             }}</p>
             <div class="template-footer">
-              <ion-note class="template-date">Updated {{ tpl.updatedAt }}</ion-note>
+              <ion-note class="template-date">Actualizado {{ tpl.updatedAt }}</ion-note>
               <ion-button
                 fill="solid"
                 color="success"
@@ -244,7 +244,7 @@
                 [href]="generateWhatsAppLink(tpl)"
                 target="_blank">
                 <ion-icon slot="start" name="logo-whatsapp"></ion-icon>
-                Send via WhatsApp
+                Enviar por WhatsApp
               </ion-button>
             </div>
           </ion-card-content>
@@ -253,18 +253,18 @@
         <!-- No template for this stage -->
         <div class="empty-state">
           <ion-icon name="chatbubbles-outline" style="font-size: 3rem;"></ion-icon>
-          <p class="empty-state__text">No template for {{ stageLabel(client().stage) }}</p>
+          <p class="empty-state__text">No hay plantilla para {{ stageLabel(client().stage) }}</p>
           <ion-button fill="outline" color="primary" size="small" class="empty-state__cta"
             (click)="openEditTemplateAlert(null)"
             (keydown.enter)="openEditTemplateAlert(null)">
             <ion-icon slot="start" name="add-outline"></ion-icon>
-            Create Template
+            Crear plantilla
           </ion-button>
         </div>
       }
 
       <!-- All Other Templates -->
-      <h4 class="all-templates-title">All Stage Templates</h4>
+      <h4 class="all-templates-title">Todas las plantillas por etapa</h4>
       @for (tpl of messageTemplates(); track tpl.id) {
         @if (tpl.stage !== client().stage) {
           <ion-card class="template-card template-card--other">
@@ -288,7 +288,7 @@
             <ion-card-content class="template-card__body">
               <p class="template-message template-message--muted">{{ tpl.messageBody }}</p>
               <div class="template-footer">
-                <ion-note class="template-date">Updated {{ tpl.updatedAt }}</ion-note>
+                <ion-note class="template-date">Actualizado {{ tpl.updatedAt }}</ion-note>
               </div>
             </ion-card-content>
           </ion-card>

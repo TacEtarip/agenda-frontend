@@ -66,11 +66,11 @@ export class ClientDetailPage {
   readonly clientId = this.route.snapshot.paramMap.get('id') ?? '';
 
   readonly allStages: IClientStageOption[] = [
-    { value: ClientStage.FIRST_CONTACT, label: 'First Contact', color: 'primary' },
-    { value: ClientStage.FOLLOW_UP,     label: 'Follow-Up',     color: 'warning' },
-    { value: ClientStage.CLOSED_SALE,   label: 'Closed Sale',   color: 'success' },
-    { value: ClientStage.MAINTENANCE,   label: 'Maintenance',   color: 'tertiary' },
-    { value: ClientStage.POST_SALE,     label: 'Post Sale',     color: 'medium' },
+    { value: ClientStage.FIRST_CONTACT, label: 'Primer contacto', color: 'primary' },
+    { value: ClientStage.FOLLOW_UP,     label: 'Seguimiento',     color: 'warning' },
+    { value: ClientStage.CLOSED_SALE,   label: 'Venta cerrada',   color: 'success' },
+    { value: ClientStage.MAINTENANCE,   label: 'Mantenimiento',   color: 'tertiary' },
+    { value: ClientStage.POST_SALE,     label: 'Postventa',       color: 'medium' },
   ];
 
   readonly activeSegment = signal<Segment>('notes');
@@ -84,47 +84,47 @@ export class ClientDetailPage {
     phone: '+34612345678',
     initials: 'MG',
     color: 'avatar--blue',
-    createdAt: 'Jan 15, 2026',
+    createdAt: '15 ene 2026',
     stage: ClientStage.FOLLOW_UP,
   });
 
   readonly notes = signal<INote[]>([
     {
       id: '1',
-      content: 'Client prefers morning appointments. Very interested in the premium plan. Has two dogs — mention pet policy.',
-      createdAt: 'Feb 28, 2026',
-      updatedAt: 'Feb 28, 2026',
+      content: 'La clienta prefiere citas por la mañana. Está muy interesada en el plan premium. Tiene dos perros: mencionar política para mascotas.',
+      createdAt: '28 feb 2026',
+      updatedAt: '28 feb 2026',
     },
     {
       id: '2',
-      content: 'Follow-up needed regarding the proposal sent on 02/20. She mentioned budget concerns — prepare alternative options.',
-      createdAt: 'Feb 20, 2026',
-      updatedAt: 'Feb 25, 2026',
+      content: 'Hacer seguimiento de la propuesta enviada el 20/02. Comentó dudas de presupuesto: preparar opciones alternativas.',
+      createdAt: '20 feb 2026',
+      updatedAt: '25 feb 2026',
     },
   ]);
 
   readonly appointments = signal<IClientAppointment[]>([
     {
       id: '1',
-      title: 'Initial Consultation',
-      description: 'First meeting to assess requirements and expectations.',
-      startTime: 'Mar 5, 2026 · 10:00 AM',
-      endTime: '11:00 AM',
+      title: 'Consulta inicial',
+      description: 'Primera reunión para evaluar requisitos y expectativas.',
+      startTime: '5 mar 2026 · 10:00',
+      endTime: '11:00',
       status: 'scheduled',
     },
     {
       id: '2',
-      title: 'Follow-up Session',
-      description: 'Review the proposal and address budget concerns.',
-      startTime: 'Feb 20, 2026 · 3:00 PM',
-      endTime: '4:00 PM',
+      title: 'Sesión de seguimiento',
+      description: 'Revisar la propuesta y resolver inquietudes de presupuesto.',
+      startTime: '20 feb 2026 · 15:00',
+      endTime: '16:00',
       status: 'completed',
     },
   ]);
 
   readonly attachments = signal<IAttachment[]>([
-    { id: '1', fileName: 'proposal_v2.pdf', fileType: 'PDF', fileSize: '1.2 MB', uploadedAt: 'Feb 20, 2026', icon: 'document-outline' },
-    { id: '2', fileName: 'client_photo.jpg', fileType: 'Image', fileSize: '840 KB', uploadedAt: 'Jan 15, 2026', icon: 'image-outline' },
+    { id: '1', fileName: 'proposal_v2.pdf', fileType: 'PDF', fileSize: '1.2 MB', uploadedAt: '20 feb 2026', icon: 'document-outline' },
+    { id: '2', fileName: 'client_photo.jpg', fileType: 'Imagen', fileSize: '840 KB', uploadedAt: '15 ene 2026', icon: 'image-outline' },
   ]);
 
   // Mock message templates — will be replaced by API call
@@ -132,32 +132,32 @@ export class ClientDetailPage {
     {
       id: '1',
       stage: ClientStage.FIRST_CONTACT,
-      messageBody: 'Hi {{name}}! Thanks for reaching out. I\'d love to schedule an initial consultation to learn more about your needs. When are you available?',
-      updatedAt: 'Feb 10, 2026',
+      messageBody: 'Hola {{name}}. ¡Gracias por contactarme! Me gustaría agendar una consulta inicial para conocer mejor tus necesidades. ¿Cuándo te viene bien?',
+      updatedAt: '10 feb 2026',
     },
     {
       id: '2',
       stage: ClientStage.FOLLOW_UP,
-      messageBody: 'Hi {{name}}! Just checking in on the proposal I sent over. Do you have any questions I can help clarify? I\'m happy to adjust based on your feedback.',
-      updatedAt: 'Feb 15, 2026',
+      messageBody: 'Hola {{name}}. Te escribo para dar seguimiento a la propuesta que te envié. ¿Tienes alguna duda que pueda aclarar? Puedo ajustarla según tus comentarios.',
+      updatedAt: '15 feb 2026',
     },
     {
       id: '3',
       stage: ClientStage.CLOSED_SALE,
-      messageBody: 'Hi {{name}}! Congratulations on your decision! 🎉 I\'m excited to work with you. I\'ll send over the onboarding details shortly.',
-      updatedAt: 'Jan 20, 2026',
+      messageBody: 'Hola {{name}}. ¡Felicidades por tu decisión! Estoy muy contento de trabajar contigo. En breve te envío los detalles de inicio.',
+      updatedAt: '20 ene 2026',
     },
     {
       id: '4',
       stage: ClientStage.MAINTENANCE,
-      messageBody: 'Hi {{name}}! Hope everything is going well. Just checking in to make sure you\'re satisfied with the service. Let me know if there\'s anything I can help with!',
-      updatedAt: 'Jan 5, 2026',
+      messageBody: 'Hola {{name}}. Espero que todo vaya muy bien. Solo quería confirmar que estás satisfecho con el servicio. Avísame si puedo ayudarte en algo.',
+      updatedAt: '5 ene 2026',
     },
     {
       id: '5',
       stage: ClientStage.POST_SALE,
-      messageBody: 'Hi {{name}}! It\'s been a pleasure working with you. I wanted to follow up and see if you\'d be interested in any of our other services. Also, a referral is always appreciated! 😊',
-      updatedAt: 'Jan 1, 2026',
+      messageBody: 'Hola {{name}}. Ha sido un placer trabajar contigo. Quería hacer seguimiento para saber si te interesan otros de nuestros servicios. ¡Y una recomendación siempre se agradece!',
+      updatedAt: '1 ene 2026',
     },
   ]);
 
@@ -200,6 +200,12 @@ export class ClientDetailPage {
     return 'danger';
   }
 
+  appointmentStatusLabel(status: IClientAppointment['status']): string {
+    if (status === 'scheduled') return 'Programada';
+    if (status === 'completed') return 'Completada';
+    return 'Cancelada';
+  }
+
   stageLabel(stage: ClientStage): string {
     return this.allStages.find((s) => s.value === stage)?.label ?? stage;
   }
@@ -222,23 +228,23 @@ export class ClientDetailPage {
   async openEditTemplateAlert(template: IMessageTemplate | null) {
     const stage = this.client().stage;
     const alert = await this.alertCtrl.create({
-      header: `Edit Template — ${this.stageLabel(stage)}`,
+      header: `Editar plantilla — ${this.stageLabel(stage)}`,
       inputs: [
         {
           name: 'messageBody',
           type: 'textarea',
-          placeholder: 'Write your template here. Use {{name}} for the client\'s name.',
+          placeholder: 'Escribe tu plantilla aquí. Usa {{name}} para el nombre del cliente.',
           value: template?.messageBody ?? '',
           attributes: { rows: 6 },
         },
       ],
       buttons: [
-        { text: 'Cancel', role: 'cancel' },
+        { text: 'Cancelar', role: 'cancel' },
         {
-          text: 'Save',
+          text: 'Guardar',
           handler: (data: { messageBody: string }) => {
             if (!data.messageBody.trim()) return;
-            const today = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+            const today = new Date().toLocaleDateString('es-ES', { month: 'short', day: 'numeric', year: 'numeric' });
             if (template) {
               this.messageTemplates.update((templates) =>
                 templates.map((t) => t.id === template.id ? { ...t, messageBody: data.messageBody, updatedAt: today } : t),
@@ -261,12 +267,12 @@ export class ClientDetailPage {
 
   async deleteTemplate(template: IMessageTemplate) {
     const alert = await this.alertCtrl.create({
-      header: 'Delete Template',
-      message: 'Are you sure you want to delete this message template?',
+      header: 'Eliminar plantilla',
+      message: '¿Seguro que quieres eliminar esta plantilla de mensaje?',
       buttons: [
-        { text: 'Cancel', role: 'cancel' },
+        { text: 'Cancelar', role: 'cancel' },
         {
-          text: 'Delete',
+          text: 'Eliminar',
           role: 'destructive',
           handler: () => {
             this.messageTemplates.update((templates) => templates.filter((t) => t.id !== template.id));

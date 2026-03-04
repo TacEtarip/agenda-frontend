@@ -49,15 +49,15 @@ export class DashboardPage {
   readonly showAllAppointments = signal(false);
 
   readonly stats = signal([
-    { label: 'Total Clients', value: 24, icon: 'people-outline', color: 'stat-icon--sky' },
-    { label: 'Today', value: 3, icon: 'time-outline', color: 'stat-icon--green' },
-    { label: 'This Week', value: 8, icon: 'calendar-outline', color: 'stat-icon--indigo' },
+    { label: 'Total de clientes', value: 24, icon: 'people-outline', color: 'stat-icon--sky' },
+    { label: 'Hoy', value: 3, icon: 'time-outline', color: 'stat-icon--green' },
+    { label: 'Esta semana', value: 8, icon: 'calendar-outline', color: 'stat-icon--indigo' },
   ]);
 
   readonly upcomingAppointments = signal<IDashboardAppointment[]>([
-    { id: '1', clientName: 'María García', initials: 'MG', title: 'Initial Consultation', time: '10:00 AM', status: 'scheduled' },
-    { id: '2', clientName: 'Carlos López', initials: 'CL', title: 'Follow-up Session', time: '2:30 PM', status: 'scheduled' },
-    { id: '3', clientName: 'Ana Martínez', initials: 'AM', title: 'New Client Meeting', time: '4:00 PM', status: 'scheduled' },
+    { id: '1', clientName: 'María García', initials: 'MG', title: 'Consulta inicial', time: '10:00', status: 'scheduled' },
+    { id: '2', clientName: 'Carlos López', initials: 'CL', title: 'Sesión de seguimiento', time: '14:30', status: 'scheduled' },
+    { id: '3', clientName: 'Ana Martínez', initials: 'AM', title: 'Reunión con nuevo cliente', time: '16:00', status: 'scheduled' },
   ]);
 
   readonly recentClients = signal<IClient[]>([
@@ -69,11 +69,11 @@ export class DashboardPage {
   ]);
 
   private readonly stageMetadata: IClientStageOption[] = [
-    { value: ClientStage.FIRST_CONTACT, label: 'First Contact', color: 'primary' },
-    { value: ClientStage.FOLLOW_UP,     label: 'Follow-Up',     color: 'warning' },
-    { value: ClientStage.CLOSED_SALE,   label: 'Closed Sale',   color: 'success' },
-    { value: ClientStage.MAINTENANCE,   label: 'Maintenance',   color: 'tertiary' },
-    { value: ClientStage.POST_SALE,     label: 'Post Sale',     color: 'medium' },
+    { value: ClientStage.FIRST_CONTACT, label: 'Primer contacto', color: 'primary' },
+    { value: ClientStage.FOLLOW_UP,     label: 'Seguimiento',     color: 'warning' },
+    { value: ClientStage.CLOSED_SALE,   label: 'Venta cerrada',   color: 'success' },
+    { value: ClientStage.MAINTENANCE,   label: 'Mantenimiento', color: 'tertiary' },
+    { value: ClientStage.POST_SALE,     label: 'Postventa',     color: 'medium' },
   ];
 
   stageLabel(stage: ClientStage): string {
@@ -117,36 +117,42 @@ export class DashboardPage {
     this.showAllAppointments.update((current) => !current);
   }
 
+  appointmentStatusLabel(status: IDashboardAppointment['status']): string {
+    if (status === 'scheduled') return 'Programada';
+    if (status === 'completed') return 'Completada';
+    return 'Cancelada';
+  }
+
   async openAddClientAlert() {
     const alert = await this.alertCtrl.create({
-      header: 'Add Client',
-      message: 'Create a client to add it to the dashboard list.',
+      header: 'Agregar cliente',
+      message: 'Crea un cliente para agregarlo a la lista del panel.',
       inputs: [
         {
           name: 'firstName',
           type: 'text',
-          placeholder: 'First name',
+          placeholder: 'Nombre',
         },
         {
           name: 'lastName',
           type: 'text',
-          placeholder: 'Last name',
+          placeholder: 'Apellido',
         },
         {
           name: 'email',
           type: 'email',
-          placeholder: 'Email address',
+          placeholder: 'Correo electrónico',
         },
         {
           name: 'phone',
           type: 'tel',
-          placeholder: 'Phone number',
+          placeholder: 'Número de teléfono',
         },
       ],
       buttons: [
-        { text: 'Cancel', role: 'cancel' },
+        { text: 'Cancelar', role: 'cancel' },
         {
-          text: 'Add',
+          text: 'Agregar',
           handler: (data: { firstName?: string; lastName?: string; email?: string; phone?: string }) => {
             const firstName = data.firstName?.trim() ?? '';
             const lastName = data.lastName?.trim() ?? '';
@@ -166,7 +172,7 @@ export class DashboardPage {
               initials: this.buildInitials(firstName, lastName),
               color: this.clientAvatarColors[this.recentClients().length % this.clientAvatarColors.length],
               stage: ClientStage.FIRST_CONTACT,
-              createdAt: new Date().toLocaleDateString('en-US', {
+              createdAt: new Date().toLocaleDateString('es-ES', {
                 month: 'short',
                 day: 'numeric',
                 year: 'numeric',
@@ -176,7 +182,7 @@ export class DashboardPage {
             this.recentClients.update((clients) => [newClient, ...clients]);
             this.stats.update((stats) =>
               stats.map((stat) =>
-                stat.label === 'Total Clients'
+                stat.label === 'Total de clientes'
                   ? { ...stat, value: Number(stat.value) + 1 }
                   : stat,
               ),

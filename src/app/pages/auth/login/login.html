@@ -14,7 +14,7 @@
           <ion-icon name="calendar-outline" class="login-logo__icon"></ion-icon>
         </div>
         <h1 class="login-title">Agenda Pro</h1>
-        <p class="login-subtitle">Streamline your scheduling effortlessly.</p>
+        <p class="login-subtitle">Organiza tu agenda sin esfuerzo.</p>
       </div>
 
       <!-- Main Card -->
@@ -25,43 +25,43 @@
           <div class="mode-toggle">
             <button type="button" class="mode-toggle__btn"
               [class.mode-toggle__btn--active]="isLoginMode()"
-              (click)="toggleMode(true)">Sign In</button>
+              (click)="toggleMode(true)">Iniciar sesión</button>
             <button type="button" class="mode-toggle__btn"
               [class.mode-toggle__btn--active]="!isLoginMode()"
-              (click)="toggleMode(false)">Register</button>
+              (click)="toggleMode(false)">Registrarse</button>
           </div>
 
           <form [formGroup]="form" (ngSubmit)="submit()" class="login-form">
             @if (!isLoginMode()) {
             <div class="form-row">
-              <ion-input formControlName="firstName" label="First name" labelPlacement="floating" fill="outline"
+              <ion-input formControlName="firstName" label="Nombre" labelPlacement="floating" fill="outline"
                 shape="round" class="custom-input"></ion-input>
-              <ion-input formControlName="lastName" label="Last name" labelPlacement="floating" fill="outline"
+              <ion-input formControlName="lastName" label="Apellido" labelPlacement="floating" fill="outline"
                 shape="round" class="custom-input"></ion-input>
             </div>
             }
 
             <div class="form-field">
-              <ion-input formControlName="email" type="email" label="Email address" labelPlacement="floating"
+              <ion-input formControlName="email" type="email" label="Correo electrónico" labelPlacement="floating"
                 fill="outline" shape="round" class="custom-input">
                 <ion-icon slot="start" name="mail-outline" class="input-icon"></ion-icon>
               </ion-input>
             </div>
 
             <div class="form-field">
-              <ion-input formControlName="password" [type]="showPassword() ? 'text' : 'password'" label="Password"
+              <ion-input formControlName="password" [type]="showPassword() ? 'text' : 'password'" label="Contraseña"
                 labelPlacement="floating" fill="outline" shape="round" class="custom-input">
                 <ion-icon slot="start" name="lock-closed-outline" class="input-icon"></ion-icon>
                 <ion-icon slot="end" [name]="showPassword() ? 'eye-off-outline' : 'eye-outline'"
                   class="toggle-pw-btn"
-                  role="button" tabindex="0" aria-label="Toggle password visibility"
+                  role="button" tabindex="0" aria-label="Mostrar u ocultar contraseña"
                   (click)="showPassword.update(v => !v)" (keydown.enter)="showPassword.update(v => !v)"
                   (keydown.space)="showPassword.update(v => !v)"></ion-icon>
               </ion-input>
 
               @if (isLoginMode()) {
               <div class="forgot-password">
-                <a href="#" class="forgot-password__link">Forgot password?</a>
+                <a href="#" class="forgot-password__link">¿Olvidaste tu contraseña?</a>
               </div>
               }
             </div>
@@ -72,14 +72,14 @@
               @if (isLoading()) {
               <ion-spinner name="crescent" slot="start"></ion-spinner>
               }
-              {{ isLoginMode() ? 'Sign In' : 'Create Account' }}
+              {{ isLoginMode() ? 'Iniciar sesión' : 'Crear cuenta' }}
             </ion-button>
           </form>
 
           <!-- Divider -->
           <div class="auth-divider">
             <div class="auth-divider__line"></div>
-            <span class="auth-divider__text">or continue with</span>
+            <span class="auth-divider__text">o continúa con</span>
             <div class="auth-divider__line"></div>
           </div>
 
@@ -95,8 +95,8 @@
       <!-- Footer -->
       <div class="login-footer">
         <p class="login-footer__text">
-          By continuing, you agree to Agenda Pro's <a href="#" class="link">Terms of
-            Service</a> and <a href="#" class="link">Privacy Policy</a>.
+          Al continuar, aceptas los <a href="#" class="link">Términos de
+            servicio</a> y la <a href="#" class="link">Política de privacidad</a> de Agenda Pro.
         </p>
       </div>
 
