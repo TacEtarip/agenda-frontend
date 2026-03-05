@@ -20,6 +20,19 @@ app-client-detail.ion-page {
   background: linear-gradient(180deg, var(--color-frost-light) 0%, var(--color-surface-alt) 36%, var(--color-surface) 100%);
 }
 
+app-products.ion-page {
+  background: linear-gradient(180deg, var(--color-frost-light) 0%, var(--color-surface-alt) 36%, var(--color-surface) 100%);
+}
+
+// Settings: ensure route transitions never reveal previous page behind
+app-settings.ion-page {
+  background: linear-gradient(180deg, var(--color-frost-light) 0%, var(--color-surface-alt) 42%, var(--color-surface) 100%);
+}
+
+app-settings ion-content {
+  --background: linear-gradient(180deg, var(--color-frost-light) 0%, var(--color-surface-alt) 42%, var(--color-surface) 100%);
+}
+
 // Ionic shadow DOM: flex-center the scroll container for vertical centering
 ion-content.login-content::part(scroll) {
   display: flex;

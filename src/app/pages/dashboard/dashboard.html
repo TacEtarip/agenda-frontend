@@ -31,6 +31,36 @@
     }
   </div>
 
+  <div class="section-header">
+    <div class="section-header__row">
+      <h2 class="section-title">Gestión comercial</h2>
+    </div>
+  </div>
+
+  <div class="quick-links-grid">
+    <a class="quick-link-card" routerLink="/products">
+      <div class="quick-link-card__icon quick-link-card__icon--sky">
+        <ion-icon name="pricetag-outline"></ion-icon>
+      </div>
+      <div class="quick-link-card__body">
+        <p class="quick-link-card__title">Productos</p>
+        <p class="quick-link-card__text">Gestiona catálogo y precios.</p>
+      </div>
+      <ion-icon name="chevron-forward-outline" class="quick-link-card__arrow"></ion-icon>
+    </a>
+
+    <a class="quick-link-card" routerLink="/settings">
+      <div class="quick-link-card__icon quick-link-card__icon--indigo">
+        <ion-icon name="settings-outline"></ion-icon>
+      </div>
+      <div class="quick-link-card__body">
+        <p class="quick-link-card__title">Ajustes</p>
+        <p class="quick-link-card__text">Edita tu perfil e integraciones.</p>
+      </div>
+      <ion-icon name="chevron-forward-outline" class="quick-link-card__arrow"></ion-icon>
+    </a>
+  </div>
+
   <!-- Today's Appointments -->
   <div class="section-header">
     <div class="section-header__row">
@@ -111,7 +141,11 @@
 
   <!-- FAB -->
   <ion-fab slot="fixed" vertical="bottom" horizontal="end">
-    <ion-fab-button color="primary" (click)="openAddClientAlert()" aria-label="Agregar cliente">
+    <ion-fab-button
+      color="primary"
+      (click)="openAddClientAlert()"
+      (keydown.enter)="openAddClientAlert()"
+      aria-label="Agregar cliente">
       <ion-icon name="add-outline"></ion-icon>
     </ion-fab-button>
   </ion-fab>

@@ -11,10 +11,11 @@ import {
   calendarOutline,
   timeOutline,
   addOutline,
+  settingsOutline,
   notificationsOutline,
   chevronForwardOutline,
   callOutline,
-  swapHorizontalOutline,
+  pricetagOutline,
 } from 'ionicons/icons';
 import {
   AlertController,
@@ -102,10 +103,11 @@ export class DashboardPage {
       calendarOutline,
       timeOutline,
       addOutline,
+      settingsOutline,
       notificationsOutline,
       chevronForwardOutline,
       callOutline,
-      swapHorizontalOutline,
+      pricetagOutline,
     });
   }
 

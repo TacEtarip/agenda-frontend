@@ -101,6 +101,12 @@
         <ion-badge color="primary" class="segment-badge">{{ attachments().length }}</ion-badge>
       </ion-label>
     </ion-segment-button>
+    <ion-segment-button value="products">
+      <ion-label>
+        Productos
+        <ion-badge color="primary" class="segment-badge">{{ currentClientProducts().length }}</ion-badge>
+      </ion-label>
+    </ion-segment-button>
     <ion-segment-button value="messages">
       <ion-label>
         <ion-icon name="chatbubbles-outline" style="font-size:1rem;"></ion-icon>
@@ -142,6 +148,16 @@
   <!-- ── Appointments Tab ── -->
   @if (activeSegment() === 'appointments') {
     <div class="tab-content">
+      <ion-button
+        expand="block"
+        fill="outline"
+        class="appt-create-btn"
+        (click)="openCreateAppointmentModal()"
+        (keydown.enter)="openCreateAppointmentModal()">
+        <ion-icon slot="start" name="add-outline"></ion-icon>
+        Programar cita
+      </ion-button>
+
       @for (appt of appointments(); track appt.id) {
         <ion-card class="tab-card">
           <ion-card-content class="tab-card__content">
@@ -158,6 +174,35 @@
               <ion-icon name="time-outline" class="time-icon"></ion-icon>
               <span class="appt-time-text">{{ appt.startTime }} – {{ appt.endTime }}</span>
             </div>
+
+            <div class="appt-actions">
+              <ion-button
+                fill="clear"
+                size="small"
+                color="primary"
+                (click)="openEditAppointmentModal(appt)"
+                (keydown.enter)="openEditAppointmentModal(appt)">
+                <ion-icon slot="icon-only" name="create-outline"></ion-icon>
+              </ion-button>
+              <ion-button
+                fill="outline"
+                size="small"
+                color="success"
+                [disabled]="appt.status === 'completed'"
+                (click)="updateAppointmentStatus(appt, 'completed')"
+                (keydown.enter)="updateAppointmentStatus(appt, 'completed')">
+                Completar
+              </ion-button>
+              <ion-button
+                fill="outline"
+                size="small"
+                color="danger"
+                [disabled]="appt.status === 'cancelled'"
+                (click)="updateAppointmentStatus(appt, 'cancelled')"
+                (keydown.enter)="updateAppointmentStatus(appt, 'cancelled')">
+                Cancelar
+              </ion-button>
+            </div>
           </ion-card-content>
         </ion-card>
       }
@@ -169,6 +214,113 @@
       }
     </div>
   }
+
+  <ion-modal [isOpen]="isAppointmentModalOpen()" (didDismiss)="closeAppointmentModal()">
+    <ng-template>
+      <ion-content class="appointment-modal-content">
+        <div class="appointment-modal">
+          <h3 class="appointment-modal__title">
+            {{ editingAppointmentId() ? 'Editar cita' : 'Programar cita' }}
+          </h3>
+
+          <ion-input
+            label="Titulo"
+            labelPlacement="floating"
+            fill="outline"
+            class="appointment-modal__field"
+            [value]="appointmentDraft().title"
+            (ionInput)="onAppointmentDraftTextChange('title', $event)">
+          </ion-input>
+
+          <ion-textarea
+            autoGrow="true"
+            rows="3"
+            class="appointment-modal__field appointment-modal__notes"
+            placeholder="Descripcion (opcional)"
+            [value]="appointmentDraft().description"
+            (ionInput)="onAppointmentDraftTextChange('description', $event)">
+          </ion-textarea>
+
+          <div class="appointment-modal__pickers">
+            <div class="appointment-modal__selector-card">
+              <p class="appointment-modal__picker-title">Fecha</p>
+              <ion-datetime-button datetime="appt-date-picker"></ion-datetime-button>
+              <p class="appointment-modal__selector-value">{{ appointmentDraftDateLabel() }}</p>
+            </div>
+
+            <div class="appointment-modal__selector-card">
+              <p class="appointment-modal__picker-title">Desde</p>
+              <ion-datetime-button datetime="appt-start-hour-picker"></ion-datetime-button>
+              <p class="appointment-modal__selector-value">{{ appointmentDraftStartHourLabel() }}</p>
+            </div>
+
+            <div class="appointment-modal__selector-card">
+              <p class="appointment-modal__picker-title">Hasta</p>
+              <ion-datetime-button datetime="appt-end-hour-picker"></ion-datetime-button>
+              <p class="appointment-modal__selector-value">{{ appointmentDraftEndHourLabel() }}</p>
+            </div>
+          </div>
+
+          <ion-modal [keepContentsMounted]="true">
+            <ng-template>
+              <ion-datetime
+                id="appt-date-picker"
+                presentation="date"
+                [preferWheel]="false"
+                [value]="appointmentDraft().date"
+                (ionChange)="onAppointmentDraftDateChange('date', $any($event))">
+              </ion-datetime>
+            </ng-template>
+          </ion-modal>
+
+          <ion-modal [keepContentsMounted]="true">
+            <ng-template>
+              <ion-datetime
+                id="appt-start-hour-picker"
+                presentation="time"
+                hour-cycle="h23"
+                [preferWheel]="true"
+                [value]="appointmentDraft().startHour"
+                (ionChange)="onAppointmentDraftDateChange('startHour', $any($event))">
+              </ion-datetime>
+            </ng-template>
+          </ion-modal>
+
+          <ion-modal [keepContentsMounted]="true">
+            <ng-template>
+              <ion-datetime
+                id="appt-end-hour-picker"
+                presentation="time"
+                hour-cycle="h23"
+                [preferWheel]="true"
+                [value]="appointmentDraft().endHour"
+                (ionChange)="onAppointmentDraftDateChange('endHour', $any($event))">
+              </ion-datetime>
+            </ng-template>
+          </ion-modal>
+
+          @if (appointmentDraftError()) {
+            <p class="appointment-modal__error">{{ appointmentDraftError() }}</p>
+          }
+
+          <div class="appointment-modal__actions">
+            <ion-button
+              fill="outline"
+              color="medium"
+              (click)="closeAppointmentModal()"
+              (keydown.enter)="closeAppointmentModal()">
+              Cancelar
+            </ion-button>
+            <ion-button
+              (click)="saveAppointmentFromModal()"
+              (keydown.enter)="saveAppointmentFromModal()">
+              Guardar
+            </ion-button>
+          </div>
+        </div>
+      </ion-content>
+    </ng-template>
+  </ion-modal>
 
   <!-- ── Attachments Tab ── -->
   @if (activeSegment() === 'attachments') {
@@ -194,6 +346,142 @@
         </ion-item>
       }
     </ion-list>
+  }
+
+  <!-- ── Products Tab ── -->
+  @if (activeSegment() === 'products') {
+    <div class="tab-content">
+      <ion-card class="tab-card product-linker-card">
+        <ion-card-content class="tab-card__content">
+          <p class="product-linker-title">Agregar producto a este cliente</p>
+
+          <div class="product-linker-grid">
+            <ion-select
+              [value]="draftProductId()"
+              interface="popover"
+              class="product-linker-select"
+              placeholder="Selecciona un producto"
+              (ionChange)="onDraftProductChange($any($event))"
+              aria-label="Seleccionar producto para cliente">
+              @for (product of products(); track product.id) {
+                <ion-select-option [value]="product.id">
+                  {{ product.name }} · {{ formatPrice(product.price) }}
+                </ion-select-option>
+              }
+            </ion-select>
+
+            <ion-select
+              [value]="draftProductStatus()"
+              interface="popover"
+              class="product-linker-select"
+              placeholder="Estado inicial"
+              (ionChange)="onDraftProductStatusChange($any($event))"
+              aria-label="Seleccionar estado inicial del producto">
+              <ion-select-option [value]="clientProductStatus.OFFERED">Ofrecido</ion-select-option>
+              <ion-select-option [value]="clientProductStatus.INTERESTED">Interesado</ion-select-option>
+              <ion-select-option [value]="clientProductStatus.SOLD">Vendido</ion-select-option>
+              <ion-select-option [value]="clientProductStatus.REJECTED">Rechazado</ion-select-option>
+            </ion-select>
+          </div>
+
+          <ion-textarea
+            [value]="draftProductNotes()"
+            autoGrow="true"
+            rows="3"
+            class="product-linker-notes"
+            placeholder="Notas de seguimiento (opcional)..."
+            (ionInput)="onDraftProductNotesChange($event)">
+          </ion-textarea>
+
+          <ion-button
+            expand="block"
+            class="product-linker-button"
+            (click)="addProductToClient()"
+            (keydown.enter)="addProductToClient()">
+            <ion-icon slot="start" name="add-outline"></ion-icon>
+            Agregar producto
+          </ion-button>
+        </ion-card-content>
+      </ion-card>
+
+      @for (offer of currentClientProducts(); track offer.id) {
+        <ion-card class="tab-card">
+          <ion-card-content class="tab-card__content">
+            <div class="product-offer-header">
+              <div>
+                <p class="product-offer-product">
+                  <ion-icon name="pricetag-outline"></ion-icon>
+                  {{ productName(offer.productId) }}
+                </p>
+                <p class="product-offer-price">
+                  <ion-icon name="cash-outline"></ion-icon>
+                  {{ formatPrice(productPrice(offer.productId)) }}
+                </p>
+              </div>
+              <ion-chip [color]="offerStatusColor(offer.status)" class="appt-status-chip">
+                {{ offerStatusLabel(offer.status) }}
+              </ion-chip>
+            </div>
+
+            <p class="appt-desc">{{ offer.notes || 'Sin notas de seguimiento.' }}</p>
+
+            <div class="product-offer-meta">
+              <span>Ofrecido {{ formatProductDate(offer.offeredAt) }}</span>
+              <span>Actualizado {{ formatProductDate(offer.updatedAt) }}</span>
+            </div>
+
+            <div class="product-offer-actions">
+              <ion-button
+                fill="outline"
+                size="small"
+                color="warning"
+                (click)="quickSetProductStatus(offer, clientProductStatus.INTERESTED)"
+                (keydown.enter)="quickSetProductStatus(offer, clientProductStatus.INTERESTED)">
+                Interesado
+              </ion-button>
+              <ion-button
+                fill="outline"
+                size="small"
+                color="success"
+                (click)="quickSetProductStatus(offer, clientProductStatus.SOLD)"
+                (keydown.enter)="quickSetProductStatus(offer, clientProductStatus.SOLD)">
+                Vendido
+              </ion-button>
+              <ion-button
+                fill="outline"
+                size="small"
+                color="danger"
+                (click)="quickSetProductStatus(offer, clientProductStatus.REJECTED)"
+                (keydown.enter)="quickSetProductStatus(offer, clientProductStatus.REJECTED)">
+                Rechazado
+              </ion-button>
+              <ion-button
+                fill="clear"
+                size="small"
+                color="primary"
+                (click)="openEditProductNotesAlert(offer)"
+                (keydown.enter)="openEditProductNotesAlert(offer)">
+                <ion-icon slot="icon-only" name="create-outline"></ion-icon>
+              </ion-button>
+              <ion-button
+                fill="clear"
+                size="small"
+                color="danger"
+                (click)="deleteProductOffer(offer)"
+                (keydown.enter)="deleteProductOffer(offer)">
+                <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
+              </ion-button>
+            </div>
+          </ion-card-content>
+        </ion-card>
+      }
+      @empty {
+        <div class="empty-state">
+          <ion-icon name="pricetag-outline" style="font-size: 3rem;"></ion-icon>
+          <p class="empty-state__text">Aún no hay productos asociados</p>
+        </div>
+      }
+    </div>
   }
 
   <!-- ── Messages / Templates Tab ── -->

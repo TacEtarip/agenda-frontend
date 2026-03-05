@@ -323,6 +323,207 @@ ion-toolbar ion-button {
   color: var(--color-green);
 }
 
+.appt-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-top: 0.85rem;
+}
+
+.appt-actions ion-button {
+  --border-radius: 0.8rem;
+}
+
+.appt-create-btn {
+  margin: 0;
+  --border-radius: 0.95rem;
+  --border-color: rgb(var(--color-green-rgb) / 35%);
+  --color: var(--color-green-shade);
+  font-weight: 700;
+}
+
+.appointment-modal-content {
+  --background:
+    radial-gradient(circle at top right, rgb(var(--color-sky-rgb) / 20%), transparent 35%),
+    linear-gradient(180deg, var(--color-frost-light) 0%, var(--color-surface-alt) 100%);
+}
+
+.appointment-modal {
+  padding: 1rem;
+
+  &__title {
+    margin: 0 0 0.75rem;
+    font-size: 1rem;
+    font-weight: 800;
+    color: var(--color-text);
+  }
+
+  &__field {
+    margin-bottom: 0.7rem;
+  }
+
+  &__notes {
+    border: 1px solid var(--color-border);
+    border-radius: 0.95rem;
+    --background: var(--color-surface);
+    --padding-start: 0.75rem;
+    --padding-end: 0.75rem;
+    --padding-top: 0.55rem;
+    --padding-bottom: 0.55rem;
+    font-size: 0.82rem;
+  }
+
+  &__pickers {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.7rem;
+  }
+
+  &__selector-card {
+    border: 1px solid var(--color-border);
+    border-radius: 1rem;
+    background: var(--color-surface);
+    padding: 0.55rem 0.65rem 0.65rem;
+  }
+
+  &__picker-title {
+    margin: 0;
+    padding: 0;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--color-text-muted);
+    margin-bottom: 0.45rem;
+  }
+
+  &__selector-value {
+    margin: 0.35rem 0 0;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--color-text);
+  }
+
+  &__error {
+    margin: 0.65rem 0 0;
+    color: var(--color-danger);
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+
+  &__actions {
+    margin-top: 0.9rem;
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+}
+
+.appointment-modal ion-datetime-button::part(native) {
+  width: 100%;
+  justify-content: center;
+  border-radius: 0.8rem;
+  border: 1px solid rgb(var(--color-green-rgb) / 25%);
+}
+
+.product-offer-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.product-linker-card {
+  border-style: dashed;
+}
+
+.product-linker-title {
+  margin: 0 0 0.65rem;
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: var(--color-text);
+}
+
+.product-linker-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem;
+}
+
+.product-linker-select {
+  width: 100%;
+  border: 1px solid var(--color-border);
+  border-radius: 0.9rem;
+  --background: var(--color-surface);
+  --padding-start: 0.7rem;
+  --padding-end: 0.65rem;
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+
+  &::part(icon) {
+    color: var(--color-green);
+  }
+}
+
+.product-linker-notes {
+  margin-top: 0.6rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.95rem;
+  --background: var(--color-surface);
+  --padding-start: 0.75rem;
+  --padding-end: 0.75rem;
+  --padding-top: 0.55rem;
+  --padding-bottom: 0.55rem;
+  font-size: 0.82rem;
+}
+
+.product-linker-button {
+  margin-top: 0.65rem;
+  --border-radius: 0.95rem;
+  font-weight: 700;
+}
+
+.product-offer-product,
+.product-offer-price {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin: 0;
+}
+
+.product-offer-product {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.product-offer-price {
+  margin-top: 0.25rem;
+  font-size: 0.8rem;
+  color: var(--color-green);
+  font-weight: 700;
+}
+
+.product-offer-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.9rem;
+  margin-top: 0.75rem;
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+}
+
+.product-offer-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-top: 0.85rem;
+}
+
+.product-offer-actions ion-button {
+  --border-radius: 0.8rem;
+}
+
 .empty-state {
   text-align: center;
   padding: 2.5rem 1rem;
@@ -536,6 +737,14 @@ ion-fab-button {
 
   .template-footer {
     align-items: stretch;
+  }
+
+  .product-linker-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .appointment-modal__pickers {
+    grid-template-columns: 1fr;
   }
 
   .template-wa-btn {

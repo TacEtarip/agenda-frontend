@@ -1,0 +1,182 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/dashboard" text="Atrás"></ion-back-button>
+    </ion-buttons>
+    <ion-title>
+      <div class="toolbar-title">
+        <span class="toolbar-title__greeting">Cuenta</span>
+        <span class="toolbar-title__name">Ajustes del usuario</span>
+      </div>
+    </ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="settings-content">
+  <section class="settings-section">
+    <ion-card class="settings-card">
+      <ion-card-content class="settings-card__content">
+        <div class="section-heading">
+          <ion-icon name="person-circle-outline"></ion-icon>
+          <div>
+            <h2>Información personal</h2>
+            <p>Edita tus datos básicos de perfil.</p>
+          </div>
+        </div>
+
+        <form class="profile-form" [formGroup]="profileForm" (ngSubmit)="saveProfile()">
+          <div class="profile-grid">
+            <ion-input
+              formControlName="firstName"
+              label="Nombre"
+              labelPlacement="floating"
+              fill="outline"
+              shape="round">
+            </ion-input>
+
+            <ion-input
+              formControlName="lastName"
+              label="Apellido"
+              labelPlacement="floating"
+              fill="outline"
+              shape="round">
+            </ion-input>
+
+            <ion-input
+              formControlName="email"
+              type="email"
+              label="Correo electrónico"
+              labelPlacement="floating"
+              fill="outline"
+              shape="round">
+            </ion-input>
+
+            <ion-input
+              formControlName="phone"
+              type="tel"
+              label="Teléfono"
+              labelPlacement="floating"
+              fill="outline"
+              shape="round">
+            </ion-input>
+          </div>
+
+          <div class="actions-row">
+            <ion-button type="submit" [disabled]="profileForm.invalid || !profileForm.dirty">
+              Guardar perfil
+            </ion-button>
+          </div>
+        </form>
+
+        @if (profileSavedMessage()) {
+          <p class="status-message">
+            <ion-icon name="checkmark-circle-outline"></ion-icon>
+            <span>{{ profileSavedMessage() }}</span>
+          </p>
+        }
+      </ion-card-content>
+    </ion-card>
+  </section>
+
+  <section class="settings-section">
+    <ion-card class="settings-card">
+      <ion-card-content class="settings-card__content">
+        <div class="section-heading">
+          <ion-icon name="settings-outline"></ion-icon>
+          <div>
+            <h2>Integraciones</h2>
+            <p>Selecciona cómo quieres sincronizar tu agenda.</p>
+          </div>
+        </div>
+
+        <ion-radio-group
+          class="integration-group"
+          [value]="currentIntegration()"
+          (ionChange)="setIntegration($any($event))">
+          <ion-item lines="none" class="integration-item">
+            <ion-icon slot="start" name="information-circle-outline"></ion-icon>
+            <ion-label>
+              <h3>Sin integración</h3>
+              <p>Gestiona tu agenda solo dentro de la app.</p>
+            </ion-label>
+            <ion-radio slot="end" value="none"></ion-radio>
+          </ion-item>
+
+          <ion-item lines="none" class="integration-item">
+            <ion-icon slot="start" name="logo-google"></ion-icon>
+            <ion-label>
+              <h3>Google</h3>
+              <p>Conecta Google Calendar y contactos.</p>
+            </ion-label>
+            <ion-radio slot="end" value="google"></ion-radio>
+          </ion-item>
+
+          <ion-item lines="none" class="integration-item">
+            <ion-icon slot="start" name="logo-microsoft"></ion-icon>
+            <ion-label>
+              <h3>Microsoft</h3>
+              <p>Conecta Outlook Calendar y contactos.</p>
+            </ion-label>
+            <ion-radio slot="end" value="microsoft"></ion-radio>
+          </ion-item>
+        </ion-radio-group>
+
+        <div class="integration-summary">
+          <ion-icon name="checkmark-circle-outline"></ion-icon>
+          <p>
+            <strong>{{ integrationTitle(currentIntegration()) }}</strong>
+            {{ integrationDescription(currentIntegration()) }}
+          </p>
+        </div>
+
+        @if (currentIntegration() !== 'none') {
+          <div class="integration-config">
+            <h3>Configuración de sincronización</h3>
+            <ion-list lines="none">
+              <ion-item>
+                <ion-icon slot="start" name="calendar-clear-outline"></ion-icon>
+                <ion-label>Sincronizar calendario</ion-label>
+                <ion-toggle
+                  slot="end"
+                  [checked]="integrationSettings().syncCalendar"
+                  (ionChange)="updateIntegrationSetting('syncCalendar', $any($event))">
+                </ion-toggle>
+              </ion-item>
+
+              <ion-item>
+                <ion-icon slot="start" name="sync-outline"></ion-icon>
+                <ion-label>Sincronizar contactos</ion-label>
+                <ion-toggle
+                  slot="end"
+                  [checked]="integrationSettings().syncContacts"
+                  (ionChange)="updateIntegrationSetting('syncContacts', $any($event))">
+                </ion-toggle>
+              </ion-item>
+
+              <ion-item>
+                <ion-icon slot="start" name="notifications-outline"></ion-icon>
+                <ion-label>Resumen diario por correo</ion-label>
+                <ion-toggle
+                  slot="end"
+                  [checked]="integrationSettings().sendDailyDigest"
+                  (ionChange)="updateIntegrationSetting('sendDailyDigest', $any($event))">
+                </ion-toggle>
+              </ion-item>
+            </ion-list>
+          </div>
+        }
+
+        <div class="actions-row">
+          <ion-button (click)="saveIntegration()">Guardar integración</ion-button>
+        </div>
+
+        @if (integrationSavedMessage()) {
+          <p class="status-message">
+            <ion-icon name="checkmark-circle-outline"></ion-icon>
+            <span>{{ integrationSavedMessage() }}</span>
+          </p>
+        }
+      </ion-card-content>
+    </ion-card>
+  </section>
+</ion-content>

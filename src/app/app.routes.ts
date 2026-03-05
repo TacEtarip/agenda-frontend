@@ -13,6 +13,16 @@ export const routes: Routes = [
       import('./pages/dashboard/dashboard').then((m) => m.DashboardPage),
   },
   {
+    path: 'products',
+    loadComponent: () =>
+      import('./pages/products/products').then((m) => m.ProductsPage),
+  },
+  {
+    path: 'settings',
+    loadComponent: () =>
+      import('./pages/settings/settings').then((m) => m.SettingsPage),
+  },
+  {
     path: 'clients/:id',
     loadComponent: () =>
       import('./pages/client-detail/client-detail').then(

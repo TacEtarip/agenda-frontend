@@ -115,6 +115,76 @@ ion-toolbar ion-button {
   margin: 0;
 }
 
+// ── Quick links ───────────────────────────────────────────────────────────────
+.quick-links-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  padding: 0 1rem 1rem;
+}
+
+.quick-link-card {
+  border: 1px solid var(--color-border);
+  border-radius: 1rem;
+  padding: 0.8rem;
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  background: linear-gradient(180deg, var(--color-surface) 0%, var(--color-surface-alt) 100%);
+  box-shadow: 0 4px 12px rgb(var(--color-green-rgb) / 8%);
+  text-decoration: none;
+  color: inherit;
+
+  &__icon {
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 0.75rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+
+    &--sky {
+      color: var(--color-sky-shade);
+      background-color: var(--color-sky-light);
+    }
+
+    &--green {
+      color: var(--color-green-shade);
+      background-color: var(--color-green-light);
+    }
+
+    &--indigo {
+      color: var(--color-indigo-shade);
+      background-color: var(--color-indigo-light);
+    }
+  }
+
+  &__body {
+    min-width: 0;
+    flex: 1;
+  }
+
+  &__title {
+    margin: 0;
+    font-size: 0.86rem;
+    font-weight: 700;
+    color: var(--color-text);
+  }
+
+  &__text {
+    margin: 0.2rem 0 0;
+    font-size: 0.72rem;
+    color: var(--color-text-muted);
+    line-height: 1.4;
+  }
+
+  &__arrow {
+    font-size: 0.9rem;
+    color: var(--color-text-muted);
+  }
+}
+
 .see-all-btn {
   font-size: 0.75rem;
   font-weight: 600;
@@ -316,4 +386,10 @@ ion-toolbar ion-button {
   text-align: center;
   color: var(--color-text-muted);
   padding: 1rem 0;
+}
+
+@media (max-width: 560px) {
+  .quick-links-grid {
+    grid-template-columns: 1fr;
+  }
 }

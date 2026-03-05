@@ -1,0 +1,124 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/dashboard" text="Atrás"></ion-back-button>
+    </ion-buttons>
+    <ion-title>
+      <div class="toolbar-title">
+        <span class="toolbar-title__greeting">Catálogo</span>
+        <span class="toolbar-title__name">Productos</span>
+      </div>
+    </ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="openCreateProductAlert()">
+        <ion-icon slot="icon-only" name="add-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="products-content">
+  <div class="stats-grid">
+    <ion-card class="stat-card">
+      <ion-card-content class="stat-card__content">
+        <div class="stat-icon stat-icon--green">
+          <ion-icon name="pricetag-outline"></ion-icon>
+        </div>
+        <p class="stat-value">{{ products().length }}</p>
+        <p class="stat-label">Total productos</p>
+      </ion-card-content>
+    </ion-card>
+
+    <ion-card class="stat-card">
+      <ion-card-content class="stat-card__content">
+        <div class="stat-icon stat-icon--sky">
+          <ion-icon name="cash-outline"></ion-icon>
+        </div>
+        <p class="stat-value">{{ pricedProducts().length }}</p>
+        <p class="stat-label">Con precio</p>
+      </ion-card-content>
+    </ion-card>
+
+    <ion-card class="stat-card">
+      <ion-card-content class="stat-card__content">
+        <div class="stat-icon stat-icon--indigo">
+          <ion-icon name="swap-vertical-outline"></ion-icon>
+        </div>
+        <p class="stat-value">{{ formatPrice(catalogValue()) }}</p>
+        <p class="stat-label">Valor catálogo</p>
+      </ion-card-content>
+    </ion-card>
+  </div>
+
+  <div class="filters">
+    <ion-searchbar
+      placeholder="Buscar productos..."
+      [debounce]="200"
+      (ionInput)="onSearch($event)"
+      class="search-bar">
+    </ion-searchbar>
+
+    <ion-select
+      [value]="sortMode()"
+      interface="popover"
+      class="sort-select"
+      (ionChange)="onSortChange($any($event))"
+      aria-label="Ordenar productos">
+      <ion-select-option value="recent">Más recientes</ion-select-option>
+      <ion-select-option value="name">Nombre A-Z</ion-select-option>
+      <ion-select-option value="price-desc">Precio mayor-menor</ion-select-option>
+      <ion-select-option value="price-asc">Precio menor-mayor</ion-select-option>
+    </ion-select>
+  </div>
+
+  <div class="average-banner">
+    <ion-icon name="cash-outline"></ion-icon>
+    <span>Precio promedio: <strong>{{ averagePrice() ? formatPrice(averagePrice() ?? 0) : 'Sin datos' }}</strong></span>
+  </div>
+
+  <div class="products-list">
+    @for (product of visibleProducts(); track product.id) {
+      <ion-card class="product-card">
+        <ion-card-content class="product-card__content">
+          <div class="product-card__header">
+            <div class="product-title-block">
+              <p class="product-title">{{ product.name }}</p>
+              <p class="product-date">Creado {{ formatDate(product.createdAt) }}</p>
+            </div>
+            <div class="product-actions">
+              <ion-button fill="clear" size="small" color="primary" (click)="openEditProductAlert(product)">
+                <ion-icon slot="icon-only" name="create-outline"></ion-icon>
+              </ion-button>
+              <ion-button fill="clear" size="small" color="danger" (click)="deleteProduct(product)">
+                <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
+              </ion-button>
+            </div>
+          </div>
+
+          @if (product.description) {
+            <p class="product-description">{{ product.description }}</p>
+          }
+
+          <div class="product-card__footer">
+            <ion-chip color="primary" class="price-chip">
+              <ion-icon name="cash-outline"></ion-icon>
+              <ion-label>{{ formatPrice(product.price) }}</ion-label>
+            </ion-chip>
+          </div>
+        </ion-card-content>
+      </ion-card>
+    }
+    @empty {
+      <div class="empty-state">
+        <ion-icon name="pricetag-outline"></ion-icon>
+        <p class="empty-state__text">No hay productos para mostrar</p>
+      </div>
+    }
+  </div>
+
+  <ion-fab slot="fixed" vertical="bottom" horizontal="end">
+    <ion-fab-button color="primary" (click)="openCreateProductAlert()" aria-label="Agregar producto">
+      <ion-icon name="add-outline"></ion-icon>
+    </ion-fab-button>
+  </ion-fab>
+</ion-content>
