@@ -1,10 +1,10 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { ClientStage } from '../../enums/client-stage.enum';
 import { IClient } from '../../interfaces/client.interface';
-import { IClientStageOption } from '../../interfaces/client-stage-option.interface';
 import { IDashboardAppointment } from '../../interfaces/dashboard-appointment.interface';
+import { getStageLabel, getStageColor } from '../../shared/client-stage.utils';
 import { COMMON_ION_PAGE_IMPORTS } from '../../shared/ionic-imports';
 import { addIcons } from 'ionicons';
 import {
@@ -26,6 +26,7 @@ import {
 
 @Component({
   selector: 'app-dashboard',
+  host: { class: 'ion-page' },
   imports: [
     ReactiveFormsModule,
     RouterLink,
@@ -78,23 +79,15 @@ export class DashboardPage {
     { id: '5', firstName: 'Laura', lastName: 'Fernández', email: 'laura@example.com', phone: '+34 632 456 789', initials: 'LF', color: 'avatar--mint', stage: ClientStage.POST_SALE },
   ]);
 
-  private readonly stageMetadata: IClientStageOption[] = [
-    { value: ClientStage.FIRST_CONTACT, label: 'Primer contacto', color: 'primary' },
-    { value: ClientStage.FOLLOW_UP,     label: 'Seguimiento',     color: 'warning' },
-    { value: ClientStage.CLOSED_SALE,   label: 'Venta cerrada',   color: 'success' },
-    { value: ClientStage.MAINTENANCE,   label: 'Mantenimiento', color: 'tertiary' },
-    { value: ClientStage.POST_SALE,     label: 'Postventa',     color: 'medium' },
-  ];
-
   stageLabel(stage: ClientStage): string {
-    return this.stageMetadata.find((s) => s.value === stage)?.label ?? stage;
+    return getStageLabel(stage);
   }
 
   stageColor(stage: ClientStage): string {
-    return this.stageMetadata.find((s) => s.value === stage)?.color ?? 'medium';
+    return getStageColor(stage);
   }
 
-  readonly filteredClients = () => {
+  readonly filteredClients = computed(() => {
     const q = this.searchQuery().toLowerCase();
     return q
       ? this.recentClients().filter(
@@ -104,7 +97,7 @@ export class DashboardPage {
             c.email.toLowerCase().includes(q),
         )
       : this.recentClients();
-  };
+  });
 
   constructor() {
     addIcons({
@@ -161,31 +154,19 @@ export class DashboardPage {
 
     if (!trimmedFirstName || !trimmedLastName || !trimmedEmail || !trimmedPhone) {
       if (!trimmedFirstName) {
-        this.addClientForm.controls.firstName.setErrors({
-          ...(this.addClientForm.controls.firstName.errors ?? {}),
-          required: true,
-        });
+        this.addClientForm.controls.firstName.setErrors({ required: true });
       }
 
       if (!trimmedLastName) {
-        this.addClientForm.controls.lastName.setErrors({
-          ...(this.addClientForm.controls.lastName.errors ?? {}),
-          required: true,
-        });
+        this.addClientForm.controls.lastName.setErrors({ required: true });
       }
 
       if (!trimmedEmail) {
-        this.addClientForm.controls.email.setErrors({
-          ...(this.addClientForm.controls.email.errors ?? {}),
-          required: true,
-        });
+        this.addClientForm.controls.email.setErrors({ required: true });
       }
 
       if (!trimmedPhone) {
-        this.addClientForm.controls.phone.setErrors({
-          ...(this.addClientForm.controls.phone.errors ?? {}),
-          required: true,
-        });
+        this.addClientForm.controls.phone.setErrors({ required: true });
       }
 
       this.addClientForm.markAllAsTouched();
@@ -212,7 +193,7 @@ export class DashboardPage {
     this.stats.update((stats) =>
       stats.map((stat) =>
         stat.label === 'Total de clientes'
-          ? { ...stat, value: Number(stat.value) + 1 }
+          ? { ...stat, value: stat.value + 1 }
           : stat,
       ),
     );

@@ -23,6 +23,8 @@ import {
 } from '@ionic/angular/standalone';
 
 type IntegrationProvider = 'none' | 'google' | 'microsoft';
+
+const VALID_INTEGRATION_PROVIDERS = new Set<IntegrationProvider>(['none', 'google', 'microsoft']);
 type IntegrationPreference = 'syncCalendar' | 'syncContacts' | 'sendDailyDigest';
 
 interface IIntegrationSettings {
@@ -98,14 +100,7 @@ export class SettingsPage {
 
   setIntegration(event: CustomEvent<{ value: IntegrationProvider }>) {
     const nextIntegration = event.detail.value;
-    if (
-      nextIntegration !== 'none' &&
-      nextIntegration !== 'google' &&
-      nextIntegration !== 'microsoft'
-    ) {
-      return;
-    }
-
+    if (!VALID_INTEGRATION_PROVIDERS.has(nextIntegration)) return;
     this.currentIntegration.set(nextIntegration);
     this.integrationSavedMessage.set(null);
   }

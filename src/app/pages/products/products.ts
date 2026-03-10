@@ -25,6 +25,8 @@ import { SalesCatalogStore } from '../../shared/stores/sales-catalog.store';
 
 type ProductSort = 'recent' | 'price-desc' | 'price-asc' | 'name';
 
+const VALID_PRODUCT_SORTS = new Set<ProductSort>(['recent', 'price-desc', 'price-asc', 'name']);
+
 @Component({
   selector: 'app-products',
   host: { class: 'ion-page' },
@@ -115,12 +117,7 @@ export class ProductsPage {
 
   onSortChange(event: CustomEvent) {
     const nextSort = event.detail.value as ProductSort;
-    if (
-      nextSort === 'recent' ||
-      nextSort === 'price-desc' ||
-      nextSort === 'price-asc' ||
-      nextSort === 'name'
-    ) {
+    if (VALID_PRODUCT_SORTS.has(nextSort)) {
       this.sortMode.set(nextSort);
     }
   }
@@ -156,10 +153,7 @@ export class ProductsPage {
 
     if (!trimmedName || this.createProductForm.invalid) {
       if (!trimmedName) {
-        this.createProductForm.controls.name.setErrors({
-          ...(this.createProductForm.controls.name.errors ?? {}),
-          required: true,
-        });
+      this.createProductForm.controls.name.setErrors({ required: true });
       }
 
       this.createProductForm.markAllAsTouched();

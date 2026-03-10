@@ -6,8 +6,8 @@ import { IAttachment } from '../../interfaces/attachment.interface';
 import { IClientAppointment } from '../../interfaces/client-appointment.interface';
 import { IClientProduct } from '../../interfaces/client-product.interface';
 import { IClient } from '../../interfaces/client.interface';
-import { IClientStageOption } from '../../interfaces/client-stage-option.interface';
 import { IMessageTemplate } from '../../interfaces/message-template.interface';
+import { CLIENT_STAGE_OPTIONS, getStageLabel, getStageColor } from '../../shared/client-stage.utils';
 import { INote } from '../../interfaces/note.interface';
 import { COMMON_ION_PAGE_IMPORTS } from '../../shared/ionic-imports';
 import { SalesCatalogStore } from '../../shared/stores/sales-catalog.store';
@@ -60,6 +60,7 @@ interface IAppointmentDraft {
 
 @Component({
   selector: 'app-client-detail',
+  host: { class: 'ion-page' },
   imports: [
     ...COMMON_ION_PAGE_IMPORTS,
     IonBackButton,
@@ -82,13 +83,7 @@ export class ClientDetailPage {
   private readonly salesCatalogStore = inject(SalesCatalogStore);
   readonly clientId = this.route.snapshot.paramMap.get('id') ?? '';
 
-  readonly allStages: IClientStageOption[] = [
-    { value: ClientStage.FIRST_CONTACT, label: 'Primer contacto', color: 'primary' },
-    { value: ClientStage.FOLLOW_UP,     label: 'Seguimiento',     color: 'warning' },
-    { value: ClientStage.CLOSED_SALE,   label: 'Venta cerrada',   color: 'success' },
-    { value: ClientStage.MAINTENANCE,   label: 'Mantenimiento',   color: 'tertiary' },
-    { value: ClientStage.POST_SALE,     label: 'Postventa',       color: 'medium' },
-  ];
+  readonly allStages = CLIENT_STAGE_OPTIONS;
 
   readonly activeSegment = signal<Segment>('notes');
   readonly clientProductStatus = ClientProductStatus;
@@ -312,7 +307,7 @@ export class ClientDetailPage {
       return;
     }
 
-    const today = this.formatShortDate(new Date());
+    const today = this.formatAppointmentDay(new Date());
     const editingId = this.editingNoteId();
 
     if (editingId) {
@@ -426,7 +421,7 @@ export class ClientDetailPage {
         fileName: draft.fileName,
         fileType: draft.fileType,
         fileSize: draft.fileSize,
-        uploadedAt: this.formatShortDate(new Date()),
+        uploadedAt: this.formatAppointmentDay(new Date()),
         icon: draft.icon,
       },
       ...attachments,
@@ -468,21 +463,17 @@ export class ClientDetailPage {
     }));
   }
 
-  appointmentDraftDateLabel(): string {
+  readonly appointmentDraftDateLabel = computed(() => {
     const dateValue = this.appointmentDraft().date;
     if (!dateValue) return 'Seleccionar fecha';
     const date = new Date(`${dateValue}T00:00:00`);
     if (Number.isNaN(date.getTime())) return 'Seleccionar fecha';
     return this.formatAppointmentDay(date);
-  }
+  });
 
-  appointmentDraftStartHourLabel(): string {
-    return this.appointmentDraft().startHour || '--:--';
-  }
+  readonly appointmentDraftStartHourLabel = computed(() => this.appointmentDraft().startHour || '--:--');
 
-  appointmentDraftEndHourLabel(): string {
-    return this.appointmentDraft().endHour || '--:--';
-  }
+  readonly appointmentDraftEndHourLabel = computed(() => this.appointmentDraft().endHour || '--:--');
 
   saveAppointmentFromModal() {
     const draft = this.appointmentDraft();
@@ -607,14 +598,6 @@ export class ClientDetailPage {
       fileSize: '',
       icon: 'document-outline',
     };
-  }
-
-  private formatShortDate(dateInput: Date): string {
-    return dateInput.toLocaleDateString('es-ES', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric',
-    });
   }
 
   private formatFileSize(sizeInBytes: number): string {
@@ -788,11 +771,11 @@ export class ClientDetailPage {
   }
 
   stageLabel(stage: ClientStage): string {
-    return this.allStages.find((s) => s.value === stage)?.label ?? stage;
+    return getStageLabel(stage);
   }
 
   stageColor(stage: ClientStage): string {
-    return this.allStages.find((s) => s.value === stage)?.color ?? 'medium';
+    return getStageColor(stage);
   }
 
   onStageChange(event: CustomEvent) {
