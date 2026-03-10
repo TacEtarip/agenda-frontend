@@ -4,8 +4,9 @@ import { RouterLink } from '@angular/router';
 import { ClientStage } from '../../enums/client-stage.enum';
 import { IClient } from '../../interfaces/client.interface';
 import { IDashboardAppointment } from '../../interfaces/dashboard-appointment.interface';
-import { getStageLabel, getStageColor } from '../../shared/client-stage.utils';
 import { COMMON_ION_PAGE_IMPORTS } from '../../shared/ionic-imports';
+import { AppointmentStatusLabelPipe } from '../../shared/pipes/appointment-status.pipes';
+import { StageLabelPipe, StageColorPipe } from '../../shared/pipes/stage.pipes';
 import { addIcons } from 'ionicons';
 import {
   peopleOutline,
@@ -33,6 +34,9 @@ import {
     ...COMMON_ION_PAGE_IMPORTS,
     IonAvatar,
     IonSearchbar,
+    StageLabelPipe,
+    StageColorPipe,
+    AppointmentStatusLabelPipe,
   ],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.scss',
@@ -79,14 +83,6 @@ export class DashboardPage {
     { id: '5', firstName: 'Laura', lastName: 'Fernández', email: 'laura@example.com', phone: '+34 632 456 789', initials: 'LF', color: 'avatar--mint', stage: ClientStage.POST_SALE },
   ]);
 
-  stageLabel(stage: ClientStage): string {
-    return getStageLabel(stage);
-  }
-
-  stageColor(stage: ClientStage): string {
-    return getStageColor(stage);
-  }
-
   readonly filteredClients = computed(() => {
     const q = this.searchQuery().toLowerCase();
     return q
@@ -120,12 +116,6 @@ export class DashboardPage {
 
   toggleAppointmentsView() {
     this.showAllAppointments.update((current) => !current);
-  }
-
-  appointmentStatusLabel(status: IDashboardAppointment['status']): string {
-    if (status === 'scheduled') return 'Programada';
-    if (status === 'completed') return 'Completada';
-    return 'Cancelada';
   }
 
   openAddClientModal() {

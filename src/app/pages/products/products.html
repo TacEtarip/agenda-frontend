@@ -39,7 +39,7 @@
         <div class="stat-icon stat-icon--indigo">
           <ion-icon name="swap-vertical-outline"></ion-icon>
         </div>
-        <p class="stat-value">{{ formatPrice(catalogValue()) }}</p>
+        <p class="stat-value">{{ catalogValue() | formatPrice }}</p>
         <p class="stat-label">Valor catálogo</p>
       </ion-card-content>
     </ion-card>
@@ -68,7 +68,7 @@
 
   <div class="average-banner">
     <ion-icon name="cash-outline"></ion-icon>
-    <span>Precio promedio: <strong>{{ averagePrice() ? formatPrice(averagePrice() ?? 0) : 'Sin datos' }}</strong></span>
+    <span>Precio promedio: <strong>{{ formattedAveragePrice() }}</strong></span>
   </div>
 
   <div class="products-list">
@@ -78,7 +78,7 @@
           <div class="product-card__header">
             <div class="product-title-block">
               <p class="product-title">{{ product.name }}</p>
-              <p class="product-date">Creado {{ formatDate(product.createdAt) }}</p>
+              <p class="product-date">Creado {{ product.createdAt | formatDate }}</p>
             </div>
             <div class="product-actions">
               <ion-button fill="clear" size="small" color="primary" (click)="openEditProductAlert(product)">
@@ -97,7 +97,7 @@
           <div class="product-card__footer">
             <ion-chip color="primary" class="price-chip">
               <ion-icon name="cash-outline"></ion-icon>
-              <ion-label>{{ formatPrice(product.price) }}</ion-label>
+              <ion-label>{{ product.price | formatPrice }}</ion-label>
             </ion-chip>
           </div>
         </ion-card-content>

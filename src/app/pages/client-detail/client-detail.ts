@@ -7,9 +7,14 @@ import { IClientAppointment } from '../../interfaces/client-appointment.interfac
 import { IClientProduct } from '../../interfaces/client-product.interface';
 import { IClient } from '../../interfaces/client.interface';
 import { IMessageTemplate } from '../../interfaces/message-template.interface';
-import { CLIENT_STAGE_OPTIONS, getStageLabel, getStageColor } from '../../shared/client-stage.utils';
+import { CLIENT_STAGE_OPTIONS, getStageLabel } from '../../shared/client-stage.utils';
 import { INote } from '../../interfaces/note.interface';
 import { COMMON_ION_PAGE_IMPORTS } from '../../shared/ionic-imports';
+import { AppointmentStatusColorPipe, AppointmentStatusLabelPipe } from '../../shared/pipes/appointment-status.pipes';
+import { FormatDatePipe } from '../../shared/pipes/format-date.pipe';
+import { FormatPricePipe } from '../../shared/pipes/format-price.pipe';
+import { OfferStatusColorPipe, OfferStatusLabelPipe } from '../../shared/pipes/offer-status.pipes';
+import { StageLabelPipe, StageColorPipe } from '../../shared/pipes/stage.pipes';
 import { SalesCatalogStore } from '../../shared/stores/sales-catalog.store';
 import { addIcons } from 'ionicons';
 import {
@@ -58,6 +63,11 @@ interface IAppointmentDraft {
   endHour: string;
 }
 
+interface IEnrichedClientProduct extends IClientProduct {
+  resolvedProductName: string;
+  resolvedProductPrice: number | undefined;
+}
+
 @Component({
   selector: 'app-client-detail',
   host: { class: 'ion-page' },
@@ -72,6 +82,14 @@ interface IAppointmentDraft {
     IonSelect,
     IonSelectOption,
     IonTextarea,
+    AppointmentStatusColorPipe,
+    AppointmentStatusLabelPipe,
+    FormatDatePipe,
+    FormatPricePipe,
+    OfferStatusColorPipe,
+    OfferStatusLabelPipe,
+    StageLabelPipe,
+    StageColorPipe,
   ],
   templateUrl: './client-detail.html',
   styleUrl: './client-detail.scss',
@@ -102,13 +120,8 @@ export class ClientDetailPage {
   readonly isAttachmentModalOpen = signal(false);
   readonly attachmentDraft = signal(this.createDefaultAttachmentDraft());
   readonly attachmentDraftError = signal<string | null>(null);
-  private readonly priceFormatter = new Intl.NumberFormat('es-ES', {
-    style: 'currency',
-    currency: 'EUR',
-    maximumFractionDigits: 2,
-  });
 
-  // Mock client data — will be replaced by API call
+  // Mock client data
   readonly client = signal<IClient>({
     id: this.clientId,
     firstName: 'María',
@@ -164,15 +177,26 @@ export class ClientDetailPage {
     { id: '2', fileName: 'client_photo.jpg', fileType: 'Imagen', fileSize: '840 KB', uploadedAt: '15 ene 2026', icon: 'image-outline' },
   ]);
 
-  readonly currentClientProducts = computed(() =>
-    this.salesCatalogStore
+  readonly currentClientProducts = computed((): IEnrichedClientProduct[] => {
+    const productMap = new Map(
+      this.salesCatalogStore.products().map((p) => [p.id, p]),
+    );
+    return this.salesCatalogStore
       .clientProducts()
       .filter((offer) => offer.clientId === this.client().id)
       .sort(
         (a, b) =>
           new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime(),
-      ),
-  );
+      )
+      .map((offer) => {
+        const product = productMap.get(offer.productId);
+        return {
+          ...offer,
+          resolvedProductName: product?.name ?? 'Producto desconocido',
+          resolvedProductPrice: product?.price,
+        };
+      });
+  });
 
   readonly canShowPrimaryFab = computed(() => {
     const segment = this.activeSegment();
@@ -225,6 +249,24 @@ export class ClientDetailPage {
   readonly currentTemplate = computed(() => {
     const stage = this.client().stage;
     return this.messageTemplates().find((t) => t.stage === stage) ?? null;
+  });
+
+  readonly callWhatsAppUrl = computed(
+    () => `https://wa.me/${this.client().phone.replaceAll(' ', '')}`,
+  );
+
+  readonly currentTemplatePersonalizedMessage = computed(() => {
+    const tpl = this.currentTemplate();
+    if (!tpl) return '';
+    return tpl.messageBody.replace('{{name}}', this.client().firstName);
+  });
+
+  readonly currentTemplateWhatsAppUrl = computed(() => {
+    const tpl = this.currentTemplate();
+    if (!tpl) return null;
+    const phone = this.client().phone.replaceAll(/\D/g, '');
+    const message = tpl.messageBody.replace('{{name}}', this.client().firstName);
+    return `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
   });
 
   constructor() {
@@ -665,50 +707,6 @@ export class ClientDetailPage {
     this.draftProductNotes.set('');
   }
 
-  statusColor(status: IClientAppointment['status']): string {
-    if (status === 'scheduled') return 'primary';
-    if (status === 'completed') return 'success';
-    return 'danger';
-  }
-
-  offerStatusLabel(status: ClientProductStatus): string {
-    if (status === ClientProductStatus.OFFERED) return 'Ofrecido';
-    if (status === ClientProductStatus.INTERESTED) return 'Interesado';
-    if (status === ClientProductStatus.SOLD) return 'Vendido';
-    return 'Rechazado';
-  }
-
-  offerStatusColor(status: ClientProductStatus): string {
-    if (status === ClientProductStatus.OFFERED) return 'primary';
-    if (status === ClientProductStatus.INTERESTED) return 'warning';
-    if (status === ClientProductStatus.SOLD) return 'success';
-    return 'danger';
-  }
-
-  productName(productId: string): string {
-    return (
-      this.products().find((product) => product.id === productId)?.name ??
-      'Producto desconocido'
-    );
-  }
-
-  productPrice(productId: string): number | undefined {
-    return this.products().find((product) => product.id === productId)?.price;
-  }
-
-  formatProductDate(dateIso: string): string {
-    return new Date(dateIso).toLocaleDateString('es-ES', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric',
-    });
-  }
-
-  formatPrice(price?: number): string {
-    if (price === undefined) return 'Sin precio';
-    return this.priceFormatter.format(price);
-  }
-
   quickSetProductStatus(offer: IClientProduct, status: ClientProductStatus) {
     if (offer.status === status) return;
     this.salesCatalogStore.updateClientProduct(offer.id, {
@@ -764,35 +762,15 @@ export class ClientDetailPage {
     await alert.present();
   }
 
-  appointmentStatusLabel(status: IClientAppointment['status']): string {
-    if (status === 'scheduled') return 'Programada';
-    if (status === 'completed') return 'Completada';
-    return 'Cancelada';
-  }
-
-  stageLabel(stage: ClientStage): string {
-    return getStageLabel(stage);
-  }
-
-  stageColor(stage: ClientStage): string {
-    return getStageColor(stage);
-  }
-
   onStageChange(event: CustomEvent) {
     const newStage = event.detail.value as ClientStage;
     this.client.update((c) => ({ ...c, stage: newStage }));
   }
 
-  generateWhatsAppLink(template: IMessageTemplate): string {
-    const phone = this.client().phone.replaceAll(/\D/g, '');
-    const message = template.messageBody.replace('{{name}}', this.client().firstName);
-    return `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
-  }
-
   async openEditTemplateAlert(template: IMessageTemplate | null) {
     const stage = this.client().stage;
     const alert = await this.alertCtrl.create({
-      header: `Editar plantilla — ${this.stageLabel(stage)}`,
+      header: `Editar plantilla — ${getStageLabel(stage)}`,
       inputs: [
         {
           name: 'messageBody',

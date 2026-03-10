@@ -37,9 +37,9 @@
           <p class="client-hero__since">Cliente desde {{ client().createdAt }}</p>
           <!-- Stage badge + selector -->
           <div class="stage-row">
-            <ion-chip [color]="stageColor(client().stage)" class="stage-chip">
+            <ion-chip [color]="client().stage | stageColor" class="stage-chip">
               <ion-icon name="swap-horizontal-outline"></ion-icon>
-              <ion-label>{{ stageLabel(client().stage) }}</ion-label>
+              <ion-label>{{ client().stage | stageLabel }}</ion-label>
             </ion-chip>
             <ion-select
               class="stage-select"
@@ -60,7 +60,7 @@
       <div class="quick-actions">
         <ion-button
           fill="outline" color="success" size="small" class="quick-actions__btn"
-          [href]="'https://wa.me/' + client().phone.replaceAll(' ', '')"
+          [href]="callWhatsAppUrl()"
           target="_blank">
           <ion-icon slot="start" name="logo-whatsapp"></ion-icon>
           WhatsApp
@@ -173,8 +173,8 @@
           <ion-card-content class="tab-card__content">
             <div class="appt-header">
               <h3 class="appt-title">{{ appt.title }}</h3>
-              <ion-chip [color]="statusColor(appt.status)" class="appt-status-chip">
-                {{ appointmentStatusLabel(appt.status) }}
+              <ion-chip [color]="appt.status | appointmentStatusColor" class="appt-status-chip">
+                {{ appt.status | appointmentStatusLabel }}
               </ion-chip>
             </div>
             @if (appt.description) {
@@ -543,7 +543,7 @@
               aria-label="Seleccionar producto para cliente">
               @for (product of products(); track product.id) {
                 <ion-select-option [value]="product.id">
-                  {{ product.name }} · {{ formatPrice(product.price) }}
+                  {{ product.name }} · {{ product.price | formatPrice }}
                 </ion-select-option>
               }
             </ion-select>
@@ -589,23 +589,23 @@
               <div>
                 <p class="product-offer-product">
                   <ion-icon name="pricetag-outline"></ion-icon>
-                  {{ productName(offer.productId) }}
+                  {{ offer.resolvedProductName }}
                 </p>
                 <p class="product-offer-price">
                   <ion-icon name="cash-outline"></ion-icon>
-                  {{ formatPrice(productPrice(offer.productId)) }}
+                  {{ offer.resolvedProductPrice | formatPrice }}
                 </p>
               </div>
-              <ion-chip [color]="offerStatusColor(offer.status)" class="appt-status-chip">
-                {{ offerStatusLabel(offer.status) }}
+              <ion-chip [color]="offer.status | offerStatusColor" class="appt-status-chip">
+                {{ offer.status | offerStatusLabel }}
               </ion-chip>
             </div>
 
             <p class="appt-desc">{{ offer.notes || 'Sin notas de seguimiento.' }}</p>
 
             <div class="product-offer-meta">
-              <span>Ofrecido {{ formatProductDate(offer.offeredAt) }}</span>
-              <span>Actualizado {{ formatProductDate(offer.updatedAt) }}</span>
+              <span>Ofrecido {{ offer.offeredAt | formatDate }}</span>
+              <span>Actualizado {{ offer.updatedAt | formatDate }}</span>
             </div>
 
             <div class="product-offer-actions">
@@ -670,7 +670,7 @@
       <div class="stage-summary">
         <ion-icon name="sparkles-outline" class="stage-summary__icon"></ion-icon>
         <span class="stage-summary__text">
-          Plantillas para la etapa <strong>{{ stageLabel(client().stage) }}</strong>
+          Plantillas para la etapa <strong>{{ client().stage | stageLabel }}</strong>
         </span>
       </div>
 
@@ -679,8 +679,8 @@
         <ion-card class="template-card">
           <ion-card-header class="template-card__header">
             <ion-card-title class="template-card__title">
-              <ion-chip [color]="stageColor(tpl.stage)" class="template-stage-chip">
-                {{ stageLabel(tpl.stage) }}
+              <ion-chip [color]="tpl.stage | stageColor" class="template-stage-chip">
+                {{ tpl.stage | stageLabel }}
               </ion-chip>
             </ion-card-title>
             <div class="template-header-actions">
@@ -697,9 +697,7 @@
             </div>
           </ion-card-header>
           <ion-card-content class="template-card__body">
-            <p class="template-message">{{
-              tpl.messageBody.replace('{{name}}', client().firstName)
-            }}</p>
+            <p class="template-message">{{ currentTemplatePersonalizedMessage() }}</p>
             <div class="template-footer">
               <ion-note class="template-date">Actualizado {{ tpl.updatedAt }}</ion-note>
               <ion-button
@@ -707,7 +705,7 @@
                 color="success"
                 size="small"
                 class="template-wa-btn"
-                [href]="generateWhatsAppLink(tpl)"
+                [href]="currentTemplateWhatsAppUrl()"
                 target="_blank">
                 <ion-icon slot="start" name="logo-whatsapp"></ion-icon>
                 Enviar por WhatsApp
@@ -719,7 +717,7 @@
         <!-- No template for this stage -->
         <div class="empty-state">
           <ion-icon name="chatbubbles-outline" style="font-size: 3rem;"></ion-icon>
-          <p class="empty-state__text">No hay plantilla para {{ stageLabel(client().stage) }}</p>
+          <p class="empty-state__text">No hay plantilla para {{ client().stage | stageLabel }}</p>
           <ion-button fill="outline" color="primary" size="small" class="empty-state__cta"
             (click)="openEditTemplateAlert(null)"
             (keydown.enter)="openEditTemplateAlert(null)">
@@ -735,8 +733,8 @@
         @if (tpl.stage !== client().stage) {
           <ion-card class="template-card template-card--other">
             <ion-card-header class="template-card__header">
-              <ion-chip [color]="stageColor(tpl.stage)" class="template-stage-chip">
-                {{ stageLabel(tpl.stage) }}
+              <ion-chip [color]="tpl.stage | stageColor" class="template-stage-chip">
+                {{ tpl.stage | stageLabel }}
               </ion-chip>
               <div class="template-header-actions">
                 <ion-button fill="clear" size="small" color="primary"

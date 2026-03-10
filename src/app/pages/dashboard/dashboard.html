@@ -93,7 +93,7 @@
           <div class="appt-card__footer">
             <ion-icon name="time-outline" class="appt-time-icon"></ion-icon>
             <span class="appt-time-text">{{ appt.time }}</span>
-            <ion-chip color="success" class="appt-status-chip">{{ appointmentStatusLabel(appt.status) }}</ion-chip>
+            <ion-chip color="success" class="appt-status-chip">{{ appt.status | appointmentStatusLabel }}</ion-chip>
           </div>
         </ion-card-content>
       </ion-card>
@@ -126,8 +126,8 @@
           <h3 class="client-name">{{ client.firstName }} {{ client.lastName }}</h3>
           <p class="client-email">{{ client.email }}</p>
           <p class="client-phone">{{ client.phone }}</p>
-          <ion-chip [color]="stageColor(client.stage)" class="client-stage-chip">
-            {{ stageLabel(client.stage) }}
+          <ion-chip [color]="client.stage | stageColor" class="client-stage-chip">
+            {{ client.stage | stageLabel }}
           </ion-chip>
         </ion-label>
       </ion-item>

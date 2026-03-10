@@ -21,6 +21,8 @@ import {
 } from '@ionic/angular/standalone';
 import { IProduct } from '../../interfaces/product.interface';
 import { COMMON_ION_PAGE_IMPORTS } from '../../shared/ionic-imports';
+import { FormatDatePipe } from '../../shared/pipes/format-date.pipe';
+import { FormatPricePipe } from '../../shared/pipes/format-price.pipe';
 import { SalesCatalogStore } from '../../shared/stores/sales-catalog.store';
 
 type ProductSort = 'recent' | 'price-desc' | 'price-asc' | 'name';
@@ -38,6 +40,8 @@ const VALID_PRODUCT_SORTS = new Set<ProductSort>(['recent', 'price-desc', 'price
     IonSelect,
     IonSelectOption,
     IonTextarea,
+    FormatDatePipe,
+    FormatPricePipe,
   ],
   templateUrl: './products.html',
   styleUrl: './products.scss',
@@ -78,6 +82,12 @@ export class ProductsPage {
   readonly catalogValue = computed(() =>
     this.pricedProducts().reduce((sum, product) => sum + (product.price ?? 0), 0),
   );
+
+  readonly formattedAveragePrice = computed(() => {
+    const avg = this.averagePrice();
+    if (avg === null) return 'Sin datos';
+    return this.priceFormatter.format(avg);
+  });
 
   readonly visibleProducts = computed(() => {
     const query = this.searchQuery().trim().toLowerCase();
@@ -120,19 +130,6 @@ export class ProductsPage {
     if (VALID_PRODUCT_SORTS.has(nextSort)) {
       this.sortMode.set(nextSort);
     }
-  }
-
-  formatPrice(price?: number): string {
-    if (price === undefined) return 'Sin precio';
-    return this.priceFormatter.format(price);
-  }
-
-  formatDate(dateIso: string): string {
-    return new Date(dateIso).toLocaleDateString('es-ES', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric',
-    });
   }
 
   openCreateProductModal() {
