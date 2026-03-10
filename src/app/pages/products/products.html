@@ -9,11 +9,6 @@
         <span class="toolbar-title__name">Productos</span>
       </div>
     </ion-title>
-    <ion-buttons slot="end">
-      <ion-button (click)="openCreateProductAlert()">
-        <ion-icon slot="icon-only" name="add-outline"></ion-icon>
-      </ion-button>
-    </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
@@ -116,9 +111,123 @@
     }
   </div>
 
-  <ion-fab slot="fixed" vertical="bottom" horizontal="end">
-    <ion-fab-button color="primary" (click)="openCreateProductAlert()" aria-label="Agregar producto">
+  <ion-fab class="products-fab" slot="fixed" vertical="bottom" horizontal="end">
+    <ion-fab-button
+      color="primary"
+      (click)="openCreateProductModal()"
+      (keydown.enter)="openCreateProductModal()"
+      aria-label="Agregar producto">
       <ion-icon name="add-outline"></ion-icon>
     </ion-fab-button>
   </ion-fab>
 </ion-content>
+
+<ion-modal
+  [isOpen]="isCreateModalOpen()"
+  (didDismiss)="closeCreateProductModal()"
+  class="app-modal">
+  <ng-template>
+    <ion-header>
+      <ion-toolbar>
+        <ion-title>Nuevo producto</ion-title>
+        <ion-buttons slot="end">
+          <ion-button (click)="closeCreateProductModal()" aria-label="Cerrar modal">
+            <ion-icon slot="icon-only" name="close-outline"></ion-icon>
+          </ion-button>
+        </ion-buttons>
+      </ion-toolbar>
+    </ion-header>
+
+    <div class="app-modal-content">
+      <section class="app-modal-shell">
+        <ion-card class="app-modal-card">
+          <ion-card-content class="app-modal-card__content">
+            <div class="app-modal-header">
+              <div class="app-modal-icon">
+                <ion-icon name="add-outline"></ion-icon>
+              </div>
+
+              <div class="app-modal-copy">
+                <p class="app-modal-eyebrow">Nuevo producto</p>
+                <h2>Agrega una oferta al catálogo</h2>
+                <p>Se guardará al instante y aparecerá en la lista de productos.</p>
+              </div>
+            </div>
+
+            <form
+              class="app-modal-body composer-form"
+              [formGroup]="createProductForm"
+              (ngSubmit)="createProduct()">
+              <div class="composer-form__grid">
+                <ion-input
+                  formControlName="name"
+                  label="Nombre"
+                  labelPlacement="floating"
+                  fill="outline"
+                  shape="round">
+                </ion-input>
+
+                <ion-input
+                  formControlName="price"
+                  type="text"
+                  inputmode="decimal"
+                  label="Precio"
+                  labelPlacement="floating"
+                  fill="outline"
+                  shape="round">
+                </ion-input>
+
+                <ion-textarea
+                  class="composer-form__description"
+                  formControlName="description"
+                  label="Descripción"
+                  labelPlacement="floating"
+                  fill="outline"
+                  autoGrow="true">
+                </ion-textarea>
+              </div>
+
+              @if (
+                createProductForm.controls.name.touched &&
+                createProductForm.controls.name.hasError('required')
+              ) {
+                <p class="form-feedback form-feedback--error">El nombre es obligatorio.</p>
+              } @else if (
+                createProductForm.controls.name.touched &&
+                createProductForm.controls.name.hasError('maxlength')
+              ) {
+                <p class="form-feedback form-feedback--error">
+                  El nombre no puede superar los 80 caracteres.
+                </p>
+              }
+
+              @if (
+                createProductForm.controls.price.touched &&
+                createProductForm.controls.price.invalid
+              ) {
+                <p class="form-feedback form-feedback--error">
+                  Ingresa un precio válido, por ejemplo 49.90.
+                </p>
+              }
+
+              <div class="app-modal-actions composer-form__actions">
+                <ion-button type="submit">
+                  <ion-icon slot="start" name="add-outline"></ion-icon>
+                  Guardar producto
+                </ion-button>
+
+                <ion-button
+                  fill="clear"
+                  type="button"
+                  (click)="resetCreateProductForm()"
+                  [disabled]="!createProductForm.dirty">
+                  Limpiar
+                </ion-button>
+              </div>
+            </form>
+          </ion-card-content>
+        </ion-card>
+      </section>
+    </div>
+  </ng-template>
+</ion-modal>

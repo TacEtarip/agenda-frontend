@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { ClientStage } from '../../enums/client-stage.enum';
 import { IClient } from '../../interfaces/client.interface';
@@ -14,11 +15,11 @@ import {
   settingsOutline,
   notificationsOutline,
   chevronForwardOutline,
+  closeOutline,
   callOutline,
   pricetagOutline,
 } from 'ionicons/icons';
 import {
-  AlertController,
   IonAvatar,
   IonSearchbar,
 } from '@ionic/angular/standalone';
@@ -26,6 +27,7 @@ import {
 @Component({
   selector: 'app-dashboard',
   imports: [
+    ReactiveFormsModule,
     RouterLink,
     ...COMMON_ION_PAGE_IMPORTS,
     IonAvatar,
@@ -36,7 +38,7 @@ import {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DashboardPage {
-  private readonly alertCtrl = inject(AlertController);
+  private readonly fb = inject(FormBuilder);
   private readonly clientAvatarColors = [
     'avatar--sky',
     'avatar--green',
@@ -48,6 +50,13 @@ export class DashboardPage {
   readonly userName = signal('Alex');
   readonly searchQuery = signal('');
   readonly showAllAppointments = signal(false);
+  readonly isAddClientModalOpen = signal(false);
+  readonly addClientForm = this.fb.nonNullable.group({
+    firstName: ['', [Validators.required, Validators.maxLength(60)]],
+    lastName: ['', [Validators.required, Validators.maxLength(60)]],
+    email: ['', [Validators.required, Validators.email]],
+    phone: ['', [Validators.required, Validators.maxLength(30)]],
+  });
 
   readonly stats = signal([
     { label: 'Total de clientes', value: 24, icon: 'people-outline', color: 'stat-icon--sky' },
@@ -106,6 +115,7 @@ export class DashboardPage {
       settingsOutline,
       notificationsOutline,
       chevronForwardOutline,
+      closeOutline,
       callOutline,
       pricetagOutline,
     });
@@ -125,78 +135,100 @@ export class DashboardPage {
     return 'Cancelada';
   }
 
-  async openAddClientAlert() {
-    const alert = await this.alertCtrl.create({
-      header: 'Agregar cliente',
-      message: 'Crea un cliente para agregarlo a la lista del panel.',
-      inputs: [
-        {
-          name: 'firstName',
-          type: 'text',
-          placeholder: 'Nombre',
-        },
-        {
-          name: 'lastName',
-          type: 'text',
-          placeholder: 'Apellido',
-        },
-        {
-          name: 'email',
-          type: 'email',
-          placeholder: 'Correo electrónico',
-        },
-        {
-          name: 'phone',
-          type: 'tel',
-          placeholder: 'Número de teléfono',
-        },
-      ],
-      buttons: [
-        { text: 'Cancelar', role: 'cancel' },
-        {
-          text: 'Agregar',
-          handler: (data: { firstName?: string; lastName?: string; email?: string; phone?: string }) => {
-            const firstName = data.firstName?.trim() ?? '';
-            const lastName = data.lastName?.trim() ?? '';
-            const email = data.email?.trim() ?? '';
-            const phone = data.phone?.trim() ?? '';
+  openAddClientModal() {
+    this.resetAddClientForm();
+    this.isAddClientModalOpen.set(true);
+  }
 
-            if (!firstName || !lastName || !email || !phone) {
-              return false;
-            }
+  closeAddClientModal(resetForm = true) {
+    this.isAddClientModalOpen.set(false);
+    if (resetForm) {
+      this.resetAddClientForm();
+    }
+  }
 
-            const newClient: IClient = {
-              id: String(Date.now()),
-              firstName,
-              lastName,
-              email,
-              phone,
-              initials: this.buildInitials(firstName, lastName),
-              color: this.clientAvatarColors[this.recentClients().length % this.clientAvatarColors.length],
-              stage: ClientStage.FIRST_CONTACT,
-              createdAt: new Date().toLocaleDateString('es-ES', {
-                month: 'short',
-                day: 'numeric',
-                year: 'numeric',
-              }),
-            };
+  createClient() {
+    if (this.addClientForm.invalid) {
+      this.addClientForm.markAllAsTouched();
+      return;
+    }
 
-            this.recentClients.update((clients) => [newClient, ...clients]);
-            this.stats.update((stats) =>
-              stats.map((stat) =>
-                stat.label === 'Total de clientes'
-                  ? { ...stat, value: Number(stat.value) + 1 }
-                  : stat,
-              ),
-            );
+    const { firstName, lastName, email, phone } = this.addClientForm.getRawValue();
+    const trimmedFirstName = firstName.trim();
+    const trimmedLastName = lastName.trim();
+    const trimmedEmail = email.trim();
+    const trimmedPhone = phone.trim();
 
-            return true;
-          },
-        },
-      ],
+    if (!trimmedFirstName || !trimmedLastName || !trimmedEmail || !trimmedPhone) {
+      if (!trimmedFirstName) {
+        this.addClientForm.controls.firstName.setErrors({
+          ...(this.addClientForm.controls.firstName.errors ?? {}),
+          required: true,
+        });
+      }
+
+      if (!trimmedLastName) {
+        this.addClientForm.controls.lastName.setErrors({
+          ...(this.addClientForm.controls.lastName.errors ?? {}),
+          required: true,
+        });
+      }
+
+      if (!trimmedEmail) {
+        this.addClientForm.controls.email.setErrors({
+          ...(this.addClientForm.controls.email.errors ?? {}),
+          required: true,
+        });
+      }
+
+      if (!trimmedPhone) {
+        this.addClientForm.controls.phone.setErrors({
+          ...(this.addClientForm.controls.phone.errors ?? {}),
+          required: true,
+        });
+      }
+
+      this.addClientForm.markAllAsTouched();
+      return;
+    }
+
+    const newClient: IClient = {
+      id: String(Date.now()),
+      firstName: trimmedFirstName,
+      lastName: trimmedLastName,
+      email: trimmedEmail,
+      phone: trimmedPhone,
+      initials: this.buildInitials(trimmedFirstName, trimmedLastName),
+      color: this.clientAvatarColors[this.recentClients().length % this.clientAvatarColors.length],
+      stage: ClientStage.FIRST_CONTACT,
+      createdAt: new Date().toLocaleDateString('es-ES', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+      }),
+    };
+
+    this.recentClients.update((clients) => [newClient, ...clients]);
+    this.stats.update((stats) =>
+      stats.map((stat) =>
+        stat.label === 'Total de clientes'
+          ? { ...stat, value: Number(stat.value) + 1 }
+          : stat,
+      ),
+    );
+
+    this.closeAddClientModal();
+  }
+
+  resetAddClientForm() {
+    this.addClientForm.reset({
+      firstName: '',
+      lastName: '',
+      email: '',
+      phone: '',
     });
-
-    await alert.present();
+    this.addClientForm.markAsPristine();
+    this.addClientForm.markAsUntouched();
   }
 
   private buildInitials(firstName: string, lastName: string): string {

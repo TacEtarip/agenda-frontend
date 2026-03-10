@@ -125,10 +125,20 @@
             <div class="note-footer">
               <ion-note class="note-date">{{ note.updatedAt }}</ion-note>
               <div class="note-actions">
-                <ion-button fill="clear" size="small" color="primary">
+                <ion-button
+                  fill="clear"
+                  size="small"
+                  color="primary"
+                  (click)="openEditNoteModal(note)"
+                  (keydown.enter)="openEditNoteModal(note)">
                   <ion-icon slot="icon-only" name="create-outline"></ion-icon>
                 </ion-button>
-                <ion-button fill="clear" size="small" color="danger">
+                <ion-button
+                  fill="clear"
+                  size="small"
+                  color="danger"
+                  (click)="deleteNote(note)"
+                  (keydown.enter)="deleteNote(note)">
                   <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
                 </ion-button>
               </div>
@@ -215,110 +225,278 @@
     </div>
   }
 
-  <ion-modal [isOpen]="isAppointmentModalOpen()" (didDismiss)="closeAppointmentModal()">
+  <ion-modal
+    [isOpen]="isAppointmentModalOpen()"
+    (didDismiss)="closeAppointmentModal()"
+    class="app-modal">
     <ng-template>
-      <ion-content class="appointment-modal-content">
-        <div class="appointment-modal">
-          <h3 class="appointment-modal__title">
-            {{ editingAppointmentId() ? 'Editar cita' : 'Programar cita' }}
-          </h3>
-
-          <ion-input
-            label="Titulo"
-            labelPlacement="floating"
-            fill="outline"
-            class="appointment-modal__field"
-            [value]="appointmentDraft().title"
-            (ionInput)="onAppointmentDraftTextChange('title', $event)">
-          </ion-input>
-
-          <ion-textarea
-            autoGrow="true"
-            rows="3"
-            class="appointment-modal__field appointment-modal__notes"
-            placeholder="Descripcion (opcional)"
-            [value]="appointmentDraft().description"
-            (ionInput)="onAppointmentDraftTextChange('description', $event)">
-          </ion-textarea>
-
-          <div class="appointment-modal__pickers">
-            <div class="appointment-modal__selector-card">
-              <p class="appointment-modal__picker-title">Fecha</p>
-              <ion-datetime-button datetime="appt-date-picker"></ion-datetime-button>
-              <p class="appointment-modal__selector-value">{{ appointmentDraftDateLabel() }}</p>
-            </div>
-
-            <div class="appointment-modal__selector-card">
-              <p class="appointment-modal__picker-title">Desde</p>
-              <ion-datetime-button datetime="appt-start-hour-picker"></ion-datetime-button>
-              <p class="appointment-modal__selector-value">{{ appointmentDraftStartHourLabel() }}</p>
-            </div>
-
-            <div class="appointment-modal__selector-card">
-              <p class="appointment-modal__picker-title">Hasta</p>
-              <ion-datetime-button datetime="appt-end-hour-picker"></ion-datetime-button>
-              <p class="appointment-modal__selector-value">{{ appointmentDraftEndHourLabel() }}</p>
-            </div>
-          </div>
-
-          <ion-modal [keepContentsMounted]="true">
-            <ng-template>
-              <ion-datetime
-                id="appt-date-picker"
-                presentation="date"
-                [preferWheel]="false"
-                [value]="appointmentDraft().date"
-                (ionChange)="onAppointmentDraftDateChange('date', $any($event))">
-              </ion-datetime>
-            </ng-template>
-          </ion-modal>
-
-          <ion-modal [keepContentsMounted]="true">
-            <ng-template>
-              <ion-datetime
-                id="appt-start-hour-picker"
-                presentation="time"
-                hour-cycle="h23"
-                [preferWheel]="true"
-                [value]="appointmentDraft().startHour"
-                (ionChange)="onAppointmentDraftDateChange('startHour', $any($event))">
-              </ion-datetime>
-            </ng-template>
-          </ion-modal>
-
-          <ion-modal [keepContentsMounted]="true">
-            <ng-template>
-              <ion-datetime
-                id="appt-end-hour-picker"
-                presentation="time"
-                hour-cycle="h23"
-                [preferWheel]="true"
-                [value]="appointmentDraft().endHour"
-                (ionChange)="onAppointmentDraftDateChange('endHour', $any($event))">
-              </ion-datetime>
-            </ng-template>
-          </ion-modal>
-
-          @if (appointmentDraftError()) {
-            <p class="appointment-modal__error">{{ appointmentDraftError() }}</p>
-          }
-
-          <div class="appointment-modal__actions">
-            <ion-button
-              fill="outline"
-              color="medium"
-              (click)="closeAppointmentModal()"
-              (keydown.enter)="closeAppointmentModal()">
-              Cancelar
+      <ion-header>
+        <ion-toolbar>
+          <ion-title>{{ editingAppointmentId() ? 'Editar cita' : 'Programar cita' }}</ion-title>
+          <ion-buttons slot="end">
+            <ion-button (click)="closeAppointmentModal()" aria-label="Cerrar modal">
+              <ion-icon slot="icon-only" name="close-outline"></ion-icon>
             </ion-button>
-            <ion-button
-              (click)="saveAppointmentFromModal()"
-              (keydown.enter)="saveAppointmentFromModal()">
-              Guardar
+          </ion-buttons>
+        </ion-toolbar>
+      </ion-header>
+
+      <div class="app-modal-content">
+        <section class="app-modal-shell">
+          <ion-card class="app-modal-card">
+            <ion-card-content class="app-modal-card__content">
+              <div class="app-modal-header">
+                <div class="app-modal-icon">
+                  <ion-icon name="time-outline"></ion-icon>
+                </div>
+
+                <div class="app-modal-copy">
+                  <p class="app-modal-eyebrow">Agenda</p>
+                  <h2>{{ editingAppointmentId() ? 'Editar cita' : 'Programar cita' }}</h2>
+                  <p>Define fecha, hora y notas para registrar el seguimiento del cliente.</p>
+                </div>
+              </div>
+
+              <div class="app-modal-body appointment-modal">
+                <ion-input
+                  label="Titulo"
+                  labelPlacement="floating"
+                  fill="outline"
+                  class="appointment-modal__field"
+                  [value]="appointmentDraft().title"
+                  (ionInput)="onAppointmentDraftTextChange('title', $event)">
+                </ion-input>
+
+                <ion-textarea
+                  autoGrow="true"
+                  rows="3"
+                  class="appointment-modal__field appointment-modal__notes"
+                  placeholder="Descripcion (opcional)"
+                  [value]="appointmentDraft().description"
+                  (ionInput)="onAppointmentDraftTextChange('description', $event)">
+                </ion-textarea>
+
+                <div class="appointment-modal__pickers">
+                  <div class="appointment-modal__selector-card">
+                    <p class="appointment-modal__picker-title">Fecha</p>
+                    <ion-datetime-button datetime="appt-date-picker"></ion-datetime-button>
+                    <p class="appointment-modal__selector-value">{{ appointmentDraftDateLabel() }}</p>
+                  </div>
+
+                  <div class="appointment-modal__selector-card">
+                    <p class="appointment-modal__picker-title">Desde</p>
+                    <ion-datetime-button datetime="appt-start-hour-picker"></ion-datetime-button>
+                    <p class="appointment-modal__selector-value">{{ appointmentDraftStartHourLabel() }}</p>
+                  </div>
+
+                  <div class="appointment-modal__selector-card">
+                    <p class="appointment-modal__picker-title">Hasta</p>
+                    <ion-datetime-button datetime="appt-end-hour-picker"></ion-datetime-button>
+                    <p class="appointment-modal__selector-value">{{ appointmentDraftEndHourLabel() }}</p>
+                  </div>
+                </div>
+
+                <ion-modal [keepContentsMounted]="true" class="app-modal app-modal--picker">
+                  <ng-template>
+                    <ion-datetime
+                      id="appt-date-picker"
+                      presentation="date"
+                      [preferWheel]="false"
+                      [value]="appointmentDraft().date"
+                      (ionChange)="onAppointmentDraftDateChange('date', $any($event))">
+                    </ion-datetime>
+                  </ng-template>
+                </ion-modal>
+
+                <ion-modal [keepContentsMounted]="true" class="app-modal app-modal--picker">
+                  <ng-template>
+                    <ion-datetime
+                      id="appt-start-hour-picker"
+                      presentation="time"
+                      hour-cycle="h23"
+                      [preferWheel]="true"
+                      [value]="appointmentDraft().startHour"
+                      (ionChange)="onAppointmentDraftDateChange('startHour', $any($event))">
+                    </ion-datetime>
+                  </ng-template>
+                </ion-modal>
+
+                <ion-modal [keepContentsMounted]="true" class="app-modal app-modal--picker">
+                  <ng-template>
+                    <ion-datetime
+                      id="appt-end-hour-picker"
+                      presentation="time"
+                      hour-cycle="h23"
+                      [preferWheel]="true"
+                      [value]="appointmentDraft().endHour"
+                      (ionChange)="onAppointmentDraftDateChange('endHour', $any($event))">
+                    </ion-datetime>
+                  </ng-template>
+                </ion-modal>
+
+                @if (appointmentDraftError()) {
+                  <p class="appointment-modal__error">{{ appointmentDraftError() }}</p>
+                }
+
+                <div class="app-modal-actions">
+                  <ion-button
+                    fill="outline"
+                    color="medium"
+                    (click)="closeAppointmentModal()"
+                    (keydown.enter)="closeAppointmentModal()">
+                    Cancelar
+                  </ion-button>
+                  <ion-button
+                    (click)="saveAppointmentFromModal()"
+                    (keydown.enter)="saveAppointmentFromModal()">
+                    Guardar
+                  </ion-button>
+                </div>
+              </div>
+            </ion-card-content>
+          </ion-card>
+        </section>
+      </div>
+    </ng-template>
+  </ion-modal>
+
+  <ion-modal [isOpen]="isNoteModalOpen()" (didDismiss)="closeNoteModal()" class="app-modal">
+    <ng-template>
+      <ion-header>
+        <ion-toolbar>
+          <ion-title>{{ editingNoteId() ? 'Editar nota' : 'Agregar nota' }}</ion-title>
+          <ion-buttons slot="end">
+            <ion-button (click)="closeNoteModal()" aria-label="Cerrar modal">
+              <ion-icon slot="icon-only" name="close-outline"></ion-icon>
             </ion-button>
-          </div>
-        </div>
-      </ion-content>
+          </ion-buttons>
+        </ion-toolbar>
+      </ion-header>
+
+      <div class="app-modal-content">
+        <section class="app-modal-shell">
+          <ion-card class="app-modal-card">
+            <ion-card-content class="app-modal-card__content">
+              <div class="app-modal-header">
+                <div class="app-modal-icon">
+                  <ion-icon name="document-outline"></ion-icon>
+                </div>
+
+                <div class="app-modal-copy">
+                  <p class="app-modal-eyebrow">Notas</p>
+                  <h2>{{ editingNoteId() ? 'Editar nota' : 'Agregar nota' }}</h2>
+                  <p>Guarda información clave del cliente para tener contexto en el seguimiento.</p>
+                </div>
+              </div>
+
+              <div class="app-modal-body note-modal">
+                <ion-textarea
+                  autoGrow="true"
+                  rows="6"
+                  label="Contenido"
+                  labelPlacement="floating"
+                  fill="outline"
+                  class="note-modal__field"
+                  [value]="noteDraft()"
+                  (ionInput)="onNoteDraftChange($event)">
+                </ion-textarea>
+
+                @if (noteDraftError()) {
+                  <p class="form-feedback form-feedback--error">{{ noteDraftError() }}</p>
+                }
+
+                <div class="app-modal-actions">
+                  <ion-button fill="outline" color="medium" (click)="closeNoteModal()">
+                    Cancelar
+                  </ion-button>
+                  <ion-button (click)="saveNoteFromModal()">
+                    <ion-icon slot="start" name="add-outline"></ion-icon>
+                    Guardar nota
+                  </ion-button>
+                </div>
+              </div>
+            </ion-card-content>
+          </ion-card>
+        </section>
+      </div>
+    </ng-template>
+  </ion-modal>
+
+  <ion-modal
+    [isOpen]="isAttachmentModalOpen()"
+    (didDismiss)="closeAttachmentModal()"
+    class="app-modal">
+    <ng-template>
+      <ion-header>
+        <ion-toolbar>
+          <ion-title>Agregar archivo</ion-title>
+          <ion-buttons slot="end">
+            <ion-button (click)="closeAttachmentModal()" aria-label="Cerrar modal">
+              <ion-icon slot="icon-only" name="close-outline"></ion-icon>
+            </ion-button>
+          </ion-buttons>
+        </ion-toolbar>
+      </ion-header>
+
+      <div class="app-modal-content">
+        <section class="app-modal-shell">
+          <ion-card class="app-modal-card">
+            <ion-card-content class="app-modal-card__content">
+              <div class="app-modal-header">
+                <div class="app-modal-icon">
+                  <ion-icon name="cloud-download-outline"></ion-icon>
+                </div>
+
+                <div class="app-modal-copy">
+                  <p class="app-modal-eyebrow">Archivos</p>
+                  <h2>Agregar archivo</h2>
+                  <p>Selecciona un archivo del dispositivo para guardarlo en la ficha del cliente.</p>
+                </div>
+              </div>
+
+              <div class="app-modal-body attachment-modal">
+                <label class="attachment-modal__dropzone">
+                  <input
+                    type="file"
+                    class="attachment-modal__input"
+                    accept=".pdf,.doc,.docx,image/*"
+                    (change)="onAttachmentFileSelected($event)" />
+                  <ion-icon name="add-outline"></ion-icon>
+                  <span>Seleccionar archivo</span>
+                </label>
+
+                @if (attachmentDraft().fileName) {
+                  <div class="attachment-modal__summary">
+                    <div class="attachment-modal__summary-icon">
+                      <ion-icon [name]="attachmentDraft().icon"></ion-icon>
+                    </div>
+                    <div>
+                      <p class="attachment-modal__summary-name">{{ attachmentDraft().fileName }}</p>
+                      <p class="attachment-modal__summary-meta">
+                        {{ attachmentDraft().fileType }} · {{ attachmentDraft().fileSize }}
+                      </p>
+                    </div>
+                  </div>
+                }
+
+                @if (attachmentDraftError()) {
+                  <p class="form-feedback form-feedback--error">{{ attachmentDraftError() }}</p>
+                }
+
+                <div class="app-modal-actions">
+                  <ion-button fill="outline" color="medium" (click)="closeAttachmentModal()">
+                    Cancelar
+                  </ion-button>
+                  <ion-button (click)="saveAttachmentFromModal()">
+                    <ion-icon slot="start" name="add-outline"></ion-icon>
+                    Guardar archivo
+                  </ion-button>
+                </div>
+              </div>
+            </ion-card-content>
+          </ion-card>
+        </section>
+      </div>
     </ng-template>
   </ion-modal>
 
@@ -586,9 +764,13 @@
   }
 
   <!-- FAB (hidden on messages tab) -->
-  @if (activeSegment() !== 'messages') {
-    <ion-fab slot="fixed" vertical="bottom" horizontal="end">
-      <ion-fab-button color="primary">
+  @if (canShowPrimaryFab()) {
+    <ion-fab class="client-detail-fab" slot="fixed" vertical="bottom" horizontal="end">
+      <ion-fab-button
+        color="primary"
+        (click)="openPrimaryActionModal()"
+        (keydown.enter)="openPrimaryActionModal()"
+        [attr.aria-label]="primaryFabLabel()">
         <ion-icon name="add-outline"></ion-icon>
       </ion-fab-button>
     </ion-fab>

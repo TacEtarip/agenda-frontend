@@ -143,11 +143,123 @@
   <ion-fab slot="fixed" vertical="bottom" horizontal="end">
     <ion-fab-button
       color="primary"
-      (click)="openAddClientAlert()"
-      (keydown.enter)="openAddClientAlert()"
+      (click)="openAddClientModal()"
+      (keydown.enter)="openAddClientModal()"
       aria-label="Agregar cliente">
       <ion-icon name="add-outline"></ion-icon>
     </ion-fab-button>
   </ion-fab>
 
 </ion-content>
+
+<ion-modal
+  [isOpen]="isAddClientModalOpen()"
+  (didDismiss)="closeAddClientModal()"
+  class="app-modal">
+  <ng-template>
+    <ion-header>
+      <ion-toolbar>
+        <ion-title>Agregar cliente</ion-title>
+        <ion-buttons slot="end">
+          <ion-button (click)="closeAddClientModal()" aria-label="Cerrar modal">
+            <ion-icon slot="icon-only" name="close-outline"></ion-icon>
+          </ion-button>
+        </ion-buttons>
+      </ion-toolbar>
+    </ion-header>
+
+    <div class="app-modal-content">
+      <section class="app-modal-shell">
+        <ion-card class="app-modal-card">
+          <ion-card-content class="app-modal-card__content">
+            <div class="app-modal-header">
+              <div class="app-modal-icon">
+                <ion-icon name="people-outline"></ion-icon>
+              </div>
+
+              <div class="app-modal-copy">
+                <p class="app-modal-eyebrow">Clientes</p>
+                <h2>Agregar cliente</h2>
+                <p>Crea un nuevo cliente y agrégalo a la lista principal del panel.</p>
+              </div>
+            </div>
+
+            <form class="app-modal-body add-client-form" [formGroup]="addClientForm" (ngSubmit)="createClient()">
+              <div class="add-client-form__grid">
+                <ion-input
+                  formControlName="firstName"
+                  label="Nombre"
+                  labelPlacement="floating"
+                  fill="outline"
+                  shape="round">
+                </ion-input>
+
+                <ion-input
+                  formControlName="lastName"
+                  label="Apellido"
+                  labelPlacement="floating"
+                  fill="outline"
+                  shape="round">
+                </ion-input>
+
+                <ion-input
+                  formControlName="email"
+                  type="email"
+                  label="Correo electrónico"
+                  labelPlacement="floating"
+                  fill="outline"
+                  shape="round">
+                </ion-input>
+
+                <ion-input
+                  formControlName="phone"
+                  type="tel"
+                  label="Número de teléfono"
+                  labelPlacement="floating"
+                  fill="outline"
+                  shape="round">
+                </ion-input>
+              </div>
+
+              @if (
+                (addClientForm.controls.firstName.touched && addClientForm.controls.firstName.invalid) ||
+                (addClientForm.controls.lastName.touched && addClientForm.controls.lastName.invalid)
+              ) {
+                <p class="form-feedback form-feedback--error">
+                  Nombre y apellido son obligatorios.
+                </p>
+              }
+
+              @if (addClientForm.controls.email.touched && addClientForm.controls.email.invalid) {
+                <p class="form-feedback form-feedback--error">
+                  Ingresa un correo electrónico válido.
+                </p>
+              }
+
+              @if (addClientForm.controls.phone.touched && addClientForm.controls.phone.invalid) {
+                <p class="form-feedback form-feedback--error">
+                  El teléfono es obligatorio.
+                </p>
+              }
+
+              <div class="app-modal-actions">
+                <ion-button
+                  fill="clear"
+                  type="button"
+                  (click)="resetAddClientForm()"
+                  [disabled]="!addClientForm.dirty">
+                  Limpiar
+                </ion-button>
+
+                <ion-button type="submit">
+                  <ion-icon slot="start" name="add-outline"></ion-icon>
+                  Agregar
+                </ion-button>
+              </div>
+            </form>
+          </ion-card-content>
+        </ion-card>
+      </section>
+    </div>
+  </ng-template>
+</ion-modal>

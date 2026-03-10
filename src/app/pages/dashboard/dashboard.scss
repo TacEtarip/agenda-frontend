@@ -388,8 +388,33 @@ ion-toolbar ion-button {
   padding: 1rem 0;
 }
 
+.add-client-form {
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+  }
+}
+
+.form-feedback {
+  margin: 0.7rem 0 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+
+  &--error {
+    color: var(--ion-color-danger);
+  }
+}
+
 @media (max-width: 560px) {
   .quick-links-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .add-client-form__grid {
     grid-template-columns: 1fr;
   }
 }

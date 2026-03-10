@@ -274,6 +274,86 @@ ion-toolbar ion-button {
   --border-radius: 0.8rem;
 }
 
+.note-modal__field {
+  margin: 0;
+}
+
+.attachment-modal__dropzone {
+  border: 1px dashed rgb(var(--color-green-rgb) / 35%);
+  border-radius: 1rem;
+  background: rgb(255 255 255 / 72%);
+  min-height: 8rem;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  color: var(--color-green);
+  font-weight: 700;
+  text-align: center;
+  cursor: pointer;
+
+  ion-icon {
+    font-size: 1.4rem;
+  }
+}
+
+.attachment-modal__input {
+  display: none;
+}
+
+.attachment-modal__summary {
+  margin-top: 0.9rem;
+  padding: 0.85rem 0.9rem;
+  border-radius: 1rem;
+  border: 1px solid var(--color-border);
+  background: rgb(255 255 255 / 78%);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.attachment-modal__summary-icon {
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 0.95rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: linear-gradient(135deg, rgb(var(--color-sky-rgb) / 18%), rgb(var(--color-mint-rgb) / 24%));
+  color: var(--color-green);
+  box-shadow: inset 0 0 0 1px rgb(var(--color-green-rgb) / 10%);
+}
+
+.attachment-modal__summary-name {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--color-text);
+  word-break: break-word;
+}
+
+.attachment-modal__summary-meta {
+  margin: 0.2rem 0 0;
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+}
+
+.form-feedback {
+  margin: 0.7rem 0 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+
+  &--error {
+    color: var(--ion-color-danger);
+  }
+}
+
 .appt-header {
   display: flex;
   align-items: flex-start;
@@ -342,22 +422,7 @@ ion-toolbar ion-button {
   font-weight: 700;
 }
 
-.appointment-modal-content {
-  --background:
-    radial-gradient(circle at top right, rgb(var(--color-sky-rgb) / 20%), transparent 35%),
-    linear-gradient(180deg, var(--color-frost-light) 0%, var(--color-surface-alt) 100%);
-}
-
 .appointment-modal {
-  padding: 1rem;
-
-  &__title {
-    margin: 0 0 0.75rem;
-    font-size: 1rem;
-    font-weight: 800;
-    color: var(--color-text);
-  }
-
   &__field {
     margin-bottom: 0.7rem;
   }
@@ -365,7 +430,6 @@ ion-toolbar ion-button {
   &__notes {
     border: 1px solid var(--color-border);
     border-radius: 0.95rem;
-    --background: var(--color-surface);
     --padding-start: 0.75rem;
     --padding-end: 0.75rem;
     --padding-top: 0.55rem;
@@ -407,14 +471,6 @@ ion-toolbar ion-button {
     color: var(--color-danger);
     font-size: 0.75rem;
     font-weight: 600;
-  }
-
-  &__actions {
-    margin-top: 0.9rem;
-    display: flex;
-    justify-content: flex-end;
-    gap: 0.5rem;
-    flex-wrap: wrap;
   }
 }
 
@@ -714,7 +770,14 @@ ion-toolbar ion-button {
   font-weight: 700;
 }
 
-ion-fab-button {
+.client-detail-fab {
+  position: fixed;
+  right: 1rem;
+  bottom: calc(1rem + var(--ion-safe-area-bottom, 0px));
+  z-index: 20;
+}
+
+.client-detail-fab ion-fab-button {
   --background: var(--color-green);
   --background-hover: var(--color-green-shade);
   --background-activated: var(--color-green-shade);
@@ -749,5 +812,10 @@ ion-fab-button {
 
   .template-wa-btn {
     width: 100%;
+  }
+
+  .client-detail-fab {
+    right: 0.875rem;
+    bottom: calc(0.875rem + var(--ion-safe-area-bottom, 0px));
   }
 }

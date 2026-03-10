@@ -55,6 +55,43 @@ ion-toolbar ion-button {
   padding: 1rem;
 }
 
+.composer-form {
+  &__grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.4fr) minmax(0, 0.8fr);
+    gap: 0.75rem;
+  }
+
+  &__description {
+    grid-column: 1 / -1;
+  }
+
+  &__actions {
+    margin-top: 0.85rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+}
+
+.form-feedback {
+  margin: 0.7rem 0 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+
+  &--error {
+    color: var(--ion-color-danger);
+  }
+
+  &--success {
+    color: var(--color-green-shade);
+  }
+}
+
 .stat-card {
   margin: 0;
   border-radius: 1rem;
@@ -261,16 +298,32 @@ ion-toolbar ion-button {
   }
 }
 
-ion-fab-button {
-  --background: var(--color-indigo);
-  --background-hover: var(--color-indigo-shade);
-  --background-activated: var(--color-indigo-shade);
-  --box-shadow: 0 22px 28px -16px rgb(var(--color-indigo-rgb) / 60%);
+.products-fab {
+  position: fixed;
+  right: 1rem;
+  bottom: calc(1rem + var(--ion-safe-area-bottom, 0px));
+  z-index: 20;
+}
+
+.products-fab ion-fab-button {
+  --background: var(--color-green);
+  --background-hover: var(--color-green-shade);
+  --background-activated: var(--color-green-shade);
+  --box-shadow: 0 20px 28px -16px rgb(var(--color-green-rgb) / 55%);
   --color: var(--color-text-inverse);
 }
 
 @media (max-width: 560px) {
   .stats-grid {
     grid-template-columns: 1fr;
+  }
+
+  .composer-form__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .products-fab {
+    right: 0.875rem;
+    bottom: calc(0.875rem + var(--ion-safe-area-bottom, 0px));
   }
 }

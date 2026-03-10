@@ -25,6 +25,7 @@ import {
   timeOutline,
   checkmarkCircleOutline,
   closeCircleOutline,
+  closeOutline,
   arrowBackOutline,
   chatbubblesOutline,
   sendOutline,
@@ -95,10 +96,17 @@ export class ClientDetailPage {
   readonly draftProductId = signal('');
   readonly draftProductStatus = signal<ClientProductStatus>(ClientProductStatus.OFFERED);
   readonly draftProductNotes = signal('');
+  readonly isNoteModalOpen = signal(false);
+  readonly editingNoteId = signal<string | null>(null);
+  readonly noteDraft = signal('');
+  readonly noteDraftError = signal<string | null>(null);
   readonly isAppointmentModalOpen = signal(false);
   readonly editingAppointmentId = signal<string | null>(null);
   readonly appointmentDraft = signal<IAppointmentDraft>(this.createDefaultAppointmentDraft());
   readonly appointmentDraftError = signal<string | null>(null);
+  readonly isAttachmentModalOpen = signal(false);
+  readonly attachmentDraft = signal(this.createDefaultAttachmentDraft());
+  readonly attachmentDraftError = signal<string | null>(null);
   private readonly priceFormatter = new Intl.NumberFormat('es-ES', {
     style: 'currency',
     currency: 'EUR',
@@ -171,6 +179,19 @@ export class ClientDetailPage {
       ),
   );
 
+  readonly canShowPrimaryFab = computed(() => {
+    const segment = this.activeSegment();
+    return segment === 'notes' || segment === 'appointments' || segment === 'attachments';
+  });
+
+  readonly primaryFabLabel = computed(() => {
+    const segment = this.activeSegment();
+    if (segment === 'notes') return 'Agregar nota';
+    if (segment === 'appointments') return 'Programar cita';
+    if (segment === 'attachments') return 'Agregar archivo';
+    return 'Agregar';
+  });
+
   // Mock message templates — will be replaced by API call
   readonly messageTemplates = signal<IMessageTemplate[]>([
     {
@@ -225,6 +246,7 @@ export class ClientDetailPage {
       timeOutline,
       checkmarkCircleOutline,
       closeCircleOutline,
+      closeOutline,
       arrowBackOutline,
       chatbubblesOutline,
       sendOutline,
@@ -238,6 +260,101 @@ export class ClientDetailPage {
 
   onSegmentChange(event: CustomEvent) {
     this.activeSegment.set(event.detail.value as Segment);
+  }
+
+  openPrimaryActionModal() {
+    const segment = this.activeSegment();
+    if (segment === 'notes') {
+      this.openCreateNoteModal();
+      return;
+    }
+
+    if (segment === 'appointments') {
+      this.openCreateAppointmentModal();
+      return;
+    }
+
+    if (segment === 'attachments') {
+      this.openCreateAttachmentModal();
+    }
+  }
+
+  openCreateNoteModal() {
+    this.editingNoteId.set(null);
+    this.noteDraft.set('');
+    this.noteDraftError.set(null);
+    this.isNoteModalOpen.set(true);
+  }
+
+  openEditNoteModal(note: INote) {
+    this.editingNoteId.set(note.id);
+    this.noteDraft.set(note.content);
+    this.noteDraftError.set(null);
+    this.isNoteModalOpen.set(true);
+  }
+
+  closeNoteModal() {
+    this.isNoteModalOpen.set(false);
+    this.editingNoteId.set(null);
+    this.noteDraft.set('');
+    this.noteDraftError.set(null);
+  }
+
+  onNoteDraftChange(event: Event) {
+    const target = event.target as HTMLTextAreaElement;
+    this.noteDraft.set(target.value ?? '');
+  }
+
+  saveNoteFromModal() {
+    const content = this.noteDraft().trim();
+    if (!content) {
+      this.noteDraftError.set('Escribe una nota antes de guardar.');
+      return;
+    }
+
+    const today = this.formatShortDate(new Date());
+    const editingId = this.editingNoteId();
+
+    if (editingId) {
+      this.notes.update((notes) =>
+        notes.map((note) =>
+          note.id === editingId
+            ? { ...note, content, updatedAt: today }
+            : note,
+        ),
+      );
+    } else {
+      this.notes.update((notes) => [
+        {
+          id: `note-${Date.now()}`,
+          content,
+          createdAt: today,
+          updatedAt: today,
+        },
+        ...notes,
+      ]);
+    }
+
+    this.closeNoteModal();
+  }
+
+  async deleteNote(note: INote) {
+    const alert = await this.alertCtrl.create({
+      header: 'Eliminar nota',
+      message: '¿Eliminar esta nota del cliente?',
+      buttons: [
+        { text: 'Cancelar', role: 'cancel' },
+        {
+          text: 'Eliminar',
+          role: 'destructive',
+          handler: () => {
+            this.notes.update((notes) => notes.filter((current) => current.id !== note.id));
+          },
+        },
+      ],
+    });
+
+    await alert.present();
   }
 
   openCreateAppointmentModal() {
@@ -267,6 +384,55 @@ export class ClientDetailPage {
   closeAppointmentModal() {
     this.isAppointmentModalOpen.set(false);
     this.appointmentDraftError.set(null);
+  }
+
+  openCreateAttachmentModal() {
+    this.attachmentDraft.set(this.createDefaultAttachmentDraft());
+    this.attachmentDraftError.set(null);
+    this.isAttachmentModalOpen.set(true);
+  }
+
+  closeAttachmentModal() {
+    this.isAttachmentModalOpen.set(false);
+    this.attachmentDraft.set(this.createDefaultAttachmentDraft());
+    this.attachmentDraftError.set(null);
+  }
+
+  onAttachmentFileSelected(event: Event) {
+    const target = event.target as HTMLInputElement;
+    const selectedFile = target.files?.[0];
+    if (!selectedFile) return;
+
+    const attachmentType = this.resolveAttachmentType(selectedFile);
+    this.attachmentDraft.set({
+      fileName: selectedFile.name,
+      fileType: attachmentType.label,
+      fileSize: this.formatFileSize(selectedFile.size),
+      icon: attachmentType.icon,
+    });
+    this.attachmentDraftError.set(null);
+  }
+
+  saveAttachmentFromModal() {
+    const draft = this.attachmentDraft();
+    if (!draft.fileName) {
+      this.attachmentDraftError.set('Selecciona un archivo antes de guardar.');
+      return;
+    }
+
+    this.attachments.update((attachments) => [
+      {
+        id: `file-${Date.now()}`,
+        fileName: draft.fileName,
+        fileType: draft.fileType,
+        fileSize: draft.fileSize,
+        uploadedAt: this.formatShortDate(new Date()),
+        icon: draft.icon,
+      },
+      ...attachments,
+    ]);
+
+    this.closeAttachmentModal();
   }
 
   onAppointmentDraftTextChange(
@@ -432,6 +598,41 @@ export class ClientDetailPage {
   private normalizeDateValue(raw: string): string {
     if (raw.length >= 10) return raw.slice(0, 10);
     return raw;
+  }
+
+  private createDefaultAttachmentDraft() {
+    return {
+      fileName: '',
+      fileType: 'PDF',
+      fileSize: '',
+      icon: 'document-outline',
+    };
+  }
+
+  private formatShortDate(dateInput: Date): string {
+    return dateInput.toLocaleDateString('es-ES', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+    });
+  }
+
+  private formatFileSize(sizeInBytes: number): string {
+    if (sizeInBytes < 1024) return `${sizeInBytes} B`;
+    if (sizeInBytes < 1024 * 1024) return `${(sizeInBytes / 1024).toFixed(1)} KB`;
+    return `${(sizeInBytes / (1024 * 1024)).toFixed(1)} MB`;
+  }
+
+  private resolveAttachmentType(file: File): { label: string; icon: string } {
+    if (file.type.startsWith('image/')) {
+      return { label: 'Imagen', icon: 'image-outline' };
+    }
+
+    if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
+      return { label: 'PDF', icon: 'document-outline' };
+    }
+
+    return { label: 'Documento', icon: 'document-outline' };
   }
 
   private normalizeTimeValue(raw: string): string {

@@ -1,9 +1,11 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { addIcons } from 'ionicons';
 import {
   addOutline,
   arrowBackOutline,
   cashOutline,
+  closeOutline,
   createOutline,
   pricetagOutline,
   swapVerticalOutline,
@@ -15,6 +17,7 @@ import {
   IonSearchbar,
   IonSelect,
   IonSelectOption,
+  IonTextarea,
 } from '@ionic/angular/standalone';
 import { IProduct } from '../../interfaces/product.interface';
 import { COMMON_ION_PAGE_IMPORTS } from '../../shared/ionic-imports';
@@ -26,17 +29,20 @@ type ProductSort = 'recent' | 'price-desc' | 'price-asc' | 'name';
   selector: 'app-products',
   host: { class: 'ion-page' },
   imports: [
+    ReactiveFormsModule,
     ...COMMON_ION_PAGE_IMPORTS,
     IonBackButton,
     IonSearchbar,
     IonSelect,
     IonSelectOption,
+    IonTextarea,
   ],
   templateUrl: './products.html',
   styleUrl: './products.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ProductsPage {
+  private readonly fb = inject(FormBuilder);
   private readonly alertCtrl = inject(AlertController);
   private readonly salesCatalogStore = inject(SalesCatalogStore);
   private readonly priceFormatter = new Intl.NumberFormat('es-ES', {
@@ -47,8 +53,14 @@ export class ProductsPage {
 
   readonly products = this.salesCatalogStore.products;
 
+  readonly isCreateModalOpen = signal(false);
   readonly searchQuery = signal('');
   readonly sortMode = signal<ProductSort>('recent');
+  readonly createProductForm = this.fb.nonNullable.group({
+    name: ['', [Validators.required, Validators.maxLength(80)]],
+    description: ['', [Validators.maxLength(280)]],
+    price: ['', [Validators.pattern(/^\d+([.,]\d{1,2})?$/)]],
+  });
 
   readonly pricedProducts = computed(() =>
     this.products().filter((product) => product.price !== undefined),
@@ -89,6 +101,7 @@ export class ProductsPage {
       addOutline,
       arrowBackOutline,
       cashOutline,
+      closeOutline,
       createOutline,
       pricetagOutline,
       swapVerticalOutline,
@@ -125,42 +138,58 @@ export class ProductsPage {
     });
   }
 
-  async openCreateProductAlert() {
-    const alert = await this.alertCtrl.create({
-      header: 'Nuevo producto',
-      message: 'Agrega un producto o servicio al catálogo.',
-      inputs: [
-        { name: 'name', type: 'text', placeholder: 'Nombre' },
-        { name: 'description', type: 'textarea', placeholder: 'Descripción (opcional)' },
-        { name: 'price', type: 'text', placeholder: 'Precio (opcional)' },
-      ],
-      buttons: [
-        { text: 'Cancelar', role: 'cancel' },
-        {
-          text: 'Guardar',
-          handler: (data: {
-            name?: string;
-            description?: string;
-            price?: string;
-          }) => {
-            const name = data.name?.trim() ?? '';
-            if (!name) return false;
+  openCreateProductModal() {
+    this.resetCreateProductForm();
+    this.isCreateModalOpen.set(true);
+  }
 
-            const parsedPrice = this.parsePrice(data.price);
-            if (parsedPrice === null) return false;
+  closeCreateProductModal(resetForm = true) {
+    this.isCreateModalOpen.set(false);
+    if (resetForm) {
+      this.resetCreateProductForm();
+    }
+  }
 
-            this.salesCatalogStore.addProduct({
-              name,
-              description: data.description?.trim() || undefined,
-              price: parsedPrice ?? undefined,
-            });
-            return true;
-          },
-        },
-      ],
+  createProduct() {
+    const { name, description, price } = this.createProductForm.getRawValue();
+    const trimmedName = name.trim();
+
+    if (!trimmedName || this.createProductForm.invalid) {
+      if (!trimmedName) {
+        this.createProductForm.controls.name.setErrors({
+          ...(this.createProductForm.controls.name.errors ?? {}),
+          required: true,
+        });
+      }
+
+      this.createProductForm.markAllAsTouched();
+      return;
+    }
+
+    const parsedPrice = this.parsePrice(price);
+    if (parsedPrice === null) {
+      this.createProductForm.controls.price.setErrors({ invalidPrice: true });
+      this.createProductForm.controls.price.markAsTouched();
+      return;
+    }
+
+    this.salesCatalogStore.addProduct({
+      name: trimmedName,
+      description: description.trim() || undefined,
+      price: parsedPrice ?? undefined,
     });
 
-    await alert.present();
+    this.closeCreateProductModal();
+  }
+
+  resetCreateProductForm() {
+    this.createProductForm.reset({
+      name: '',
+      description: '',
+      price: '',
+    });
+    this.createProductForm.markAsPristine();
+    this.createProductForm.markAsUntouched();
   }
 
   async openEditProductAlert(product: IProduct) {
