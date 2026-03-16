@@ -24,6 +24,15 @@ app-products.ion-page {
   background: linear-gradient(180deg, var(--color-frost-light) 0%, var(--color-surface-alt) 36%, var(--color-surface) 100%);
 }
 
+// Message templates: opaque route backdrop to avoid previous-page flashes during navigation
+app-message-templates.ion-page {
+  background: linear-gradient(180deg, var(--color-frost-light) 0%, var(--color-surface-alt) 42%, var(--color-surface) 100%);
+}
+
+app-message-templates ion-content {
+  --background: linear-gradient(180deg, var(--color-frost-light) 0%, var(--color-surface-alt) 42%, var(--color-surface) 100%);
+}
+
 // Settings: ensure route transitions never reveal previous page behind
 app-settings.ion-page {
   background: linear-gradient(180deg, var(--color-frost-light) 0%, var(--color-surface-alt) 42%, var(--color-surface) 100%);

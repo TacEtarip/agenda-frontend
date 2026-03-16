@@ -18,6 +18,13 @@ export const routes: Routes = [
       import('./pages/products/products').then((m) => m.ProductsPage),
   },
   {
+    path: 'message-templates',
+    loadComponent: () =>
+      import('./pages/message-templates/message-templates').then(
+        (m) => m.MessageTemplatesPage,
+      ),
+  },
+  {
     path: 'settings',
     loadComponent: () =>
       import('./pages/settings/settings').then((m) => m.SettingsPage),
@@ -31,4 +38,3 @@ export const routes: Routes = [
   },
   { path: '**', redirectTo: 'login' },
 ];
-

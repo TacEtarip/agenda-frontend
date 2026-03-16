@@ -16,6 +16,7 @@ import { FormatPricePipe } from '../../shared/pipes/format-price.pipe';
 import { OfferStatusColorPipe, OfferStatusLabelPipe } from '../../shared/pipes/offer-status.pipes';
 import { StageLabelPipe, StageColorPipe } from '../../shared/pipes/stage.pipes';
 import { SalesCatalogStore } from '../../shared/stores/sales-catalog.store';
+import { MessageTemplateStore } from '../../shared/stores/message-template.store';
 import { addIcons } from 'ionicons';
 import {
   logoWhatsapp,
@@ -99,6 +100,7 @@ export class ClientDetailPage {
   private readonly route = inject(ActivatedRoute);
   private readonly alertCtrl = inject(AlertController);
   private readonly salesCatalogStore = inject(SalesCatalogStore);
+  private readonly messageTemplateStore = inject(MessageTemplateStore);
   readonly clientId = this.route.snapshot.paramMap.get('id') ?? '';
 
   readonly allStages = CLIENT_STAGE_OPTIONS;
@@ -211,63 +213,20 @@ export class ClientDetailPage {
     return 'Agregar';
   });
 
-  // Mock message templates — will be replaced by API call
-  readonly messageTemplates = signal<IMessageTemplate[]>([
-    {
-      id: '1',
-      stage: ClientStage.FIRST_CONTACT,
-      messageBody: 'Hola {{name}}. ¡Gracias por contactarme! Me gustaría agendar una consulta inicial para conocer mejor tus necesidades. ¿Cuándo te viene bien?',
-      updatedAt: '10 feb 2026',
-    },
-    {
-      id: '2',
-      stage: ClientStage.FOLLOW_UP,
-      messageBody: 'Hola {{name}}. Te escribo para dar seguimiento a la propuesta que te envié. ¿Tienes alguna duda que pueda aclarar? Puedo ajustarla según tus comentarios.',
-      updatedAt: '15 feb 2026',
-    },
-    {
-      id: '3',
-      stage: ClientStage.CLOSED_SALE,
-      messageBody: 'Hola {{name}}. ¡Felicidades por tu decisión! Estoy muy contento de trabajar contigo. En breve te envío los detalles de inicio.',
-      updatedAt: '20 ene 2026',
-    },
-    {
-      id: '4',
-      stage: ClientStage.MAINTENANCE,
-      messageBody: 'Hola {{name}}. Espero que todo vaya muy bien. Solo quería confirmar que estás satisfecho con el servicio. Avísame si puedo ayudarte en algo.',
-      updatedAt: '5 ene 2026',
-    },
-    {
-      id: '5',
-      stage: ClientStage.POST_SALE,
-      messageBody: 'Hola {{name}}. Ha sido un placer trabajar contigo. Quería hacer seguimiento para saber si te interesan otros de nuestros servicios. ¡Y una recomendación siempre se agradece!',
-      updatedAt: '1 ene 2026',
-    },
-  ]);
+  readonly messageTemplates = this.messageTemplateStore.templates;
 
-  /** The template that matches the client's current stage */
-  readonly currentTemplate = computed(() => {
-    const stage = this.client().stage;
-    return this.messageTemplates().find((t) => t.stage === stage) ?? null;
-  });
+  readonly currentStageTemplates = computed(() =>
+    this.messageTemplates()
+      .filter((template) => template.stage === this.client().stage)
+      .sort(
+        (a, b) =>
+          new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime(),
+      ),
+  );
 
   readonly callWhatsAppUrl = computed(
     () => `https://wa.me/${this.client().phone.replaceAll(' ', '')}`,
   );
-
-  readonly currentTemplatePersonalizedMessage = computed(() => {
-    const tpl = this.currentTemplate();
-    if (!tpl) return '';
-    return tpl.messageBody.replace('{{name}}', this.client().firstName);
-  });
-
-  readonly currentTemplateWhatsAppUrl = computed(() => {
-    const tpl = this.currentTemplate();
-    if (!tpl) return null;
-    const phone = this.client().phone.replaceAll(/\D/g, '');
-    const message = tpl.messageBody.replace('{{name}}', this.client().firstName);
-    return `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
-  });
 
   constructor() {
     addIcons({
@@ -768,9 +727,9 @@ export class ClientDetailPage {
   }
 
   async openEditTemplateAlert(template: IMessageTemplate | null) {
-    const stage = this.client().stage;
+    const stage = template?.stage ?? this.client().stage;
     const alert = await this.alertCtrl.create({
-      header: `Editar plantilla — ${getStageLabel(stage)}`,
+      header: `${template ? 'Editar' : 'Crear'} plantilla — ${getStageLabel(stage)}`,
       inputs: [
         {
           name: 'messageBody',
@@ -785,21 +744,14 @@ export class ClientDetailPage {
         {
           text: 'Guardar',
           handler: (data: { messageBody: string }) => {
-            if (!data.messageBody.trim()) return;
-            const today = new Date().toLocaleDateString('es-ES', { month: 'short', day: 'numeric', year: 'numeric' });
-            if (template) {
-              this.messageTemplates.update((templates) =>
-                templates.map((t) => t.id === template.id ? { ...t, messageBody: data.messageBody, updatedAt: today } : t),
-              );
-            } else {
-              const newTemplate: IMessageTemplate = {
-                id: String(Date.now()),
-                stage,
-                messageBody: data.messageBody,
-                updatedAt: today,
-              };
-              this.messageTemplates.update((templates) => [...templates, newTemplate]);
-            }
+            if (!data.messageBody.trim()) return false;
+
+            this.messageTemplateStore.saveTemplate({
+              templateId: template?.id,
+              stage,
+              messageBody: data.messageBody,
+            });
+            return true;
           },
         },
       ],
@@ -817,11 +769,22 @@ export class ClientDetailPage {
           text: 'Eliminar',
           role: 'destructive',
           handler: () => {
-            this.messageTemplates.update((templates) => templates.filter((t) => t.id !== template.id));
+            this.messageTemplateStore.deleteTemplate(template.id);
           },
         },
       ],
     });
     await alert.present();
   }
+
+  personalizeTemplateMessage(template: IMessageTemplate): string {
+    return template.messageBody.replace('{{name}}', this.client().firstName);
+  }
+
+  getTemplateWhatsAppUrl(template: IMessageTemplate): string {
+    const phone = this.client().phone.replaceAll(/\D/g, '');
+    const message = this.personalizeTemplateMessage(template);
+    return `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+  }
 }
+

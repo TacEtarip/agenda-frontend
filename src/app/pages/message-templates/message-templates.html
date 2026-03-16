@@ -1,0 +1,191 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/dashboard" text="Atrás"></ion-back-button>
+    </ion-buttons>
+    <ion-title>
+      <div class="toolbar-title">
+        <span class="toolbar-title__greeting">WhatsApp</span>
+        <span class="toolbar-title__name">Plantillas por etapa</span>
+      </div>
+    </ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="message-templates-content">
+  <div class="stats-grid">
+    <ion-card class="stat-card">
+      <ion-card-content class="stat-card__content">
+        <div class="stat-icon stat-icon--green">
+          <ion-icon name="chatbubbles-outline"></ion-icon>
+        </div>
+        <p class="stat-value">{{ totalTemplatesCount() }}</p>
+        <p class="stat-label">Total plantillas</p>
+      </ion-card-content>
+    </ion-card>
+
+    <ion-card class="stat-card">
+      <ion-card-content class="stat-card__content">
+        <div class="stat-icon stat-icon--amber">
+          <ion-icon name="checkmark-circle-outline"></ion-icon>
+        </div>
+        <p class="stat-value">{{ stagesWithTemplatesCount() }}</p>
+        <p class="stat-label">Etapas cubiertas</p>
+      </ion-card-content>
+    </ion-card>
+
+    <ion-card class="stat-card">
+      <ion-card-content class="stat-card__content">
+        <div class="stat-icon stat-icon--indigo">
+          <ion-icon name="sparkles-outline"></ion-icon>
+        </div>
+        <p class="stat-value">{{ coveragePercentage() }}%</p>
+        <p class="stat-label">Cobertura CRM</p>
+      </ion-card-content>
+    </ion-card>
+  </div>
+
+  <div class="page-intro">
+    <ion-icon name="chatbubbles-outline"></ion-icon>
+    <p>
+      Administra varias plantillas por etapa. Usa
+      <code [innerText]="'{{name}}'"></code>
+      para personalizar el mensaje con el nombre del cliente.
+    </p>
+  </div>
+
+  <div class="templates-list">
+    @for (section of stageSections(); track section.value) {
+      <ion-card class="template-card" [class.template-card--empty]="section.templates.length === 0">
+        <ion-card-content class="template-card__content">
+          <div class="template-card__header">
+            <div class="template-card__meta">
+              <ion-chip [color]="section.color" class="template-stage-chip">
+                {{ section.label }}
+              </ion-chip>
+              <p class="template-stage-status" [class.template-stage-status--empty]="section.templates.length === 0">
+                {{ section.templates.length }}
+                {{ section.templates.length === 1 ? 'plantilla' : 'plantillas' }}
+              </p>
+            </div>
+
+            <ion-button fill="outline" size="small" color="primary" (click)="openCreateTemplateModal(section.value)">
+              <ion-icon slot="start" name="add-outline"></ion-icon>
+              Nueva
+            </ion-button>
+          </div>
+
+          @if (section.templates.length > 0) {
+            <div class="template-stack">
+              @for (template of section.templates; track template.id) {
+                <article class="template-entry">
+                  <div class="template-entry__actions">
+                    <ion-button fill="clear" size="small" color="primary" (click)="openEditTemplateModal(template)">
+                      <ion-icon slot="icon-only" name="create-outline"></ion-icon>
+                    </ion-button>
+                    <ion-button fill="clear" size="small" color="danger" (click)="deleteTemplate(template)">
+                      <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
+                    </ion-button>
+                  </div>
+
+                  <p class="template-message">{{ template.messageBody }}</p>
+                  <p class="template-updated">Actualizado {{ template.updatedAt | formatDate }}</p>
+                </article>
+              }
+            </div>
+          } @else {
+            <div class="template-empty-state">
+              <ion-icon name="time-outline"></ion-icon>
+              <div>
+                <p class="template-empty-state__title">Todavía no hay plantillas en esta etapa</p>
+                <p class="template-empty-state__text">
+                  Crea variantes para {{ section.label.toLowerCase() }} y reutilízalas según el contexto de cada cliente.
+                </p>
+              </div>
+            </div>
+          }
+        </ion-card-content>
+      </ion-card>
+    }
+  </div>
+</ion-content>
+
+<ion-modal
+  [isOpen]="isComposerModalOpen()"
+  (didDismiss)="closeComposerModal()"
+  class="app-modal">
+  <ng-template>
+    <ion-header>
+      <ion-toolbar>
+        <ion-title>{{ isEditing() ? 'Editar plantilla' : 'Nueva plantilla' }}</ion-title>
+        <ion-buttons slot="end">
+          <ion-button (click)="closeComposerModal()" aria-label="Cerrar modal">
+            <ion-icon slot="icon-only" name="close-outline"></ion-icon>
+          </ion-button>
+        </ion-buttons>
+      </ion-toolbar>
+    </ion-header>
+
+    <div class="app-modal-content">
+      <section class="app-modal-shell">
+        <ion-card class="app-modal-card">
+          <ion-card-content class="app-modal-card__content">
+            <div class="app-modal-header">
+              <div class="app-modal-icon">
+                <ion-icon [name]="isEditing() ? 'create-outline' : 'add-outline'"></ion-icon>
+              </div>
+
+              <div class="app-modal-copy">
+                <p class="app-modal-eyebrow">Plantillas</p>
+                <h2>{{ composerStageMeta().label }}</h2>
+                <p>Redacta otra variante de mensaje para esta etapa o ajusta una ya existente.</p>
+              </div>
+            </div>
+
+            <form class="app-modal-body composer-form" [formGroup]="composerForm" (ngSubmit)="saveTemplate()">
+              <ion-chip [color]="composerStageMeta().color" class="composer-stage-chip">
+                {{ composerStageMeta().label }}
+              </ion-chip>
+
+              <ion-textarea
+                formControlName="messageBody"
+                label="Mensaje"
+                labelPlacement="floating"
+                fill="outline"
+                autoGrow="true"
+                rows="7"
+                class="composer-form__field">
+              </ion-textarea>
+
+              @if (
+                composerForm.controls.messageBody.touched &&
+                composerForm.controls.messageBody.hasError('required')
+              ) {
+                <p class="form-feedback form-feedback--error">
+                  El mensaje es obligatorio.
+                </p>
+              } @else if (
+                composerForm.controls.messageBody.touched &&
+                composerForm.controls.messageBody.hasError('maxlength')
+              ) {
+                <p class="form-feedback form-feedback--error">
+                  La plantilla no puede superar los 700 caracteres.
+                </p>
+              }
+
+              <div class="app-modal-actions composer-form__actions">
+                <ion-button fill="outline" color="medium" type="button" (click)="closeComposerModal()">
+                  Cancelar
+                </ion-button>
+                <ion-button type="submit">
+                  <ion-icon slot="start" [name]="isEditing() ? 'create-outline' : 'add-outline'"></ion-icon>
+                  {{ isEditing() ? 'Guardar cambios' : 'Guardar plantilla' }}
+                </ion-button>
+              </div>
+            </form>
+          </ion-card-content>
+        </ion-card>
+      </section>
+    </div>
+  </ng-template>
+</ion-modal>

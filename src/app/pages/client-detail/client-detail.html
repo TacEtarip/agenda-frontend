@@ -666,58 +666,65 @@
   @if (activeSegment() === 'messages') {
     <div class="tab-content">
 
-      <!-- Current Stage Summary -->
       <div class="stage-summary">
         <ion-icon name="sparkles-outline" class="stage-summary__icon"></ion-icon>
         <span class="stage-summary__text">
-          Plantillas para la etapa <strong>{{ client().stage | stageLabel }}</strong>
+          {{ currentStageTemplates().length }}
+          {{ currentStageTemplates().length === 1 ? 'plantilla' : 'plantillas' }} para la etapa
+          <strong>{{ client().stage | stageLabel }}</strong>
         </span>
+        <ion-button fill="clear" size="small" color="primary"
+          (click)="openEditTemplateAlert(null)"
+          (keydown.enter)="openEditTemplateAlert(null)">
+          <ion-icon slot="start" name="add-outline"></ion-icon>
+          Nueva plantilla
+        </ion-button>
       </div>
 
-      <!-- Template Card -->
-      @if (currentTemplate(); as tpl) {
-        <ion-card class="template-card">
-          <ion-card-header class="template-card__header">
-            <ion-card-title class="template-card__title">
-              <ion-chip [color]="tpl.stage | stageColor" class="template-stage-chip">
-                {{ tpl.stage | stageLabel }}
-              </ion-chip>
-            </ion-card-title>
-            <div class="template-header-actions">
-              <ion-button fill="clear" size="small" color="primary"
-                (click)="openEditTemplateAlert(tpl)"
-                (keydown.enter)="openEditTemplateAlert(tpl)">
-                <ion-icon slot="icon-only" name="create-outline"></ion-icon>
-              </ion-button>
-              <ion-button fill="clear" size="small" color="danger"
-                (click)="deleteTemplate(tpl)"
-                (keydown.enter)="deleteTemplate(tpl)">
-                <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
-              </ion-button>
-            </div>
-          </ion-card-header>
-          <ion-card-content class="template-card__body">
-            <p class="template-message">{{ currentTemplatePersonalizedMessage() }}</p>
-            <div class="template-footer">
-              <ion-note class="template-date">Actualizado {{ tpl.updatedAt }}</ion-note>
-              <ion-button
-                fill="solid"
-                color="success"
-                size="small"
-                class="template-wa-btn"
-                [href]="currentTemplateWhatsAppUrl()"
-                target="_blank">
-                <ion-icon slot="start" name="logo-whatsapp"></ion-icon>
-                Enviar por WhatsApp
-              </ion-button>
-            </div>
-          </ion-card-content>
-        </ion-card>
+      @if (currentStageTemplates().length > 0) {
+        @for (tpl of currentStageTemplates(); track tpl.id) {
+          <ion-card class="template-card">
+            <ion-card-header class="template-card__header">
+              <ion-card-title class="template-card__title">
+                <ion-chip [color]="tpl.stage | stageColor" class="template-stage-chip">
+                  {{ tpl.stage | stageLabel }}
+                </ion-chip>
+              </ion-card-title>
+              <div class="template-header-actions">
+                <ion-button fill="clear" size="small" color="primary"
+                  (click)="openEditTemplateAlert(tpl)"
+                  (keydown.enter)="openEditTemplateAlert(tpl)">
+                  <ion-icon slot="icon-only" name="create-outline"></ion-icon>
+                </ion-button>
+                <ion-button fill="clear" size="small" color="danger"
+                  (click)="deleteTemplate(tpl)"
+                  (keydown.enter)="deleteTemplate(tpl)">
+                  <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
+                </ion-button>
+              </div>
+            </ion-card-header>
+            <ion-card-content class="template-card__body">
+              <p class="template-message">{{ personalizeTemplateMessage(tpl) }}</p>
+              <div class="template-footer">
+                <ion-note class="template-date">Actualizado {{ tpl.updatedAt | formatDate }}</ion-note>
+                <ion-button
+                  fill="solid"
+                  color="success"
+                  size="small"
+                  class="template-wa-btn"
+                  [href]="getTemplateWhatsAppUrl(tpl)"
+                  target="_blank">
+                  <ion-icon slot="start" name="logo-whatsapp"></ion-icon>
+                  Enviar por WhatsApp
+                </ion-button>
+              </div>
+            </ion-card-content>
+          </ion-card>
+        }
       } @else {
-        <!-- No template for this stage -->
         <div class="empty-state">
           <ion-icon name="chatbubbles-outline" style="font-size: 3rem;"></ion-icon>
-          <p class="empty-state__text">No hay plantilla para {{ client().stage | stageLabel }}</p>
+          <p class="empty-state__text">No hay plantillas para {{ client().stage | stageLabel }}</p>
           <ion-button fill="outline" color="primary" size="small" class="empty-state__cta"
             (click)="openEditTemplateAlert(null)"
             (keydown.enter)="openEditTemplateAlert(null)">
@@ -727,8 +734,7 @@
         </div>
       }
 
-      <!-- All Other Templates -->
-      <h4 class="all-templates-title">Todas las plantillas por etapa</h4>
+      <h4 class="all-templates-title">Plantillas de otras etapas</h4>
       @for (tpl of messageTemplates(); track tpl.id) {
         @if (tpl.stage !== client().stage) {
           <ion-card class="template-card template-card--other">
@@ -752,7 +758,7 @@
             <ion-card-content class="template-card__body">
               <p class="template-message template-message--muted">{{ tpl.messageBody }}</p>
               <div class="template-footer">
-                <ion-note class="template-date">Actualizado {{ tpl.updatedAt }}</ion-note>
+                <ion-note class="template-date">Actualizado {{ tpl.updatedAt | formatDate }}</ion-note>
               </div>
             </ion-card-content>
           </ion-card>
@@ -775,3 +781,4 @@
   }
 
 </ion-content>
+

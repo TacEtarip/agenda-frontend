@@ -19,6 +19,7 @@ import {
   closeOutline,
   callOutline,
   pricetagOutline,
+  chatbubblesOutline,
 } from 'ionicons/icons';
 import {
   IonAvatar,
@@ -107,6 +108,7 @@ export class DashboardPage {
       closeOutline,
       callOutline,
       pricetagOutline,
+      chatbubblesOutline,
     });
   }
 
