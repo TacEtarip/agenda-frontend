@@ -7,7 +7,7 @@
       </div>
     </ion-title>
     <ion-buttons slot="end">
-      <ion-button>
+      <ion-button aria-label="Ver notificaciones">
         <ion-icon slot="icon-only" name="notifications-outline"></ion-icon>
       </ion-button>
     </ion-buttons>
@@ -22,7 +22,7 @@
       <ion-card class="stat-card">
         <ion-card-content class="stat-card__content">
           <div class="stat-icon {{ stat.color }}">
-            <ion-icon [name]="stat.icon" style="font-size: 1.25rem;"></ion-icon>
+            <ion-icon [name]="stat.icon"></ion-icon>
           </div>
           <p class="stat-value">{{ stat.value }}</p>
           <p class="stat-label">{{ stat.label }}</p>
@@ -126,7 +126,7 @@
   </div>
 
   <ion-list lines="inset" class="clients-list">
-    @for (client of filteredClients(); track client.id) {
+    @for (client of pagedClients(); track client.id) {
       <ion-item [routerLink]="['/clients', client.id]" detail="true" button>
         <ion-avatar slot="start">
           <div class="client-avatar {{ client.color }}">
@@ -149,6 +149,12 @@
       </ion-item>
     }
   </ion-list>
+
+  <ion-infinite-scroll
+    (ionInfinite)="loadMoreClients($any($event))"
+    [disabled]="clientDisplayLimit() >= filteredClients().length">
+    <ion-infinite-scroll-content loadingText="Cargando clientes..."></ion-infinite-scroll-content>
+  </ion-infinite-scroll>
 
   <!-- FAB -->
   <ion-fab slot="fixed" vertical="bottom" horizontal="end">

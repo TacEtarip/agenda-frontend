@@ -72,7 +72,7 @@
   </div>
 
   <div class="products-list">
-    @for (product of visibleProducts(); track product.id) {
+    @for (product of pagedProducts(); track product.id) {
       <ion-card class="product-card">
         <ion-card-content class="product-card__content">
           <div class="product-card__header">
@@ -110,6 +110,12 @@
       </div>
     }
   </div>
+
+  <ion-infinite-scroll
+    (ionInfinite)="loadMoreProducts($any($event))"
+    [disabled]="productDisplayLimit() >= visibleProducts().length">
+    <ion-infinite-scroll-content loadingText="Cargando productos..."></ion-infinite-scroll-content>
+  </ion-infinite-scroll>
 
   <ion-fab class="products-fab" slot="fixed" vertical="bottom" horizontal="end">
     <ion-fab-button

@@ -227,6 +227,10 @@ ion-toolbar ion-button {
   --color: var(--color-green);
 }
 
+.segment-tab-icon {
+  font-size: 1rem;
+}
+
 .tab-content {
   padding: 0 1rem 6rem;
   display: flex;
@@ -589,6 +593,7 @@ ion-toolbar ion-button {
   color: var(--color-text-muted);
 
   ion-icon {
+    font-size: 3rem;
     color: var(--color-green);
     opacity: 0.85;
   }

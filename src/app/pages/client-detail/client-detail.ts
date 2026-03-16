@@ -46,6 +46,10 @@ import {
   IonBackButton,
   IonCardHeader,
   IonCardTitle,
+  IonDatetime,
+  IonDatetimeButton,
+  IonFab,
+  IonFabButton,
   IonNote,
   IonSegment,
   IonSegmentButton,
@@ -77,6 +81,10 @@ interface IEnrichedClientProduct extends IClientProduct {
     IonBackButton,
     IonCardHeader,
     IonCardTitle,
+    IonDatetime,
+    IonDatetimeButton,
+    IonFab,
+    IonFabButton,
     IonSegment,
     IonSegmentButton,
     IonNote,
@@ -186,10 +194,7 @@ export class ClientDetailPage {
     return this.salesCatalogStore
       .clientProducts()
       .filter((offer) => offer.clientId === this.client().id)
-      .sort(
-        (a, b) =>
-          new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime(),
-      )
+      .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
       .map((offer) => {
         const product = productMap.get(offer.productId);
         return {
@@ -218,10 +223,7 @@ export class ClientDetailPage {
   readonly currentStageTemplates = computed(() =>
     this.messageTemplates()
       .filter((template) => template.stage === this.client().stage)
-      .sort(
-        (a, b) =>
-          new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime(),
-      ),
+      .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)),
   );
 
   readonly callWhatsAppUrl = computed(

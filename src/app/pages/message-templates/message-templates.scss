@@ -42,10 +42,7 @@ ion-toolbar ion-button {
 }
 
 .message-templates-content {
-  --background:
-    radial-gradient(circle at top right, rgb(var(--color-indigo-rgb) / 18%), transparent 32%),
-    radial-gradient(circle at top left, rgb(var(--color-sky-rgb) / 16%), transparent 30%),
-    linear-gradient(180deg, var(--color-frost-light) 0%, var(--color-surface-alt) 42%, var(--color-surface) 100%);
+  --background: linear-gradient(180deg, var(--color-frost-light) 0%, var(--color-surface-alt) 42%, var(--color-surface) 100%);
 }
 
 .stats-grid {
@@ -84,8 +81,8 @@ ion-toolbar ion-button {
   }
 
   &--amber {
-    color: var(--ion-color-warning);
-    background: rgb(var(--ion-color-warning-rgb) / 0.14);
+    color: var(--color-amber-shade);
+    background: var(--color-amber-light);
   }
 
   &--indigo {

@@ -23,6 +23,10 @@ import {
 } from 'ionicons/icons';
 import {
   IonAvatar,
+  IonFab,
+  IonFabButton,
+  IonInfiniteScroll,
+  IonInfiniteScrollContent,
   IonSearchbar,
 } from '@ionic/angular/standalone';
 
@@ -34,6 +38,10 @@ import {
     RouterLink,
     ...COMMON_ION_PAGE_IMPORTS,
     IonAvatar,
+    IonFab,
+    IonFabButton,
+    IonInfiniteScroll,
+    IonInfiniteScrollContent,
     IonSearchbar,
     StageLabelPipe,
     StageColorPipe,
@@ -57,6 +65,7 @@ export class DashboardPage {
   readonly searchQuery = signal('');
   readonly showAllAppointments = signal(false);
   readonly isAddClientModalOpen = signal(false);
+  readonly clientDisplayLimit = signal(20);
   readonly addClientForm = this.fb.nonNullable.group({
     firstName: ['', [Validators.required, Validators.maxLength(60)]],
     lastName: ['', [Validators.required, Validators.maxLength(60)]],
@@ -96,6 +105,10 @@ export class DashboardPage {
       : this.recentClients();
   });
 
+  readonly pagedClients = computed(() =>
+    this.filteredClients().slice(0, this.clientDisplayLimit()),
+  );
+
   constructor() {
     addIcons({
       peopleOutline,
@@ -114,6 +127,12 @@ export class DashboardPage {
 
   onSearch(event: CustomEvent) {
     this.searchQuery.set(event.detail.value ?? '');
+    this.clientDisplayLimit.set(20);
+  }
+
+  loadMoreClients(event: { target: { complete: () => void } }): void {
+    this.clientDisplayLimit.update((n) => n + 20);
+    event.target.complete();
   }
 
   toggleAppointmentsView() {

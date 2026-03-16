@@ -42,10 +42,7 @@ ion-toolbar ion-button {
 }
 
 .settings-content {
-  --background:
-    radial-gradient(circle at top right, rgb(var(--color-sky-rgb) / 20%), transparent 35%),
-    radial-gradient(circle at top left, rgb(var(--color-indigo-rgb) / 16%), transparent 30%),
-    linear-gradient(180deg, var(--color-frost-light) 0%, var(--color-surface-alt) 42%, var(--color-surface) 100%);
+  --background: linear-gradient(180deg, var(--color-frost-light) 0%, var(--color-surface-alt) 42%, var(--color-surface) 100%);
 }
 
 .settings-section {

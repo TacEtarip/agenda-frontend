@@ -6,10 +6,6 @@ import {
   IonCardContent,
   IonChip,
   IonContent,
-  IonDatetime,
-  IonDatetimeButton,
-  IonFab,
-  IonFabButton,
   IonHeader,
   IonIcon,
   IonInput,
@@ -21,6 +17,12 @@ import {
   IonToolbar,
 } from '@ionic/angular/standalone';
 
+/**
+ * Shared Ionic imports for all pages.
+ * Heavy/specialised components (IonDatetime, IonFab, etc.) are intentionally
+ * excluded — import them only in the pages that actually use them so that
+ * unrelated lazy bundles stay small.
+ */
 export const COMMON_ION_PAGE_IMPORTS = [
   IonHeader,
   IonToolbar,
@@ -37,9 +39,5 @@ export const COMMON_ION_PAGE_IMPORTS = [
   IonIcon,
   IonInput,
   IonModal,
-  IonDatetime,
-  IonDatetimeButton,
-  IonFab,
-  IonFabButton,
   IonChip,
 ] as const;

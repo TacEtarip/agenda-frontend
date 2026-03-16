@@ -10,7 +10,7 @@
       </div>
     </ion-title>
     <ion-buttons slot="end">
-      <ion-button>
+      <ion-button aria-label="Editar cliente">
         <ion-icon slot="icon-only" name="create-outline"></ion-icon>
       </ion-button>
     </ion-buttons>
@@ -79,6 +79,7 @@
 
   <!-- Segment Tabs -->
   <ion-segment
+    scrollable="true"
     [value]="activeSegment()"
     (ionChange)="onSegmentChange($any($event))"
     color="primary"
@@ -109,7 +110,7 @@
     </ion-segment-button>
     <ion-segment-button value="messages">
       <ion-label>
-        <ion-icon name="chatbubbles-outline" style="font-size:1rem;"></ion-icon>
+        <ion-icon name="chatbubbles-outline" class="segment-tab-icon"></ion-icon>
         Mensajes
       </ion-label>
     </ion-segment-button>
@@ -148,7 +149,7 @@
       }
       @empty {
         <div class="empty-state">
-          <ion-icon name="document-outline" style="font-size: 3rem;"></ion-icon>
+          <ion-icon name="document-outline"></ion-icon>
           <p class="empty-state__text">Aún no hay notas</p>
         </div>
       }
@@ -218,7 +219,7 @@
       }
       @empty {
         <div class="empty-state">
-          <ion-icon name="time-outline" style="font-size: 3rem;"></ion-icon>
+          <ion-icon name="time-outline"></ion-icon>
           <p class="empty-state__text">Aún no hay citas</p>
         </div>
       }
@@ -655,7 +656,7 @@
       }
       @empty {
         <div class="empty-state">
-          <ion-icon name="pricetag-outline" style="font-size: 3rem;"></ion-icon>
+          <ion-icon name="pricetag-outline"></ion-icon>
           <p class="empty-state__text">Aún no hay productos asociados</p>
         </div>
       }
@@ -723,7 +724,7 @@
         }
       } @else {
         <div class="empty-state">
-          <ion-icon name="chatbubbles-outline" style="font-size: 3rem;"></ion-icon>
+          <ion-icon name="chatbubbles-outline"></ion-icon>
           <p class="empty-state__text">No hay plantillas para {{ client().stage | stageLabel }}</p>
           <ion-button fill="outline" color="primary" size="small" class="empty-state__cta"
             (click)="openEditTemplateAlert(null)"

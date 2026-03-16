@@ -66,6 +66,10 @@ ion-toolbar ion-button {
   justify-content: center;
   margin: 0 auto 0.5rem;
 
+  ion-icon {
+    font-size: 1.25rem;
+  }
+
   &.stat-icon--sky {
     background-color: var(--color-sky-light);
     color: var(--color-sky-shade);
@@ -410,6 +414,10 @@ ion-toolbar ion-button {
 }
 
 @media (max-width: 560px) {
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+
   .quick-links-grid {
     grid-template-columns: 1fr;
   }

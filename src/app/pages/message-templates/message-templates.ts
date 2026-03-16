@@ -58,10 +58,7 @@ export class MessageTemplatesPage {
       ...stage,
       templates: this.templates()
         .filter((template) => template.stage === stage.value)
-        .sort(
-          (a, b) =>
-            new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime(),
-        ),
+        .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)),
     })),
   );
 

@@ -14,6 +14,10 @@ import {
 import {
   AlertController,
   IonBackButton,
+  IonFab,
+  IonFabButton,
+  IonInfiniteScroll,
+  IonInfiniteScrollContent,
   IonSearchbar,
   IonSelect,
   IonSelectOption,
@@ -36,6 +40,10 @@ const VALID_PRODUCT_SORTS = new Set<ProductSort>(['recent', 'price-desc', 'price
     ReactiveFormsModule,
     ...COMMON_ION_PAGE_IMPORTS,
     IonBackButton,
+    IonFab,
+    IonFabButton,
+    IonInfiniteScroll,
+    IonInfiniteScrollContent,
     IonSearchbar,
     IonSelect,
     IonSelectOption,
@@ -60,6 +68,7 @@ export class ProductsPage {
   readonly products = this.salesCatalogStore.products;
 
   readonly isCreateModalOpen = signal(false);
+  readonly productDisplayLimit = signal(20);
   readonly searchQuery = signal('');
   readonly sortMode = signal<ProductSort>('recent');
   readonly createProductForm = this.fb.nonNullable.group({
@@ -104,9 +113,13 @@ export class ProductsPage {
       if (sort === 'name') return a.name.localeCompare(b.name, 'es');
       if (sort === 'price-desc') return (b.price ?? -1) - (a.price ?? -1);
       if (sort === 'price-asc') return (a.price ?? Number.MAX_VALUE) - (b.price ?? Number.MAX_VALUE);
-      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      return b.createdAt.localeCompare(a.createdAt);
     });
   });
+
+  readonly pagedProducts = computed(() =>
+    this.visibleProducts().slice(0, this.productDisplayLimit()),
+  );
 
   constructor() {
     addIcons({
@@ -123,13 +136,20 @@ export class ProductsPage {
 
   onSearch(event: CustomEvent) {
     this.searchQuery.set(event.detail.value ?? '');
+    this.productDisplayLimit.set(20);
   }
 
   onSortChange(event: CustomEvent) {
     const nextSort = event.detail.value as ProductSort;
     if (VALID_PRODUCT_SORTS.has(nextSort)) {
       this.sortMode.set(nextSort);
+      this.productDisplayLimit.set(20);
     }
+  }
+
+  loadMoreProducts(event: { target: { complete: () => void } }): void {
+    this.productDisplayLimit.update((n) => n + 20);
+    event.target.complete();
   }
 
   openCreateProductModal() {

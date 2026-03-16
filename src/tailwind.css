@@ -1,7 +1,0 @@
-/*
-  Tailwind v4 entry — kept in a .css file so it bypasses Sass and is processed
-  directly by @tailwindcss/postcss. Preflight is intentionally omitted because
-  Ionic ships its own normalize/reset that conflicts with it.
-*/
-@import "tailwindcss/theme";
-@import "tailwindcss/utilities";
