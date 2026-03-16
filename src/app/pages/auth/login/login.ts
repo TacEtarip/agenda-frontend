@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { addIcons } from 'ionicons';
@@ -40,6 +40,7 @@ import {
 export class LoginPage {
   private readonly fb = inject(FormBuilder);
   private readonly router = inject(Router);
+  private readonly destroyRef = inject(DestroyRef);
 
   readonly isLoginMode = signal(true);
   readonly isLoading = signal(false);
@@ -65,6 +66,16 @@ export class LoginPage {
 
   toggleMode(login: boolean) {
     this.isLoginMode.set(login);
+    const { firstName, lastName } = this.form.controls;
+    if (login) {
+      firstName.clearValidators();
+      lastName.clearValidators();
+    } else {
+      firstName.setValidators([Validators.required, Validators.maxLength(60)]);
+      lastName.setValidators([Validators.required, Validators.maxLength(60)]);
+    }
+    firstName.updateValueAndValidity();
+    lastName.updateValueAndValidity();
     this.form.reset();
   }
 
@@ -74,9 +85,10 @@ export class LoginPage {
       return;
     }
     this.isLoading.set(true);
-    setTimeout(() => {
+    const timeoutId = setTimeout(() => {
       this.isLoading.set(false);
       void this.router.navigate(['/dashboard']);
     }, 800);
+    this.destroyRef.onDestroy(() => clearTimeout(timeoutId));
   }
 }

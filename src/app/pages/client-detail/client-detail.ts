@@ -225,7 +225,7 @@ export class ClientDetailPage {
   );
 
   readonly callWhatsAppUrl = computed(
-    () => `https://wa.me/${this.client().phone.replaceAll(' ', '')}`,
+    () => `https://wa.me/${this.client().phone.replaceAll(/\D/g, '')}`,
   );
 
   constructor() {

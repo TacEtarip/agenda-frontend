@@ -150,7 +150,7 @@ export class ProductsPage {
 
     if (!trimmedName || this.createProductForm.invalid) {
       if (!trimmedName) {
-      this.createProductForm.controls.name.setErrors({ required: true });
+        this.createProductForm.controls.name.setErrors({ required: true });
       }
 
       this.createProductForm.markAllAsTouched();
@@ -167,7 +167,7 @@ export class ProductsPage {
     this.salesCatalogStore.addProduct({
       name: trimmedName,
       description: description.trim() || undefined,
-      price: parsedPrice ?? undefined,
+      price: parsedPrice,
     });
 
     this.closeCreateProductModal();

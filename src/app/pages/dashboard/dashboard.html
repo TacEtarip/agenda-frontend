@@ -172,7 +172,7 @@
       <ion-toolbar>
         <ion-title>Agregar cliente</ion-title>
         <ion-buttons slot="end">
-          <ion-button (click)="closeAddClientModal()" aria-label="Cerrar modal">
+          <ion-button (click)="closeAddClientModal()" (keydown.enter)="closeAddClientModal()" aria-label="Cerrar modal">
             <ion-icon slot="icon-only" name="close-outline"></ion-icon>
           </ion-button>
         </ion-buttons>
@@ -258,6 +258,7 @@
                   fill="clear"
                   type="button"
                   (click)="resetAddClientForm()"
+                  (keydown.enter)="resetAddClientForm()"
                   [disabled]="!addClientForm.dirty">
                   Limpiar
                 </ion-button>

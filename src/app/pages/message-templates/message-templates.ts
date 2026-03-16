@@ -71,10 +71,6 @@ export class MessageTemplatesPage {
     () => this.stageSections().filter((section) => section.templates.length > 0).length,
   );
 
-  readonly missingTemplatesCount = computed(
-    () => this.stageSections().filter((section) => section.templates.length === 0).length,
-  );
-
   readonly coveragePercentage = computed(() =>
     Math.round(
       (this.stagesWithTemplatesCount() / this.stageSections().length) * 100,
