@@ -92,7 +92,7 @@
         <ion-radio-group
           class="integration-group"
           [value]="currentIntegration()"
-          (ionChange)="setIntegration($any($event))">
+          (ionChange)="setIntegration($event)">
           <ion-item lines="none" class="integration-item">
             <ion-icon slot="start" name="information-circle-outline"></ion-icon>
             <ion-label>
@@ -124,8 +124,8 @@
         <div class="integration-summary">
           <ion-icon name="checkmark-circle-outline"></ion-icon>
           <p>
-            <strong>{{ integrationTitle(currentIntegration()) }}</strong>
-            {{ integrationDescription(currentIntegration()) }}
+            <strong>{{ integrationTitle() }}</strong>
+            {{ integrationDescription() }}
           </p>
         </div>
 
@@ -139,7 +139,7 @@
                 <ion-toggle
                   slot="end"
                   [checked]="integrationSettings().syncCalendar"
-                  (ionChange)="updateIntegrationSetting('syncCalendar', $any($event))">
+                  (ionChange)="updateIntegrationSetting('syncCalendar', $event)">
                 </ion-toggle>
               </ion-item>
 
@@ -149,7 +149,7 @@
                 <ion-toggle
                   slot="end"
                   [checked]="integrationSettings().syncContacts"
-                  (ionChange)="updateIntegrationSetting('syncContacts', $any($event))">
+                  (ionChange)="updateIntegrationSetting('syncContacts', $event)">
                 </ion-toggle>
               </ion-item>
 
@@ -159,7 +159,7 @@
                 <ion-toggle
                   slot="end"
                   [checked]="integrationSettings().sendDailyDigest"
-                  (ionChange)="updateIntegrationSetting('sendDailyDigest', $any($event))">
+                  (ionChange)="updateIntegrationSetting('sendDailyDigest', $event)">
                 </ion-toggle>
               </ion-item>
             </ion-list>
@@ -167,7 +167,7 @@
         }
 
         <div class="actions-row">
-          <ion-button (click)="saveIntegration()">Guardar integración</ion-button>
+          <ion-button (click)="saveIntegration()" (keydown.enter)="saveIntegration()">Guardar integración</ion-button>
         </div>
 
         @if (integrationSavedMessage()) {

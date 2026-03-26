@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { addIcons } from 'ionicons';
@@ -19,6 +19,7 @@ import {
   IonIcon,
   IonSpinner,
 } from '@ionic/angular/standalone';
+import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
   selector: 'app-login',
@@ -40,11 +41,12 @@ import {
 export class LoginPage {
   private readonly fb = inject(FormBuilder);
   private readonly router = inject(Router);
-  private readonly destroyRef = inject(DestroyRef);
+  private readonly authService = inject(AuthService);
 
   readonly isLoginMode = signal(true);
   readonly isLoading = signal(false);
   readonly showPassword = signal(false);
+  readonly errorMessage = signal<string | null>(null);
 
   readonly form = this.fb.nonNullable.group({
     firstName: [''],
@@ -66,6 +68,7 @@ export class LoginPage {
 
   toggleMode(login: boolean) {
     this.isLoginMode.set(login);
+    this.errorMessage.set(null);
     const { firstName, lastName } = this.form.controls;
     if (login) {
       firstName.clearValidators();
@@ -85,10 +88,26 @@ export class LoginPage {
       return;
     }
     this.isLoading.set(true);
-    const timeoutId = setTimeout(() => {
-      this.isLoading.set(false);
-      void this.router.navigate(['/dashboard']);
-    }, 800);
-    this.destroyRef.onDestroy(() => clearTimeout(timeoutId));
+    this.errorMessage.set(null);
+
+    const { email, password, firstName, lastName } = this.form.getRawValue();
+
+    const request$ = this.isLoginMode()
+      ? this.authService.login(email, password)
+      : this.authService.register(firstName, lastName, email, password);
+
+    request$.subscribe({
+      next: () => {
+        this.isLoading.set(false);
+        void this.router.navigate(['/dashboard']);
+      },
+      error: (err: unknown) => {
+        this.isLoading.set(false);
+        const message =
+          (err as { error?: { message?: string } })?.error?.message ??
+          'Error al conectar. Verifica tus datos.';
+        this.errorMessage.set(Array.isArray(message) ? message[0] : message);
+      },
+    });
   }
 }

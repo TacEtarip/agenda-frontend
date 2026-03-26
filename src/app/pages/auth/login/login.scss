@@ -245,6 +245,14 @@
   --box-shadow: 0 20px 25px -5px rgb(var(--color-sky-rgb) / 40%);
 }
 
+.form-error-msg {
+  margin: 0.75rem 0 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--ion-color-danger, #eb445a);
+  text-align: center;
+}
+
 ion-button {
   --border-radius: 16px;
   text-transform: none;

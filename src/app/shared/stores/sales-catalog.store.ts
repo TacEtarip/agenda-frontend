@@ -1,149 +1,160 @@
-import { Injectable, signal } from '@angular/core';
-import { ClientProductStatus } from '../../enums/client-product-status.enum';
+import { Injectable, inject, signal } from '@angular/core';
 import { IClientProduct } from '../../interfaces/client-product.interface';
 import { IProduct } from '../../interfaces/product.interface';
-
-interface ICreateClientProductInput {
-  clientId: string;
-  productId: string;
-  status: ClientProductStatus;
-  notes?: string;
-}
+import { ProductApiService } from '../../core/services/product-api.service';
+import { ClientProductApiService } from '../../core/services/client-product-api.service';
+import { AuthService } from '../../core/services/auth.service';
+import { ICreateClientProductInput } from './interfaces/create-client-product-input.interface';
 
 @Injectable({ providedIn: 'root' })
 export class SalesCatalogStore {
-  private readonly productsState = signal<IProduct[]>([
-    {
-      id: 'p-1',
-      userId: 'u-1',
-      name: 'Plan Premium',
-      description:
-        'Acompañamiento completo durante 8 semanas con seguimiento semanal.',
-      price: 320,
-      createdAt: '2026-01-12T10:15:00.000Z',
-    },
-    {
-      id: 'p-2',
-      userId: 'u-1',
-      name: 'Consulta Inicial',
-      description: 'Sesión de diagnóstico y plan de trabajo personalizado.',
-      price: 45,
-      createdAt: '2026-02-05T15:40:00.000Z',
-    },
-    {
-      id: 'p-3',
-      userId: 'u-1',
-      name: 'Pack de Mantenimiento',
-      description: 'Soporte mensual para clientes postventa.',
-      price: 85,
-      createdAt: '2026-02-20T09:25:00.000Z',
-    },
-    {
-      id: 'p-4',
-      userId: 'u-1',
-      name: 'Plantilla de Seguimiento',
-      description: 'Recursos descargables para automatizar recordatorios.',
-      price: 19.9,
-      createdAt: '2026-02-28T13:00:00.000Z',
-    },
-  ]);
+  private readonly productApi = inject(ProductApiService);
+  private readonly clientProductApi = inject(ClientProductApiService);
+  private readonly authService = inject(AuthService);
+  private productsLoadRequestId = 0;
+  private clientProductsLoadRequestId = 0;
 
-  private readonly clientProductsState = signal<IClientProduct[]>([
-    {
-      id: 'cp-1',
-      clientId: '1',
-      productId: 'p-1',
-      status: ClientProductStatus.INTERESTED,
-      offeredAt: '2026-02-27T09:00:00.000Z',
-      updatedAt: '2026-02-28T14:30:00.000Z',
-      notes: 'Pidio facilidades de pago en 2 cuotas.',
-    },
-    {
-      id: 'cp-2',
-      clientId: '1',
-      productId: 'p-2',
-      status: ClientProductStatus.OFFERED,
-      offeredAt: '2026-03-01T11:15:00.000Z',
-      updatedAt: '2026-03-01T11:15:00.000Z',
-      notes: 'Prefiere horario de la tarde para la primera sesion.',
-    },
-    {
-      id: 'cp-3',
-      clientId: '2',
-      productId: 'p-3',
-      status: ClientProductStatus.SOLD,
-      offeredAt: '2026-02-10T16:00:00.000Z',
-      updatedAt: '2026-02-12T09:40:00.000Z',
-      notes: 'Venta cerrada con mantenimiento trimestral.',
-    },
-  ]);
+  private readonly productsState = signal<IProduct[]>([]);
+  private readonly clientProductsState = signal<IClientProduct[]>([]);
+  private readonly productsLoadingState = signal(false);
+  private readonly clientProductsLoadingState = signal(false);
+  private readonly productsErrorState = signal<string | null>(null);
+  private readonly clientProductsErrorState = signal<string | null>(null);
 
   readonly products = this.productsState.asReadonly();
   readonly clientProducts = this.clientProductsState.asReadonly();
+  readonly productsLoading = this.productsLoadingState.asReadonly();
+  readonly clientProductsLoading = this.clientProductsLoadingState.asReadonly();
+  readonly productsError = this.productsErrorState.asReadonly();
+  readonly clientProductsError = this.clientProductsErrorState.asReadonly();
+
+  loadProducts(userId: string): void {
+    const requestId = ++this.productsLoadRequestId;
+    this.productsLoadingState.set(true);
+    this.productsErrorState.set(null);
+    this.productApi.getAllByUser(userId).subscribe({
+      next: (products) => {
+        if (requestId !== this.productsLoadRequestId) return;
+        this.productsState.set(products);
+        this.productsLoadingState.set(false);
+      },
+      error: () => {
+        if (requestId !== this.productsLoadRequestId) return;
+        this.productsErrorState.set('No se pudo cargar el catálogo de productos.');
+        this.productsLoadingState.set(false);
+      },
+    });
+  }
+
+  loadClientProducts(clientId: string): void {
+    const requestId = ++this.clientProductsLoadRequestId;
+    this.clientProductsLoadingState.set(true);
+    this.clientProductsErrorState.set(null);
+    this.clientProductApi.getAllByClient(clientId).subscribe({
+      next: (offers) => {
+        if (requestId !== this.clientProductsLoadRequestId) return;
+        this.clientProductsState.set(offers);
+        this.clientProductsLoadingState.set(false);
+      },
+      error: () => {
+        if (requestId !== this.clientProductsLoadRequestId) return;
+        this.clientProductsErrorState.set('No se pudo cargar la relación de productos del cliente.');
+        this.clientProductsLoadingState.set(false);
+      },
+    });
+  }
 
   addProduct(input: {
     name: string;
     description?: string;
     price?: number;
     userId?: string;
-  }) {
-    const newProduct: IProduct = {
-      id: `p-${Date.now()}`,
-      userId: input.userId ?? 'u-1',
-      name: input.name,
-      description: input.description,
-      price: input.price,
-      createdAt: new Date().toISOString(),
-    };
-
-    this.productsState.update((products) => [newProduct, ...products]);
+  }): void {
+    const userId = input.userId ?? this.authService.currentUser()?.userId ?? '';
+    this.productsErrorState.set(null);
+    this.productApi
+      .create({ userId, name: input.name, description: input.description, price: input.price })
+      .subscribe({
+        next: (product) => {
+          this.productsState.update((products) => [product, ...products]);
+        },
+        error: () => {
+          this.productsErrorState.set('No se pudo crear el producto.');
+        },
+      });
   }
 
-  updateProduct(productId: string, updates: Partial<IProduct>) {
-    this.productsState.update((products) =>
-      products.map((product) =>
-        product.id === productId ? { ...product, ...updates } : product,
-      ),
-    );
+  updateProduct(productId: string, updates: Partial<IProduct>): void {
+    this.productsErrorState.set(null);
+    this.productApi.update(productId, updates).subscribe({
+      next: (updated) => {
+        this.productsState.update((products) =>
+          products.map((p) => (p.id === productId ? updated : p)),
+        );
+      },
+      error: () => {
+        this.productsErrorState.set('No se pudo actualizar el producto.');
+      },
+    });
   }
 
-  deleteProduct(productId: string) {
-    this.productsState.update((products) =>
-      products.filter((product) => product.id !== productId),
-    );
-
-    // Keep client-product data consistent when a catalog product is removed.
-    this.clientProductsState.update((offers) =>
-      offers.filter((offer) => offer.productId !== productId),
-    );
+  deleteProduct(productId: string): void {
+    this.productsErrorState.set(null);
+    this.productApi.remove(productId).subscribe({
+      next: () => {
+        this.productsState.update((products) =>
+          products.filter((p) => p.id !== productId),
+        );
+        this.clientProductsState.update((offers) =>
+          offers.filter((o) => o.productId !== productId),
+        );
+      },
+      error: () => {
+        this.productsErrorState.set('No se pudo eliminar el producto.');
+      },
+    });
   }
 
-  createClientProduct(input: ICreateClientProductInput) {
-    const now = new Date().toISOString();
-    const newOffer: IClientProduct = {
-      id: `cp-${Date.now()}`,
-      clientId: input.clientId,
-      productId: input.productId,
-      status: input.status,
-      offeredAt: now,
-      updatedAt: now,
-      notes: input.notes,
-    };
-
-    this.clientProductsState.update((offers) => [newOffer, ...offers]);
+  createClientProduct(input: ICreateClientProductInput): void {
+    this.clientProductsErrorState.set(null);
+    this.clientProductApi.create(input).subscribe({
+      next: (offer) => {
+        this.clientProductsState.update((offers) => [offer, ...offers]);
+      },
+      error: () => {
+        this.clientProductsErrorState.set('No se pudo vincular el producto al cliente.');
+      },
+    });
   }
 
-  updateClientProduct(offerId: string, updates: Partial<IClientProduct>) {
-    this.clientProductsState.update((offers) =>
-      offers.map((offer) =>
-        offer.id === offerId ? { ...offer, ...updates } : offer,
-      ),
-    );
+  updateClientProduct(offerId: string, updates: Partial<IClientProduct>): void {
+    this.clientProductsErrorState.set(null);
+    this.clientProductApi
+      .update(offerId, { status: updates.status, notes: updates.notes })
+      .subscribe({
+        next: (updated) => {
+          this.clientProductsState.update((offers) =>
+            offers.map((o) => (o.id === offerId ? updated : o)),
+          );
+        },
+        error: () => {
+          this.clientProductsErrorState.set('No se pudo actualizar el producto del cliente.');
+        },
+      });
   }
 
-  deleteClientProduct(offerId: string) {
-    this.clientProductsState.update((offers) =>
-      offers.filter((offer) => offer.id !== offerId),
-    );
+  deleteClientProduct(offerId: string): void {
+    this.clientProductsErrorState.set(null);
+    this.clientProductApi.remove(offerId).subscribe({
+      next: () => {
+        this.clientProductsState.update((offers) =>
+          offers.filter((o) => o.id !== offerId),
+        );
+      },
+      error: () => {
+        this.clientProductsErrorState.set('No se pudo eliminar el producto del cliente.');
+      },
+    });
   }
 }
+

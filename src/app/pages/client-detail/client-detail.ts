@@ -1,4 +1,5 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute } from '@angular/router';
 import { ClientStage } from '../../enums/client-stage.enum';
 import { ClientProductStatus } from '../../enums/client-product-status.enum';
@@ -17,6 +18,11 @@ import { OfferStatusColorPipe, OfferStatusLabelPipe } from '../../shared/pipes/o
 import { StageLabelPipe, StageColorPipe } from '../../shared/pipes/stage.pipes';
 import { SalesCatalogStore } from '../../shared/stores/sales-catalog.store';
 import { MessageTemplateStore } from '../../shared/stores/message-template.store';
+import { ClientApiService } from '../../core/services/client-api.service';
+import { NoteApiService } from '../../core/services/note-api.service';
+import { AppointmentApiService } from '../../core/services/appointment-api.service';
+import { AuthService } from '../../core/services/auth.service';
+import { IAppointmentApi } from '../../core/interfaces/appointment-api.interface';
 import { addIcons } from 'ionicons';
 import {
   logoWhatsapp,
@@ -57,21 +63,9 @@ import {
   IonSelectOption,
   IonTextarea,
 } from '@ionic/angular/standalone';
-
-type Segment = 'notes' | 'appointments' | 'attachments' | 'products' | 'messages';
-
-interface IAppointmentDraft {
-  title: string;
-  description: string;
-  date: string;
-  startHour: string;
-  endHour: string;
-}
-
-interface IEnrichedClientProduct extends IClientProduct {
-  resolvedProductName: string;
-  resolvedProductPrice: number | undefined;
-}
+import { ClientDetailSegment } from './enums/client-detail-segment.enum';
+import { IAppointmentDraft } from './interfaces/appointment-draft.interface';
+import { IEnrichedClientProduct } from './interfaces/enriched-client-product.interface';
 
 @Component({
   selector: 'app-client-detail',
@@ -109,11 +103,16 @@ export class ClientDetailPage {
   private readonly alertCtrl = inject(AlertController);
   private readonly salesCatalogStore = inject(SalesCatalogStore);
   private readonly messageTemplateStore = inject(MessageTemplateStore);
+  private readonly clientApi = inject(ClientApiService);
+  private readonly noteApi = inject(NoteApiService);
+  private readonly appointmentApi = inject(AppointmentApiService);
+  private readonly authService = inject(AuthService);
+  private readonly destroyRef = inject(DestroyRef);
   readonly clientId = this.route.snapshot.paramMap.get('id') ?? '';
 
   readonly allStages = CLIENT_STAGE_OPTIONS;
 
-  readonly activeSegment = signal<Segment>('notes');
+  readonly activeSegment = signal<ClientDetailSegment>(ClientDetailSegment.NOTES);
   readonly clientProductStatus = ClientProductStatus;
   readonly products = this.salesCatalogStore.products;
   readonly draftProductId = signal('');
@@ -130,57 +129,24 @@ export class ClientDetailPage {
   readonly isAttachmentModalOpen = signal(false);
   readonly attachmentDraft = signal(this.createDefaultAttachmentDraft());
   readonly attachmentDraftError = signal<string | null>(null);
+  readonly actionError = signal<string | null>(null);
 
-  // Mock client data
+  // Client data loaded from API
   readonly client = signal<IClient>({
     id: this.clientId,
-    firstName: 'María',
-    lastName: 'García',
-    email: 'maria.garcia@example.com',
-    phone: '+34612345678',
-    initials: 'MG',
-    color: 'avatar--blue',
-    createdAt: '15 ene 2026',
-    stage: ClientStage.FOLLOW_UP,
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    initials: '?',
+    color: 'avatar--sky',
+    createdAt: '',
+    stage: ClientStage.FIRST_CONTACT,
   });
 
-  readonly notes = signal<INote[]>([
-    {
-      id: '1',
-      content: 'La clienta prefiere citas por la mañana. Está muy interesada en el plan premium. Tiene dos perros: mencionar política para mascotas.',
-      createdAt: '28 feb 2026',
-      updatedAt: '28 feb 2026',
-    },
-    {
-      id: '2',
-      content: 'Hacer seguimiento de la propuesta enviada el 20/02. Comentó dudas de presupuesto: preparar opciones alternativas.',
-      createdAt: '20 feb 2026',
-      updatedAt: '25 feb 2026',
-    },
-  ]);
+  readonly notes = signal<INote[]>([]);
 
-  readonly appointments = signal<IClientAppointment[]>([
-    {
-      id: '1',
-      title: 'Consulta inicial',
-      description: 'Primera reunión para evaluar requisitos y expectativas.',
-      startAt: '2026-03-05T10:00',
-      endAt: '2026-03-05T11:00',
-      startTime: '5 mar 2026 · 10:00',
-      endTime: '11:00',
-      status: 'scheduled',
-    },
-    {
-      id: '2',
-      title: 'Sesión de seguimiento',
-      description: 'Revisar la propuesta y resolver inquietudes de presupuesto.',
-      startAt: '2026-02-20T15:00',
-      endAt: '2026-02-20T16:00',
-      startTime: '20 feb 2026 · 15:00',
-      endTime: '16:00',
-      status: 'completed',
-    },
-  ]);
+  readonly appointments = signal<IClientAppointment[]>([]);
 
   readonly attachments = signal<IAttachment[]>([
     { id: '1', fileName: 'proposal_v2.pdf', fileType: 'PDF', fileSize: '1.2 MB', uploadedAt: '20 feb 2026', icon: 'document-outline' },
@@ -207,14 +173,18 @@ export class ClientDetailPage {
 
   readonly canShowPrimaryFab = computed(() => {
     const segment = this.activeSegment();
-    return segment === 'notes' || segment === 'appointments' || segment === 'attachments';
+    return (
+      segment === ClientDetailSegment.NOTES ||
+      segment === ClientDetailSegment.APPOINTMENTS ||
+      segment === ClientDetailSegment.ATTACHMENTS
+    );
   });
 
   readonly primaryFabLabel = computed(() => {
     const segment = this.activeSegment();
-    if (segment === 'notes') return 'Agregar nota';
-    if (segment === 'appointments') return 'Programar cita';
-    if (segment === 'attachments') return 'Agregar archivo';
+    if (segment === ClientDetailSegment.NOTES) return 'Agregar nota';
+    if (segment === ClientDetailSegment.APPOINTMENTS) return 'Programar cita';
+    if (segment === ClientDetailSegment.ATTACHMENTS) return 'Agregar archivo';
     return 'Agregar';
   });
 
@@ -226,9 +196,18 @@ export class ClientDetailPage {
       .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)),
   );
 
-  readonly callWhatsAppUrl = computed(
-    () => `https://wa.me/${this.client().phone.replaceAll(/\D/g, '')}`,
-  );
+  readonly callWhatsAppUrl = computed(() => {
+    const templates = this.currentStageTemplates();
+    const phone = this.client().phone.replaceAll(/\D/g, '');
+
+    if (templates.length > 0) {
+      const template = templates[0];
+      const message = template.messageBody.replace('{{name}}', this.client().firstName);
+      return `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+    }
+
+    return `https://wa.me/${phone}`;
+  });
 
   constructor() {
     addIcons({
@@ -256,23 +235,52 @@ export class ClientDetailPage {
     });
   }
 
-  onSegmentChange(event: CustomEvent) {
-    this.activeSegment.set(event.detail.value as Segment);
+  ionViewWillEnter(): void {
+    const userId = this.authService.currentUser()?.userId;
+
+    if (this.clientId) {
+      this.clientApi
+        .getById(this.clientId)
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe((client) => this.client.set(client));
+
+      this.noteApi
+        .getAllByClient(this.clientId)
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe((notes) => this.notes.set(notes));
+
+      this.appointmentApi
+        .getAllByClient(this.clientId)
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe((appts) => this.appointments.set(appts.map((a) => this.mapApiAppointment(a))));
+    }
+
+    if (userId) {
+      this.salesCatalogStore.loadProducts(userId);
+      this.salesCatalogStore.loadClientProducts(this.clientId);
+      this.messageTemplateStore.load(userId);
+    }
+  }
+
+  onSegmentChange(event: Event) {
+    const segment = this.getEventValue<ClientDetailSegment>(event);
+    if (!segment) return;
+    this.activeSegment.set(segment);
   }
 
   openPrimaryActionModal() {
     const segment = this.activeSegment();
-    if (segment === 'notes') {
+    if (segment === ClientDetailSegment.NOTES) {
       this.openCreateNoteModal();
       return;
     }
 
-    if (segment === 'appointments') {
+    if (segment === ClientDetailSegment.APPOINTMENTS) {
       this.openCreateAppointmentModal();
       return;
     }
 
-    if (segment === 'attachments') {
+    if (segment === ClientDetailSegment.ATTACHMENTS) {
       this.openCreateAttachmentModal();
     }
   }
@@ -304,36 +312,44 @@ export class ClientDetailPage {
   }
 
   saveNoteFromModal() {
+    this.actionError.set(null);
     const content = this.noteDraft().trim();
     if (!content) {
       this.noteDraftError.set('Escribe una nota antes de guardar.');
       return;
     }
 
-    const today = this.formatAppointmentDay(new Date());
     const editingId = this.editingNoteId();
 
     if (editingId) {
-      this.notes.update((notes) =>
-        notes.map((note) =>
-          note.id === editingId
-            ? { ...note, content, updatedAt: today }
-            : note,
-        ),
-      );
+      this.noteApi
+        .update(editingId, { content })
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe({
+          next: (updated) => {
+            this.notes.update((notes) =>
+              notes.map((n) => (n.id === editingId ? updated : n)),
+            );
+            this.closeNoteModal();
+          },
+          error: () => {
+            this.actionError.set('No se pudo actualizar la nota.');
+          },
+        });
     } else {
-      this.notes.update((notes) => [
-        {
-          id: `note-${Date.now()}`,
-          content,
-          createdAt: today,
-          updatedAt: today,
-        },
-        ...notes,
-      ]);
+      this.noteApi
+        .create({ clientId: this.clientId, content })
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe({
+          next: (created) => {
+            this.notes.update((notes) => [created, ...notes]);
+            this.closeNoteModal();
+          },
+          error: () => {
+            this.actionError.set('No se pudo guardar la nota.');
+          },
+        });
     }
-
-    this.closeNoteModal();
   }
 
   async deleteNote(note: INote) {
@@ -345,9 +361,7 @@ export class ClientDetailPage {
         {
           text: 'Eliminar',
           role: 'destructive',
-          handler: () => {
-            this.notes.update((notes) => notes.filter((current) => current.id !== note.id));
-          },
+          handler: () => this.confirmDeleteNote(note.id),
         },
       ],
     });
@@ -446,9 +460,9 @@ export class ClientDetailPage {
 
   onAppointmentDraftDateChange(
     field: 'date' | 'startHour' | 'endHour',
-    event: CustomEvent,
+    event: Event,
   ) {
-    const value = event.detail.value;
+    const value = this.getEventValue<string | string[]>(event);
     const parsedValue = Array.isArray(value) ? value[0] : value;
     let nextValue = '';
 
@@ -479,6 +493,7 @@ export class ClientDetailPage {
   readonly appointmentDraftEndHourLabel = computed(() => this.appointmentDraft().endHour || '--:--');
 
   saveAppointmentFromModal() {
+    this.actionError.set(null);
     const draft = this.appointmentDraft();
     const title = draft.title.trim();
     if (!title || !draft.date || !draft.startHour || !draft.endHour) {
@@ -501,36 +516,50 @@ export class ClientDetailPage {
       return;
     }
 
-    const payload: Omit<IClientAppointment, 'id' | 'status'> = {
-      title,
-      description: draft.description.trim() || undefined,
-      startAt,
-      endAt,
-      startTime: `${this.formatAppointmentDay(startDate)} · ${this.formatAppointmentHour(startDate)}`,
-      endTime: this.formatAppointmentHour(endDate),
-    };
-
+    const userId = this.authService.currentUser()?.userId ?? '';
     const editingId = this.editingAppointmentId();
-    if (editingId) {
-      this.appointments.update((appointments) =>
-        appointments.map((current) =>
-          current.id === editingId
-            ? { ...current, ...payload }
-            : current,
-        ),
-      );
-    } else {
-      this.appointments.update((appointments) => [
-        {
-          id: `appt-${Date.now()}`,
-          status: 'scheduled',
-          ...payload,
-        },
-        ...appointments,
-      ]);
-    }
 
-    this.closeAppointmentModal();
+    if (editingId) {
+      this.appointmentApi
+        .update(editingId, {
+          title,
+          description: draft.description.trim() || undefined,
+          startTime: startAt,
+          endTime: endAt,
+        })
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe({
+          next: (updated) => {
+            this.appointments.update((appts) =>
+              appts.map((a) => (a.id === editingId ? this.mapApiAppointment(updated) : a)),
+            );
+            this.closeAppointmentModal();
+          },
+          error: () => {
+            this.actionError.set('No se pudo actualizar la cita.');
+          },
+        });
+    } else {
+      this.appointmentApi
+        .create({
+          clientId: this.clientId,
+          userId,
+          title,
+          description: draft.description.trim() || undefined,
+          startTime: startAt,
+          endTime: endAt,
+        })
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe({
+          next: (created) => {
+            this.appointments.update((appts) => [this.mapApiAppointment(created), ...appts]);
+            this.closeAppointmentModal();
+          },
+          error: () => {
+            this.actionError.set('No se pudo crear la cita.');
+          },
+        });
+    }
   }
 
   updateAppointmentStatus(
@@ -538,12 +567,37 @@ export class ClientDetailPage {
     status: IClientAppointment['status'],
   ) {
     if (appointment.status === status) return;
+    this.actionError.set(null);
+    this.appointmentApi
+      .update(appointment.id, { status })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (updated) => {
+          this.appointments.update((appts) =>
+            appts.map((item) =>
+              item.id === appointment.id ? this.mapApiAppointment(updated) : item,
+            ),
+          );
+        },
+        error: () => {
+          this.actionError.set('No se pudo actualizar el estado de la cita.');
+        },
+      });
+  }
 
-    this.appointments.update((appointments) =>
-      appointments.map((current) =>
-        current.id === appointment.id ? { ...current, status } : current,
-      ),
-    );
+  private mapApiAppointment(a: IAppointmentApi): IClientAppointment {
+    const startDate = new Date(a.startTime);
+    const endDate = new Date(a.endTime);
+    return {
+      id: a.id,
+      title: a.title,
+      description: a.description,
+      startAt: a.startTime,
+      endAt: a.endTime,
+      startTime: `${this.formatAppointmentDay(startDate)} · ${this.formatAppointmentHour(startDate)}`,
+      endTime: this.formatAppointmentHour(endDate),
+      status: a.status,
+    };
   }
 
   private formatAppointmentDay(dateInput: Date): string {
@@ -631,12 +685,13 @@ export class ClientDetailPage {
     return raw;
   }
 
-  onDraftProductChange(event: CustomEvent) {
-    this.draftProductId.set(event.detail.value ?? '');
+  onDraftProductChange(event: Event) {
+    this.draftProductId.set(this.getEventValue<string>(event) ?? '');
   }
 
-  onDraftProductStatusChange(event: CustomEvent) {
-    const nextStatus = event.detail.value as ClientProductStatus;
+  onDraftProductStatusChange(event: Event) {
+    const nextStatus = this.getEventValue<ClientProductStatus>(event);
+    if (!nextStatus) return;
     if (
       nextStatus === ClientProductStatus.OFFERED ||
       nextStatus === ClientProductStatus.INTERESTED ||
@@ -723,9 +778,38 @@ export class ClientDetailPage {
     await alert.present();
   }
 
-  onStageChange(event: CustomEvent) {
-    const newStage = event.detail.value as ClientStage;
-    this.client.update((c) => ({ ...c, stage: newStage }));
+  onStageChange(event: Event) {
+    const newStage = this.getEventValue<ClientStage>(event);
+    if (!newStage) return;
+    if (this.client().stage === newStage) return;
+
+    this.actionError.set(null);
+    this.clientApi.update(this.clientId, { stage: newStage }).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: ({ client }) => {
+        this.client.update((current) => ({
+          ...current,
+          ...client,
+        }));
+      },
+      error: () => {
+        this.actionError.set('No se pudo actualizar la etapa del cliente.');
+      },
+    });
+  }
+
+  private confirmDeleteNote(noteId: string): void {
+    this.actionError.set(null);
+    this.noteApi
+      .remove(noteId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.notes.update((notes) => notes.filter((note) => note.id !== noteId));
+        },
+        error: () => {
+          this.actionError.set('No se pudo eliminar la nota.');
+        },
+      });
   }
 
   async openEditTemplateAlert(template: IMessageTemplate | null) {
@@ -787,6 +871,11 @@ export class ClientDetailPage {
     const phone = this.client().phone.replaceAll(/\D/g, '');
     const message = this.personalizeTemplateMessage(template);
     return `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+  }
+
+  private getEventValue<T>(event: Event): T | null {
+    const value = (event as CustomEvent<{ value?: T }>).detail?.value;
+    return value ?? null;
   }
 }
 

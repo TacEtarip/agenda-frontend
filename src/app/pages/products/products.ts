@@ -28,10 +28,9 @@ import { COMMON_ION_PAGE_IMPORTS } from '../../shared/ionic-imports';
 import { FormatDatePipe } from '../../shared/pipes/format-date.pipe';
 import { FormatPricePipe } from '../../shared/pipes/format-price.pipe';
 import { SalesCatalogStore } from '../../shared/stores/sales-catalog.store';
-
-type ProductSort = 'recent' | 'price-desc' | 'price-asc' | 'name';
-
-const VALID_PRODUCT_SORTS = new Set<ProductSort>(['recent', 'price-desc', 'price-asc', 'name']);
+import { AuthService } from '../../core/services/auth.service';
+import { ProductSort } from './enums/product-sort.enum';
+import { VALID_PRODUCT_SORTS } from './constants/product-sort.constants';
 
 @Component({
   selector: 'app-products',
@@ -59,6 +58,7 @@ export class ProductsPage {
   private readonly fb = inject(FormBuilder);
   private readonly alertCtrl = inject(AlertController);
   private readonly salesCatalogStore = inject(SalesCatalogStore);
+  private readonly authService = inject(AuthService);
   private readonly priceFormatter = new Intl.NumberFormat('es-ES', {
     style: 'currency',
     currency: 'EUR',
@@ -70,7 +70,7 @@ export class ProductsPage {
   readonly isCreateModalOpen = signal(false);
   readonly productDisplayLimit = signal(20);
   readonly searchQuery = signal('');
-  readonly sortMode = signal<ProductSort>('recent');
+  readonly sortMode = signal<ProductSort>(ProductSort.RECENT);
   readonly createProductForm = this.fb.nonNullable.group({
     name: ['', [Validators.required, Validators.maxLength(80)]],
     description: ['', [Validators.maxLength(280)]],
@@ -110,9 +110,9 @@ export class ProductsPage {
       : [...this.products()];
 
     return filtered.sort((a, b) => {
-      if (sort === 'name') return a.name.localeCompare(b.name, 'es');
-      if (sort === 'price-desc') return (b.price ?? -1) - (a.price ?? -1);
-      if (sort === 'price-asc') return (a.price ?? Number.MAX_VALUE) - (b.price ?? Number.MAX_VALUE);
+      if (sort === ProductSort.NAME) return a.name.localeCompare(b.name, 'es');
+      if (sort === ProductSort.PRICE_DESC) return (b.price ?? -1) - (a.price ?? -1);
+      if (sort === ProductSort.PRICE_ASC) return (a.price ?? Number.MAX_VALUE) - (b.price ?? Number.MAX_VALUE);
       return b.createdAt.localeCompare(a.createdAt);
     });
   });
@@ -134,22 +134,31 @@ export class ProductsPage {
     });
   }
 
+  ionViewWillEnter(): void {
+    const userId = this.authService.currentUser()?.userId;
+    if (userId) {
+      this.salesCatalogStore.loadProducts(userId);
+    }
+  }
+
   onSearch(event: CustomEvent) {
     this.searchQuery.set(event.detail.value ?? '');
     this.productDisplayLimit.set(20);
   }
 
-  onSortChange(event: CustomEvent) {
-    const nextSort = event.detail.value as ProductSort;
+  onSortChange(event: Event) {
+    const nextSort = this.getEventValue<ProductSort>(event);
+    if (!nextSort) return;
     if (VALID_PRODUCT_SORTS.has(nextSort)) {
       this.sortMode.set(nextSort);
       this.productDisplayLimit.set(20);
     }
   }
 
-  loadMoreProducts(event: { target: { complete: () => void } }): void {
+  loadMoreProducts(event: Event): void {
     this.productDisplayLimit.update((n) => n + 20);
-    event.target.complete();
+    const target = event.target as { complete?: () => void } | null;
+    target?.complete?.();
   }
 
   openCreateProductModal() {
@@ -188,6 +197,7 @@ export class ProductsPage {
       name: trimmedName,
       description: description.trim() || undefined,
       price: parsedPrice,
+      userId: this.authService.currentUser()?.userId,
     });
 
     this.closeCreateProductModal();
@@ -277,5 +287,10 @@ export class ProductsPage {
     if (!Number.isFinite(parsed) || parsed < 0) return null;
 
     return Math.round(parsed * 100) / 100;
+  }
+
+  private getEventValue<T>(event: Event): T | null {
+    const value = (event as CustomEvent<{ value?: T }>).detail?.value;
+    return value ?? null;
   }
 }

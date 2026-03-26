@@ -23,6 +23,7 @@ import { COMMON_ION_PAGE_IMPORTS } from '../../shared/ionic-imports';
 import { CLIENT_STAGE_OPTIONS } from '../../shared/client-stage.utils';
 import { FormatDatePipe } from '../../shared/pipes/format-date.pipe';
 import { MessageTemplateStore } from '../../shared/stores/message-template.store';
+import { AuthService } from '../../core/services/auth.service';
 
 @Component({
   selector: 'app-message-templates',
@@ -42,6 +43,7 @@ export class MessageTemplatesPage {
   private readonly fb = inject(FormBuilder);
   private readonly alertCtrl = inject(AlertController);
   private readonly messageTemplateStore = inject(MessageTemplateStore);
+  private readonly authService = inject(AuthService);
 
   readonly allStages = CLIENT_STAGE_OPTIONS;
   readonly templates = this.messageTemplateStore.templates;
@@ -94,6 +96,13 @@ export class MessageTemplatesPage {
       timeOutline,
       trashOutline,
     });
+  }
+
+  ionViewWillEnter(): void {
+    const userId = this.authService.currentUser()?.userId;
+    if (userId) {
+      this.messageTemplateStore.load(userId);
+    }
   }
 
   openCreateTemplateModal(stage: ClientStage) {

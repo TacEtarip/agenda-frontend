@@ -1,3 +1,5 @@
+import { AppointmentStatus } from '../types/appointment-status.type';
+
 export interface IClientAppointment {
   id: string;
   title: string;
@@ -6,5 +8,5 @@ export interface IClientAppointment {
   endAt?: string;
   startTime: string;
   endTime: string;
-  status: 'scheduled' | 'completed' | 'cancelled';
+  status: AppointmentStatus;
 }

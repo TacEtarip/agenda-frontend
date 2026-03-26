@@ -1,85 +1,81 @@
-import { Injectable, signal } from '@angular/core';
-import { ClientStage } from '../../enums/client-stage.enum';
+import { Injectable, inject, signal } from '@angular/core';
 import { IMessageTemplate } from '../../interfaces/message-template.interface';
-
-interface IUpsertMessageTemplateInput {
-  templateId?: string;
-  stage: ClientStage;
-  messageBody: string;
-}
+import { MessageTemplateApiService } from '../../core/services/message-template-api.service';
+import { AuthService } from '../../core/services/auth.service';
+import { IUpsertMessageTemplateInput } from './interfaces/upsert-message-template-input.interface';
 
 @Injectable({ providedIn: 'root' })
 export class MessageTemplateStore {
-  private readonly templatesState = signal<IMessageTemplate[]>([
-    {
-      id: 'mt-1',
-      stage: ClientStage.FIRST_CONTACT,
-      messageBody:
-        'Hola {{name}}. ¡Gracias por contactarme! Me gustaría agendar una consulta inicial para conocer mejor tus necesidades. ¿Cuándo te viene bien?',
-      updatedAt: '2026-02-10T09:00:00.000Z',
-    },
-    {
-      id: 'mt-2',
-      stage: ClientStage.FOLLOW_UP,
-      messageBody:
-        'Hola {{name}}. Te escribo para dar seguimiento a la propuesta que te envié. ¿Tienes alguna duda que pueda aclarar? Puedo ajustarla según tus comentarios.',
-      updatedAt: '2026-02-15T16:30:00.000Z',
-    },
-    {
-      id: 'mt-3',
-      stage: ClientStage.FOLLOW_UP,
-      messageBody:
-        'Hola {{name}}. Paso por aquí para saber si quieres que te comparta una versión más resumida de la propuesta o una alternativa ajustada a tu presupuesto.',
-      updatedAt: '2026-02-18T11:10:00.000Z',
-    },
-    {
-      id: 'mt-4',
-      stage: ClientStage.MAINTENANCE,
-      messageBody:
-        'Hola {{name}}. Espero que todo vaya muy bien. Solo quería confirmar que estás satisfecho con el servicio. Avísame si puedo ayudarte en algo.',
-      updatedAt: '2026-01-05T12:15:00.000Z',
-    },
-    {
-      id: 'mt-5',
-      stage: ClientStage.CLOSED_SALE,
-      messageBody:
-        'Hola {{name}}. ¡Felicidades por tu decisión! Estoy muy contento de trabajar contigo. En breve te envío los detalles de inicio.',
-      updatedAt: '2026-01-20T10:20:00.000Z',
-    },
-  ]);
+  private readonly templateApi = inject(MessageTemplateApiService);
+  private readonly authService = inject(AuthService);
+  private loadRequestId = 0;
+  private readonly templatesState = signal<IMessageTemplate[]>([]);
+  private readonly templatesLoadingState = signal(false);
+  private readonly templatesErrorState = signal<string | null>(null);
 
   readonly templates = this.templatesState.asReadonly();
+  readonly templatesLoading = this.templatesLoadingState.asReadonly();
+  readonly templatesError = this.templatesErrorState.asReadonly();
 
-  saveTemplate(input: IUpsertMessageTemplateInput) {
+  load(userId: string): void {
+    const requestId = ++this.loadRequestId;
+    this.templatesLoadingState.set(true);
+    this.templatesErrorState.set(null);
+    this.templateApi.getAllByUser(userId).subscribe({
+      next: (templates) => {
+        if (requestId !== this.loadRequestId) return;
+        this.templatesState.set(templates);
+        this.templatesLoadingState.set(false);
+      },
+      error: () => {
+        if (requestId !== this.loadRequestId) return;
+        this.templatesErrorState.set('No se pudieron cargar las plantillas.');
+        this.templatesLoadingState.set(false);
+      },
+    });
+  }
+
+  saveTemplate(input: IUpsertMessageTemplateInput): void {
     const messageBody = input.messageBody.trim();
     if (!messageBody) return;
 
-    const now = new Date().toISOString();
+    const userId = this.authService.currentUser()?.userId;
+    if (!userId) return;
+
+    this.templatesErrorState.set(null);
 
     if (input.templateId) {
-      this.templatesState.update((templates) =>
-        templates.map((template) =>
-          template.id === input.templateId
-            ? { ...template, stage: input.stage, messageBody, updatedAt: now }
-            : template,
-        ),
-      );
-      return;
+      this.templateApi.update(input.templateId, { stage: input.stage, messageBody }).subscribe({
+        next: (updated) => {
+          this.templatesState.update((templates) =>
+            templates.map((t) => (t.id === input.templateId ? updated : t)),
+          );
+        },
+        error: () => {
+          this.templatesErrorState.set('No se pudo actualizar la plantilla.');
+        },
+      });
+    } else {
+      this.templateApi.create({ userId, stage: input.stage, messageBody }).subscribe({
+        next: (created) => {
+          this.templatesState.update((templates) => [created, ...templates]);
+        },
+        error: () => {
+          this.templatesErrorState.set('No se pudo crear la plantilla.');
+        },
+      });
     }
-
-    const newTemplate: IMessageTemplate = {
-      id: `mt-${Date.now()}`,
-      stage: input.stage,
-      messageBody,
-      updatedAt: now,
-    };
-
-    this.templatesState.update((templates) => [newTemplate, ...templates]);
   }
 
-  deleteTemplate(templateId: string) {
-    this.templatesState.update((templates) =>
-      templates.filter((template) => template.id !== templateId),
-    );
+  deleteTemplate(templateId: string): void {
+    this.templatesErrorState.set(null);
+    this.templateApi.remove(templateId).subscribe({
+      next: () => {
+        this.templatesState.update((templates) => templates.filter((t) => t.id !== templateId));
+      },
+      error: () => {
+        this.templatesErrorState.set('No se pudo eliminar la plantilla.');
+      },
+    });
   }
 }

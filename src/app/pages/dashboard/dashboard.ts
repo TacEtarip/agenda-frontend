@@ -1,9 +1,11 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { ClientStage } from '../../enums/client-stage.enum';
 import { IClient } from '../../interfaces/client.interface';
 import { IDashboardAppointment } from '../../interfaces/dashboard-appointment.interface';
+import { CLIENT_STAGE_OPTIONS } from '../../shared/client-stage.utils';
 import { COMMON_ION_PAGE_IMPORTS } from '../../shared/ionic-imports';
 import { AppointmentStatusLabelPipe } from '../../shared/pipes/appointment-status.pipes';
 import { StageLabelPipe, StageColorPipe } from '../../shared/pipes/stage.pipes';
@@ -28,7 +30,12 @@ import {
   IonInfiniteScroll,
   IonInfiniteScrollContent,
   IonSearchbar,
+  IonSelect,
+  IonSelectOption,
 } from '@ionic/angular/standalone';
+import { AuthService } from '../../core/services/auth.service';
+import { ClientApiService } from '../../core/services/client-api.service';
+import { AppointmentApiService, IAppointmentApi } from '../../core/services/appointment-api.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -43,6 +50,8 @@ import {
     IonInfiniteScroll,
     IonInfiniteScrollContent,
     IonSearchbar,
+    IonSelect,
+    IonSelectOption,
     StageLabelPipe,
     StageColorPipe,
     AppointmentStatusLabelPipe,
@@ -53,56 +62,84 @@ import {
 })
 export class DashboardPage {
   private readonly fb = inject(FormBuilder);
-  private readonly clientAvatarColors = [
-    'avatar--sky',
-    'avatar--green',
-    'avatar--indigo',
-    'avatar--cyan',
-    'avatar--mint',
-  ] as const;
+  private readonly authService = inject(AuthService);
+  private readonly clientApi = inject(ClientApiService);
+  private readonly appointmentApi = inject(AppointmentApiService);
+  private readonly destroyRef = inject(DestroyRef);
 
-  readonly userName = signal('Alex');
+  readonly userName = computed(() => {
+    const user = this.authService.currentUser();
+    return user?.firstName ?? user?.email?.split('@')[0] ?? 'Usuario';
+  });
   readonly searchQuery = signal('');
+  readonly stageFilter = signal<ClientStage | 'ALL'>('ALL');
   readonly showAllAppointments = signal(false);
   readonly isAddClientModalOpen = signal(false);
+  readonly isCreatingClient = signal(false);
   readonly clientDisplayLimit = signal(20);
+  readonly stageOptions = signal(CLIENT_STAGE_OPTIONS);
   readonly addClientForm = this.fb.nonNullable.group({
     firstName: ['', [Validators.required, Validators.maxLength(60)]],
     lastName: ['', [Validators.required, Validators.maxLength(60)]],
     email: ['', [Validators.required, Validators.email]],
     phone: ['', [Validators.required, Validators.maxLength(30)]],
+    stage: [ClientStage.FIRST_CONTACT as ClientStage, [Validators.required]],
   });
 
   readonly stats = signal([
-    { label: 'Total de clientes', value: 24, icon: 'people-outline', color: 'stat-icon--sky' },
-    { label: 'Hoy', value: 3, icon: 'time-outline', color: 'stat-icon--green' },
-    { label: 'Esta semana', value: 8, icon: 'calendar-outline', color: 'stat-icon--indigo' },
+    { label: 'Total de clientes', value: 0, icon: 'people-outline', color: 'stat-icon--sky' },
+    { label: 'Hoy', value: 0, icon: 'time-outline', color: 'stat-icon--green' },
+    { label: 'Esta semana', value: 0, icon: 'calendar-outline', color: 'stat-icon--indigo' },
   ]);
 
-  readonly upcomingAppointments = signal<IDashboardAppointment[]>([
-    { id: '1', clientName: 'María García', initials: 'MG', title: 'Consulta inicial', time: '10:00', status: 'scheduled' },
-    { id: '2', clientName: 'Carlos López', initials: 'CL', title: 'Sesión de seguimiento', time: '14:30', status: 'scheduled' },
-    { id: '3', clientName: 'Ana Martínez', initials: 'AM', title: 'Reunión con nuevo cliente', time: '16:00', status: 'scheduled' },
-  ]);
+  readonly recentClients = signal<IClient[]>([]);
+  readonly appointmentsToday = signal<IAppointmentApi[]>([]);
 
-  readonly recentClients = signal<IClient[]>([
-    { id: '1', firstName: 'María',  lastName: 'García',    email: 'maria@example.com',  phone: '+34 612 345 678', initials: 'MG', color: 'avatar--sky',    stage: ClientStage.FOLLOW_UP },
-    { id: '2', firstName: 'Carlos', lastName: 'López',     email: 'carlos@example.com', phone: '+34 698 765 432', initials: 'CL', color: 'avatar--green',  stage: ClientStage.FIRST_CONTACT },
-    { id: '3', firstName: 'Ana',    lastName: 'Martínez',  email: 'ana@example.com',    phone: '+34 677 123 456', initials: 'AM', color: 'avatar--indigo', stage: ClientStage.CLOSED_SALE },
-    { id: '4', firstName: 'Pedro',  lastName: 'Sánchez',   email: 'pedro@example.com',  phone: '+34 655 987 654', initials: 'PS', color: 'avatar--cyan',   stage: ClientStage.MAINTENANCE },
-    { id: '5', firstName: 'Laura', lastName: 'Fernández', email: 'laura@example.com', phone: '+34 632 456 789', initials: 'LF', color: 'avatar--mint', stage: ClientStage.POST_SALE },
-  ]);
+  readonly upcomingAppointments = computed<IDashboardAppointment[]>(() => {
+    const clientsById = new Map(this.recentClients().map((client) => [client.id, client]));
+
+    return this.appointmentsToday()
+      .filter((appointment) => appointment.status === 'scheduled')
+      .map((appointment) => {
+        const client = clientsById.get(appointment.clientId);
+        const clientName = client
+          ? `${client.firstName} ${client.lastName}`.trim()
+          : 'Cliente sin nombre';
+
+        return {
+          id: appointment.id,
+          clientName,
+          initials: client?.initials ?? this.getClientInitials(clientName),
+          title: appointment.title,
+          time: new Date(appointment.startTime).toLocaleTimeString('es-ES', {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false,
+          }),
+          status: appointment.status,
+        };
+      });
+  });
 
   readonly filteredClients = computed(() => {
     const q = this.searchQuery().toLowerCase();
-    return q
-      ? this.recentClients().filter(
-          (c) =>
-            c.firstName.toLowerCase().includes(q) ||
-            c.lastName.toLowerCase().includes(q) ||
-            c.email.toLowerCase().includes(q),
-        )
-      : this.recentClients();
+    const sf = this.stageFilter();
+    let clients = this.recentClients();
+
+    if (sf !== 'ALL') {
+      clients = clients.filter((c) => c.stage === sf);
+    }
+
+    if (q) {
+      clients = clients.filter(
+        (c) =>
+          c.firstName.toLowerCase().includes(q) ||
+          c.lastName.toLowerCase().includes(q) ||
+          c.email.toLowerCase().includes(q),
+      );
+    }
+
+    return clients;
   });
 
   readonly pagedClients = computed(() =>
@@ -125,14 +162,78 @@ export class DashboardPage {
     });
   }
 
+  ionViewWillEnter(): void {
+    const userId = this.authService.currentUser()?.userId;
+    if (!userId) return;
+
+    this.clientApi.getAllByUser(userId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: (clients) => {
+        this.recentClients.set(clients);
+        this.stats.update((s) =>
+          s.map((stat) =>
+            stat.label === 'Total de clientes'
+              ? { ...stat, value: clients.length }
+              : stat,
+          ),
+        );
+      },
+    });
+
+    this.appointmentApi.getAllByUser(userId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: (appointments) => {
+        const today = new Date();
+        const todayStr = today.toDateString();
+        const startOfWeek = new Date(today);
+        startOfWeek.setDate(today.getDate() - today.getDay());
+        const endOfWeek = new Date(startOfWeek);
+        endOfWeek.setDate(startOfWeek.getDate() + 6);
+
+        const todayAppts = appointments.filter((a) =>
+          new Date(a.startTime).toDateString() === todayStr,
+        );
+        const weekAppts = appointments.filter((a) => {
+          const d = new Date(a.startTime);
+          return d >= startOfWeek && d <= endOfWeek;
+        });
+
+        this.stats.update((s) =>
+          s.map((stat) => {
+            if (stat.label === 'Hoy') return { ...stat, value: todayAppts.length };
+            if (stat.label === 'Esta semana') return { ...stat, value: weekAppts.length };
+            return stat;
+          }),
+        );
+
+        this.appointmentsToday.set(todayAppts);
+      },
+    });
+  }
+
+  private getClientInitials(clientName: string): string {
+    return clientName
+      .split(' ')
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part[0]?.toUpperCase() ?? '')
+      .join('') || 'CL';
+  }
+
   onSearch(event: CustomEvent) {
     this.searchQuery.set(event.detail.value ?? '');
     this.clientDisplayLimit.set(20);
   }
 
-  loadMoreClients(event: { target: { complete: () => void } }): void {
+  onStageFilterChange(event: CustomEvent) {
+    const stage = this.getEventValue<ClientStage | 'ALL'>(event);
+    if (!stage) return;
+    this.stageFilter.set(stage);
+    this.clientDisplayLimit.set(20);
+  }
+
+  loadMoreClients(event: Event): void {
     this.clientDisplayLimit.update((n) => n + 20);
-    event.target.complete();
+    const target = event.target as { complete?: () => void } | null;
+    target?.complete?.();
   }
 
   toggleAppointmentsView() {
@@ -157,59 +258,51 @@ export class DashboardPage {
       return;
     }
 
-    const { firstName, lastName, email, phone } = this.addClientForm.getRawValue();
+    const { firstName, lastName, email, phone, stage } = this.addClientForm.getRawValue();
     const trimmedFirstName = firstName.trim();
     const trimmedLastName = lastName.trim();
     const trimmedEmail = email.trim();
     const trimmedPhone = phone.trim();
 
-    if (!trimmedFirstName || !trimmedLastName || !trimmedEmail || !trimmedPhone) {
-      if (!trimmedFirstName) {
-        this.addClientForm.controls.firstName.setErrors({ required: true });
-      }
-
-      if (!trimmedLastName) {
-        this.addClientForm.controls.lastName.setErrors({ required: true });
-      }
-
-      if (!trimmedEmail) {
-        this.addClientForm.controls.email.setErrors({ required: true });
-      }
-
-      if (!trimmedPhone) {
-        this.addClientForm.controls.phone.setErrors({ required: true });
-      }
-
+    if (!trimmedFirstName || !trimmedLastName || !trimmedPhone) {
+      if (!trimmedFirstName) this.addClientForm.controls.firstName.setErrors({ required: true });
+      if (!trimmedLastName) this.addClientForm.controls.lastName.setErrors({ required: true });
+      if (!trimmedPhone) this.addClientForm.controls.phone.setErrors({ required: true });
       this.addClientForm.markAllAsTouched();
       return;
     }
 
-    const newClient: IClient = {
-      id: String(Date.now()),
-      firstName: trimmedFirstName,
-      lastName: trimmedLastName,
-      email: trimmedEmail,
-      phone: trimmedPhone,
-      initials: this.buildInitials(trimmedFirstName, trimmedLastName),
-      color: this.clientAvatarColors[this.recentClients().length % this.clientAvatarColors.length],
-      stage: ClientStage.FIRST_CONTACT,
-      createdAt: new Date().toLocaleDateString('es-ES', {
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric',
-      }),
-    };
+    const userId = this.authService.currentUser()?.userId;
+    if (!userId) return;
 
-    this.recentClients.update((clients) => [newClient, ...clients]);
-    this.stats.update((stats) =>
-      stats.map((stat) =>
-        stat.label === 'Total de clientes'
-          ? { ...stat, value: stat.value + 1 }
-          : stat,
-      ),
-    );
-
-    this.closeAddClientModal();
+    this.isCreatingClient.set(true);
+    this.clientApi
+      .create({
+        userId,
+        firstName: trimmedFirstName,
+        lastName: trimmedLastName,
+        email: trimmedEmail || undefined,
+        phoneNumber: trimmedPhone,
+        stage,
+      })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: ({ client }) => {
+          this.recentClients.update((clients) => [client, ...clients]);
+          this.stats.update((stats) =>
+            stats.map((stat) =>
+              stat.label === 'Total de clientes'
+                ? { ...stat, value: stat.value + 1 }
+                : stat,
+            ),
+          );
+          this.isCreatingClient.set(false);
+          this.closeAddClientModal();
+        },
+        error: () => {
+          this.isCreatingClient.set(false);
+        },
+      });
   }
 
   resetAddClientForm() {
@@ -218,12 +311,15 @@ export class DashboardPage {
       lastName: '',
       email: '',
       phone: '',
+      stage: ClientStage.FIRST_CONTACT,
     });
     this.addClientForm.markAsPristine();
     this.addClientForm.markAsUntouched();
   }
 
-  private buildInitials(firstName: string, lastName: string): string {
-    return `${firstName[0] ?? ''}${lastName[0] ?? ''}`.toUpperCase();
+  private getEventValue<T>(event: Event): T | null {
+    const value = (event as CustomEvent<{ value?: T }>).detail?.value;
+    return value ?? null;
   }
+
 }

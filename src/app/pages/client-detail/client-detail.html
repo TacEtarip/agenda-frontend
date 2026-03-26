@@ -46,7 +46,7 @@
               [value]="client().stage"
               interface="action-sheet"
               placeholder="Cambiar etapa"
-              (ionChange)="onStageChange($any($event))"
+              (ionChange)="onStageChange($event)"
               aria-label="Cambiar etapa del cliente">
               @for (s of allStages; track s.value) {
                 <ion-select-option [value]="s.value">{{ s.label }}</ion-select-option>
@@ -77,11 +77,15 @@
     </ion-card-content>
   </ion-card>
 
+  @if (actionError()) {
+    <p class="form-feedback form-feedback--error">{{ actionError() }}</p>
+  }
+
   <!-- Segment Tabs -->
   <ion-segment
     scrollable="true"
     [value]="activeSegment()"
-    (ionChange)="onSegmentChange($any($event))"
+    (ionChange)="onSegmentChange($event)"
     color="primary"
     class="detail-segment">
     <ion-segment-button value="notes">
@@ -226,6 +230,7 @@
     </div>
   }
 
+  @defer (when isAppointmentModalOpen()) {
   <ion-modal
     [isOpen]="isAppointmentModalOpen()"
     (didDismiss)="closeAppointmentModal()"
@@ -235,7 +240,7 @@
         <ion-toolbar>
           <ion-title>{{ editingAppointmentId() ? 'Editar cita' : 'Programar cita' }}</ion-title>
           <ion-buttons slot="end">
-            <ion-button (click)="closeAppointmentModal()" aria-label="Cerrar modal">
+            <ion-button (click)="closeAppointmentModal()" (keydown.enter)="closeAppointmentModal()" aria-label="Cerrar modal">
               <ion-icon slot="icon-only" name="close-outline"></ion-icon>
             </ion-button>
           </ion-buttons>
@@ -304,7 +309,7 @@
                       presentation="date"
                       [preferWheel]="false"
                       [value]="appointmentDraft().date"
-                      (ionChange)="onAppointmentDraftDateChange('date', $any($event))">
+                      (ionChange)="onAppointmentDraftDateChange('date', $event)">
                     </ion-datetime>
                   </ng-template>
                 </ion-modal>
@@ -317,7 +322,7 @@
                       hour-cycle="h23"
                       [preferWheel]="true"
                       [value]="appointmentDraft().startHour"
-                      (ionChange)="onAppointmentDraftDateChange('startHour', $any($event))">
+                      (ionChange)="onAppointmentDraftDateChange('startHour', $event)">
                     </ion-datetime>
                   </ng-template>
                 </ion-modal>
@@ -330,7 +335,7 @@
                       hour-cycle="h23"
                       [preferWheel]="true"
                       [value]="appointmentDraft().endHour"
-                      (ionChange)="onAppointmentDraftDateChange('endHour', $any($event))">
+                      (ionChange)="onAppointmentDraftDateChange('endHour', $event)">
                     </ion-datetime>
                   </ng-template>
                 </ion-modal>
@@ -360,14 +365,16 @@
       </div>
     </ng-template>
   </ion-modal>
+  }
 
+  @defer (when isNoteModalOpen()) {
   <ion-modal [isOpen]="isNoteModalOpen()" (didDismiss)="closeNoteModal()" class="app-modal">
     <ng-template>
       <ion-header>
         <ion-toolbar>
           <ion-title>{{ editingNoteId() ? 'Editar nota' : 'Agregar nota' }}</ion-title>
           <ion-buttons slot="end">
-            <ion-button (click)="closeNoteModal()" aria-label="Cerrar modal">
+            <ion-button (click)="closeNoteModal()" (keydown.enter)="closeNoteModal()" aria-label="Cerrar modal">
               <ion-icon slot="icon-only" name="close-outline"></ion-icon>
             </ion-button>
           </ion-buttons>
@@ -407,10 +414,10 @@
                 }
 
                 <div class="app-modal-actions">
-                  <ion-button fill="outline" color="medium" (click)="closeNoteModal()">
+                  <ion-button fill="outline" color="medium" (click)="closeNoteModal()" (keydown.enter)="closeNoteModal()">
                     Cancelar
                   </ion-button>
-                  <ion-button (click)="saveNoteFromModal()">
+                  <ion-button (click)="saveNoteFromModal()" (keydown.enter)="saveNoteFromModal()">
                     <ion-icon slot="start" name="add-outline"></ion-icon>
                     Guardar nota
                   </ion-button>
@@ -422,7 +429,9 @@
       </div>
     </ng-template>
   </ion-modal>
+  }
 
+  @defer (when isAttachmentModalOpen()) {
   <ion-modal
     [isOpen]="isAttachmentModalOpen()"
     (didDismiss)="closeAttachmentModal()"
@@ -432,7 +441,7 @@
         <ion-toolbar>
           <ion-title>Agregar archivo</ion-title>
           <ion-buttons slot="end">
-            <ion-button (click)="closeAttachmentModal()" aria-label="Cerrar modal">
+            <ion-button (click)="closeAttachmentModal()" (keydown.enter)="closeAttachmentModal()" aria-label="Cerrar modal">
               <ion-icon slot="icon-only" name="close-outline"></ion-icon>
             </ion-button>
           </ion-buttons>
@@ -485,10 +494,10 @@
                 }
 
                 <div class="app-modal-actions">
-                  <ion-button fill="outline" color="medium" (click)="closeAttachmentModal()">
+                  <ion-button fill="outline" color="medium" (click)="closeAttachmentModal()" (keydown.enter)="closeAttachmentModal()">
                     Cancelar
                   </ion-button>
-                  <ion-button (click)="saveAttachmentFromModal()">
+                  <ion-button (click)="saveAttachmentFromModal()" (keydown.enter)="saveAttachmentFromModal()">
                     <ion-icon slot="start" name="add-outline"></ion-icon>
                     Guardar archivo
                   </ion-button>
@@ -500,6 +509,7 @@
       </div>
     </ng-template>
   </ion-modal>
+  }
 
   <!-- ── Attachments Tab ── -->
   @if (activeSegment() === 'attachments') {
@@ -540,7 +550,7 @@
               interface="popover"
               class="product-linker-select"
               placeholder="Selecciona un producto"
-              (ionChange)="onDraftProductChange($any($event))"
+              (ionChange)="onDraftProductChange($event)"
               aria-label="Seleccionar producto para cliente">
               @for (product of products(); track product.id) {
                 <ion-select-option [value]="product.id">
@@ -554,7 +564,7 @@
               interface="popover"
               class="product-linker-select"
               placeholder="Estado inicial"
-              (ionChange)="onDraftProductStatusChange($any($event))"
+              (ionChange)="onDraftProductStatusChange($event)"
               aria-label="Seleccionar estado inicial del producto">
               <ion-select-option [value]="clientProductStatus.OFFERED">Ofrecido</ion-select-option>
               <ion-select-option [value]="clientProductStatus.INTERESTED">Interesado</ion-select-option>

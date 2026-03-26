@@ -74,6 +74,10 @@
               }
               {{ isLoginMode() ? 'Iniciar sesión' : 'Crear cuenta' }}
             </ion-button>
+
+            @if (errorMessage()) {
+              <p class="form-error-msg">{{ errorMessage() }}</p>
+            }
           </form>
 
           <!-- Divider -->

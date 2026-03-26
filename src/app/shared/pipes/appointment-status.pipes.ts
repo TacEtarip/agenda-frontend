@@ -1,6 +1,5 @@
 import { Pipe, PipeTransform } from '@angular/core';
-
-type AppointmentStatus = 'scheduled' | 'completed' | 'cancelled';
+import { AppointmentStatus } from '../../types/appointment-status.type';
 
 @Pipe({ name: 'appointmentStatusLabel', pure: true, standalone: true })
 export class AppointmentStatusLabelPipe implements PipeTransform {

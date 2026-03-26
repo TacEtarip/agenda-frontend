@@ -57,7 +57,7 @@
       [value]="sortMode()"
       interface="popover"
       class="sort-select"
-      (ionChange)="onSortChange($any($event))"
+      (ionChange)="onSortChange($event)"
       aria-label="Ordenar productos">
       <ion-select-option value="recent">Más recientes</ion-select-option>
       <ion-select-option value="name">Nombre A-Z</ion-select-option>
@@ -81,10 +81,10 @@
               <p class="product-date">Creado {{ product.createdAt | formatDate }}</p>
             </div>
             <div class="product-actions">
-              <ion-button fill="clear" size="small" color="primary" (click)="openEditProductAlert(product)">
+              <ion-button fill="clear" size="small" color="primary" (click)="openEditProductAlert(product)" (keydown.enter)="openEditProductAlert(product)">
                 <ion-icon slot="icon-only" name="create-outline"></ion-icon>
               </ion-button>
-              <ion-button fill="clear" size="small" color="danger" (click)="deleteProduct(product)">
+              <ion-button fill="clear" size="small" color="danger" (click)="deleteProduct(product)" (keydown.enter)="deleteProduct(product)">
                 <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
               </ion-button>
             </div>
@@ -112,7 +112,7 @@
   </div>
 
   <ion-infinite-scroll
-    (ionInfinite)="loadMoreProducts($any($event))"
+    (ionInfinite)="loadMoreProducts($event)"
     [disabled]="productDisplayLimit() >= visibleProducts().length">
     <ion-infinite-scroll-content loadingText="Cargando productos..."></ion-infinite-scroll-content>
   </ion-infinite-scroll>
@@ -137,7 +137,7 @@
       <ion-toolbar>
         <ion-title>Nuevo producto</ion-title>
         <ion-buttons slot="end">
-          <ion-button (click)="closeCreateProductModal()" aria-label="Cerrar modal">
+          <ion-button (click)="closeCreateProductModal()" (keydown.enter)="closeCreateProductModal()" aria-label="Cerrar modal">
             <ion-icon slot="icon-only" name="close-outline"></ion-icon>
           </ion-button>
         </ion-buttons>
@@ -226,6 +226,7 @@
                   fill="clear"
                   type="button"
                   (click)="resetCreateProductForm()"
+                  (keydown.enter)="resetCreateProductForm()"
                   [disabled]="!createProductForm.dirty">
                   Limpiar
                 </ion-button>
