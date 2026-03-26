@@ -139,7 +139,7 @@
                 <ion-toggle
                   slot="end"
                   [checked]="integrationSettings().syncCalendar"
-                  (ionChange)="updateIntegrationSetting('syncCalendar', $event)">
+                  (ionChange)="updateIntegrationSetting(IntegrationPreference.SYNC_CALENDAR, $event)">
                 </ion-toggle>
               </ion-item>
 
@@ -149,7 +149,7 @@
                 <ion-toggle
                   slot="end"
                   [checked]="integrationSettings().syncContacts"
-                  (ionChange)="updateIntegrationSetting('syncContacts', $event)">
+                  (ionChange)="updateIntegrationSetting(IntegrationPreference.SYNC_CONTACTS, $event)">
                 </ion-toggle>
               </ion-item>
 
@@ -159,7 +159,7 @@
                 <ion-toggle
                   slot="end"
                   [checked]="integrationSettings().sendDailyDigest"
-                  (ionChange)="updateIntegrationSetting('sendDailyDigest', $event)">
+                  (ionChange)="updateIntegrationSetting(IntegrationPreference.SEND_DAILY_DIGEST, $event)">
                 </ion-toggle>
               </ion-item>
             </ion-list>

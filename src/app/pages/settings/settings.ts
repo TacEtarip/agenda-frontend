@@ -56,6 +56,8 @@ import {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SettingsPage {
+  readonly IntegrationPreference = IntegrationPreference;
+
   private readonly fb = inject(FormBuilder);
   private readonly authService = inject(AuthService);
   private readonly storedSettings = this.loadStoredSettings();
