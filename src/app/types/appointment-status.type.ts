@@ -1,1 +1,1 @@
-export type AppointmentStatus = 'scheduled' | 'completed' | 'cancelled';
+export type AppointmentStatus = 'scheduled' | 'pending_payment' | 'completed' | 'cancelled';

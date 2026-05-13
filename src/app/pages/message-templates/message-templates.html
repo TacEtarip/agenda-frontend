@@ -49,8 +49,8 @@
     <ion-icon name="chatbubbles-outline"></ion-icon>
     <p>
       Administra varias plantillas por etapa. Usa
-      <code [innerText]="'{{name}}'"></code>
-      para personalizar el mensaje con el nombre del cliente.
+      <code [innerText]="'{{name}}'"></code>, <code [innerText]="'{{date}}'"></code> y <code [innerText]="'{{paymentUrl}}'"></code>
+      para personalizar el mensaje con la información del cliente.
     </p>
   </div>
 
@@ -143,9 +143,23 @@
             </div>
 
             <form class="app-modal-body composer-form" [formGroup]="composerForm" (ngSubmit)="saveTemplate()">
-              <ion-chip [color]="composerStageMeta().color" class="composer-stage-chip">
-                {{ composerStageMeta().label }}
-              </ion-chip>
+              <div class="composer-stage-header">
+                <ion-chip [color]="composerStageMeta().color" class="composer-stage-chip">
+                  {{ composerStageMeta().label }}
+                </ion-chip>
+
+                <div class="composer-variables-actions">
+                  <ion-button size="small" fill="clear" (click)="insertVariable('{{name}}')" title="Insertar nombre">
+                    <code [innerText]="'{{name}}'"></code>
+                  </ion-button>
+                  <ion-button size="small" fill="clear" (click)="insertVariable('{{date}}')" title="Insertar fecha">
+                    <code [innerText]="'{{date}}'"></code>
+                  </ion-button>
+                  <ion-button size="small" fill="clear" (click)="insertVariable('{{paymentUrl}}')" title="Insertar pago">
+                    <code [innerText]="'{{url}}'"></code>
+                  </ion-button>
+                </div>
+              </div>
 
               <ion-textarea
                 formControlName="messageBody"

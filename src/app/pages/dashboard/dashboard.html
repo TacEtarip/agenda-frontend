@@ -70,6 +70,17 @@
       </div>
       <ion-icon name="chevron-forward-outline" class="quick-link-card__arrow"></ion-icon>
     </a>
+
+    <a class="quick-link-card" routerLink="/payments">
+      <div class="quick-link-card__icon quick-link-card__icon--amber">
+        <ion-icon name="cash-outline"></ion-icon>
+      </div>
+      <div class="quick-link-card__body">
+        <p class="quick-link-card__title">Pagos</p>
+        <p class="quick-link-card__text">Control de ingresos y enlaces.</p>
+      </div>
+      <ion-icon name="chevron-forward-outline" class="quick-link-card__arrow"></ion-icon>
+    </a>
   </div>
 
   <!-- Today's Appointments -->
@@ -104,8 +115,14 @@
           <div class="appt-card__footer">
             <ion-icon name="time-outline" class="appt-time-icon"></ion-icon>
             <span class="appt-time-text">{{ appt.time }}</span>
-            <ion-chip color="success" class="appt-status-chip">{{ appt.status | appointmentStatusLabel }}</ion-chip>
+            <ion-chip [color]="appt.status === 'pending_payment' ? 'warning' : 'success'" class="appt-status-chip">{{ appt.status | appointmentStatusLabel }}</ion-chip>
           </div>
+          @if (appt.paymentUrl) {
+            <div class="appt-card__payment">
+              <ion-icon name="cash-outline" color="primary"></ion-icon>
+              <a [href]="appt.paymentUrl" target="_blank" rel="noopener noreferrer">Enlace de pago</a>
+            </div>
+          }
         </ion-card-content>
       </ion-card>
     }

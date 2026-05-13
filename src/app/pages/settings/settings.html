@@ -179,4 +179,95 @@
       </ion-card-content>
     </ion-card>
   </section>
+
+  <!-- WhatsApp Integration Section -->
+  <section class="settings-section">
+    <ion-card class="settings-card">
+      <ion-card-content class="settings-card__content">
+        <div class="section-heading">
+          <ion-icon class="ion-color-success" name="logo-whatsapp" style="font-size: 24px; margin-right: 12px;"></ion-icon>
+          <div>
+            <h2>WhatsApp API</h2>
+            <p>Envía recordatorios a tus clientes automáticamente sin costo.</p>
+          </div>
+        </div>
+
+        <div class="whatsapp-status-container" style="margin-top: 1rem;">
+          <div class="actions-row" style="justify-content: flex-start; gap: 1rem; align-items: center; margin-bottom: 1rem;">
+            <p style="margin: 0;">Estado actual: <strong style="text-transform: capitalize">{{ whatsappStatus() }}</strong></p>
+            <ion-button fill="outline" size="small" (click)="checkWhatsappStatus()" [disabled]="isPollingQr()">
+              <ion-icon name="refresh-outline" slot="icon-only"></ion-icon>
+            </ion-button>
+          </div>
+
+          @if (whatsappStatus() === 'WAITING_QR') {
+            <div class="qr-container" style="display: flex; flex-direction: column; align-items: center; background: #fff; padding: 1.5rem; border-radius: 8px;">
+              @if (isPollingQr() && !whatsappQrImage()) {
+                <ion-spinner name="crescent"></ion-spinner>
+                <p>Generando código QR...</p>
+              } @else if (whatsappQrImage()) {
+                <img [src]="whatsappQrImage()" alt="Escanea este QR con tu número de WhatsApp" style="max-width: 280px; width: 100%;" />
+                <p style="text-align: center; color: #666; font-size: 0.9rem; margin-top: 1rem;">Abre WhatsApp en tu teléfono > Dispositivos Vinculados > Vincular un dispositivo</p>
+              }
+            </div>
+          }
+
+          @if (whatsappStatus() === 'CONNECTED') {
+            <div class="actions-row" style="justify-content: flex-start;">
+              <p style="color: green; display: flex; align-items: center; gap: 0.5rem; margin: 0;">
+                <ion-icon name="checkmark-circle-outline"></ion-icon>
+                Tu WhatsApp está vinculado correctamente.
+              </p>
+            </div>
+          }
+        </div>
+      </ion-card-content>
+    </ion-card>
+  </section>
+
+  <!-- Payment Integration Section -->
+  <section class="settings-section">
+    <ion-card class="settings-card">
+      <ion-card-content class="settings-card__content">
+        <div class="section-heading">
+          <ion-icon class="ion-color-primary" name="card-outline" style="font-size: 24px; margin-right: 12px;"></ion-icon>
+          <div>
+            <h2>Integración de Pagos</h2>
+            <p>Genera links de pago para tus servicios B2B2C.</p>
+          </div>
+        </div>
+
+        <div class="integration-config" style="margin-top: 1rem;">
+          <ion-list lines="none">
+            <ion-item>
+              <ion-icon slot="start" name="cash-outline"></ion-icon>
+              <ion-label>Habilitar cobro por Link de Pago</ion-label>
+              <ion-toggle
+                slot="end"
+                [checked]="enablePayments()"
+                (ionChange)="updatePaymentSetting($event)">
+              </ion-toggle>
+            </ion-item>
+
+            @if (enablePayments()) {
+              <ion-item>
+                <ion-label position="stacked">API Key del Gateway (Opcional)</ion-label>
+                <ion-input
+                  [value]="paymentGatewayKey()"
+                  (ionChange)="updatePaymentKey($event)"
+                  (ionBlur)="saveIntegration()"
+                  placeholder="ej. pk_live_xxx..."
+                  type="password"
+                ></ion-input>
+              </ion-item>
+              <p style="font-size: 0.8em; color: var(--ion-color-medium); margin-left: 16px;">
+                *Si el gateway es de testing no necesitas configurarlo por ahora.
+              </p>
+            }
+          </ion-list>
+        </div>
+      </ion-card-content>
+    </ion-card>
+  </section>
+
 </ion-content>

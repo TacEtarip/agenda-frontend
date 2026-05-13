@@ -1,12 +1,14 @@
 import {
-  ChangeDetectionStrategy,
   Component,
   computed,
   effect,
   inject,
   signal,
+  DestroyRef,
 } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import * as QRCode from 'qrcode';
 import { COMMON_ION_PAGE_IMPORTS } from '../../shared/ionic-imports';
 import { addIcons } from 'ionicons';
 import {
@@ -16,19 +18,26 @@ import {
   informationCircleOutline,
   logoGoogle,
   logoMicrosoft,
+  logoWhatsapp,
   notificationsOutline,
   personCircleOutline,
   settingsOutline,
   syncOutline,
+  refreshOutline,
+  cardOutline,
+  cashOutline,
 } from 'ionicons/icons';
 import {
   IonBackButton,
+  IonButton,
   IonInput,
   IonRadio,
   IonRadioGroup,
   IonToggle,
+  IonSpinner,
 } from '@ionic/angular/standalone';
 import { AuthService } from '../../core/services/auth.service';
+import { WhatsAppApiService, MessagingStatus } from '../../core/services/whatsapp-api.service';
 import { IntegrationProvider } from './enums/integration-provider.enum';
 import { IntegrationPreference } from './enums/integration-preference.enum';
 import { IIntegrationSettings } from './interfaces/integration-settings.interface';
@@ -38,6 +47,7 @@ import {
   SETTINGS_STORAGE_KEY,
   VALID_INTEGRATION_PROVIDERS,
 } from './constants/settings.constants';
+import { UserApiService } from '../../core/services/user-api.service';
 
 @Component({
   selector: 'app-settings',
@@ -46,20 +56,24 @@ import {
     ReactiveFormsModule,
     ...COMMON_ION_PAGE_IMPORTS,
     IonBackButton,
+    IonButton,
     IonInput,
     IonRadioGroup,
     IonRadio,
     IonToggle,
+    IonSpinner,
   ],
   templateUrl: './settings.html',
   styleUrl: './settings.scss',
-  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SettingsPage {
   readonly IntegrationPreference = IntegrationPreference;
 
   private readonly fb = inject(FormBuilder);
   private readonly authService = inject(AuthService);
+  private readonly whatsappApi = inject(WhatsAppApiService);
+  private readonly userApi = inject(UserApiService);
+  private readonly destroyRef = inject(DestroyRef);
   private readonly storedSettings = this.loadStoredSettings();
 
   readonly profileForm = this.fb.nonNullable.group({
@@ -76,8 +90,16 @@ export class SettingsPage {
     this.storedSettings.integrationSettings,
   );
 
+  readonly enablePayments = signal<boolean>(this.storedSettings.enablePayments);
+  readonly paymentGatewayKey = signal<string>(this.storedSettings.paymentGatewayKey);
+
   readonly profileSavedMessage = signal<string | null>(null);
   readonly integrationSavedMessage = signal<string | null>(null);
+
+  // WhatsApp Signals
+  readonly whatsappStatus = signal<MessagingStatus>('INITIALIZING');
+  readonly whatsappQrImage = signal<string | null>(null);
+  readonly isPollingQr = signal<boolean>(false);
   readonly integrationTitle = computed(() => {
     const provider = this.currentIntegration();
     if (provider === IntegrationProvider.GOOGLE) return 'Google Workspace';
@@ -105,10 +127,14 @@ export class SettingsPage {
       informationCircleOutline,
       logoGoogle,
       logoMicrosoft,
+      logoWhatsapp,
       notificationsOutline,
       personCircleOutline,
       settingsOutline,
       syncOutline,
+      refreshOutline,
+      cardOutline,
+      cashOutline,
     });
 
     effect(() => {
@@ -124,6 +150,41 @@ export class SettingsPage {
       );
       this.profileForm.markAsPristine();
       this.profileForm.markAsUntouched();
+    });
+
+    this.checkWhatsappStatus();
+  }
+
+  checkWhatsappStatus() {
+    this.isPollingQr.set(true);
+    this.whatsappApi.getStatus().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: (res) => {
+        this.whatsappStatus.set(res.status);
+        if (res.status === 'WAITING_QR') {
+          this.fetchWhatsappQr();
+        } else {
+          this.isPollingQr.set(false);
+          this.whatsappQrImage.set(null);
+        }
+      },
+      error: () => this.isPollingQr.set(false)
+    });
+  }
+
+  private fetchWhatsappQr() {
+    this.whatsappApi.getQrCode().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: async (res) => {
+        if (res.qr) {
+          try {
+            const qrDataUrl = await QRCode.toDataURL(res.qr, { margin: 2, scale: 6 });
+            this.whatsappQrImage.set(qrDataUrl);
+          } catch (err) {
+            console.error('Error rendering QR code', err);
+          }
+        }
+        this.isPollingQr.set(false);
+      },
+      error: () => this.isPollingQr.set(false)
     });
   }
 
@@ -165,6 +226,17 @@ export class SettingsPage {
     }));
   }
 
+  updatePaymentSetting(event: Event) {
+    const isEnabled = Boolean((event as CustomEvent<{ checked?: boolean }>).detail?.checked);
+    this.enablePayments.set(isEnabled);
+    this.saveIntegration(); // Reuse to auto-save or call persistSettings
+  }
+
+  updatePaymentKey(event: Event) {
+    const val = (event as CustomEvent<{ value?: string }>).detail?.value ?? '';
+    this.paymentGatewayKey.set(val);
+  }
+
   saveIntegration() {
     const provider = this.currentIntegration();
     const savedAt = new Date().toLocaleTimeString('es-ES', {
@@ -172,20 +244,39 @@ export class SettingsPage {
       minute: '2-digit',
     });
 
-    this.persistSettings({
+    const settingsObj = {
       integrationProvider: provider,
       integrationSettings: this.integrationSettings(),
+      enablePayments: this.enablePayments(),
+      paymentGatewayKey: this.paymentGatewayKey(),
+    };
+
+    this.persistSettings(settingsObj);
+
+    // Call Backend
+    this.userApi.updateMySettings({
+      integrationProvider: settingsObj.integrationProvider,
+      syncCalendar: settingsObj.integrationSettings.syncCalendar,
+      syncContacts: settingsObj.integrationSettings.syncContacts,
+      sendDailyDigest: settingsObj.integrationSettings.sendDailyDigest,
+      paymentEnabled: settingsObj.enablePayments,
+      paymentGatewayKey: settingsObj.paymentGatewayKey,
+    }).subscribe({
+      next: () => {
+        if (provider === IntegrationProvider.NONE) {
+          this.integrationSavedMessage.set(`Integración desactivada a las ${savedAt}.`);
+          return;
+        }
+
+        const providerLabel = provider === IntegrationProvider.GOOGLE ? 'Google' : 'Microsoft';
+        this.integrationSavedMessage.set(
+          `Configuración de ${providerLabel} y pagos guardada a las ${savedAt}.`,
+        );
+      },
+      error: (err) => {
+        console.error('Failed to sync settings with backend', err);
+      }
     });
-
-    if (provider === IntegrationProvider.NONE) {
-      this.integrationSavedMessage.set(`Integración desactivada a las ${savedAt}.`);
-      return;
-    }
-
-    const providerLabel = provider === IntegrationProvider.GOOGLE ? 'Google' : 'Microsoft';
-    this.integrationSavedMessage.set(
-      `Configuración de ${providerLabel} guardada a las ${savedAt}.`,
-    );
   }
 
   private getEventValue<T>(event: Event): T | null {
@@ -200,6 +291,8 @@ export class SettingsPage {
         return {
           integrationProvider: IntegrationProvider.NONE,
           integrationSettings: DEFAULT_INTEGRATION_SETTINGS,
+          enablePayments: false,
+          paymentGatewayKey: '',
         };
       }
 
@@ -216,11 +309,15 @@ export class SettingsPage {
           ...DEFAULT_INTEGRATION_SETTINGS,
           ...parsed.integrationSettings,
         },
+        enablePayments: parsed.enablePayments ?? false,
+        paymentGatewayKey: parsed.paymentGatewayKey ?? '',
       };
     } catch {
       return {
         integrationProvider: IntegrationProvider.NONE,
         integrationSettings: DEFAULT_INTEGRATION_SETTINGS,
+        enablePayments: false,
+        paymentGatewayKey: '',
       };
     }
   }

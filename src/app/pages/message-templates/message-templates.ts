@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { addIcons } from 'ionicons';
 import {
@@ -37,7 +37,6 @@ import { AuthService } from '../../core/services/auth.service';
   ],
   templateUrl: './message-templates.html',
   styleUrl: './message-templates.scss',
-  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class MessageTemplatesPage {
   private readonly fb = inject(FormBuilder);
@@ -132,6 +131,13 @@ export class MessageTemplatesPage {
       this.composerForm.markAsPristine();
       this.composerForm.markAsUntouched();
     }
+  }
+
+  insertVariable(variable: string) {
+    const current = this.composerForm.controls.messageBody.value;
+    // Agreamos la variable al final del texto por ahora (o podrías manejar cursor if necessary).
+    this.composerForm.controls.messageBody.setValue(`${current} ${variable}`.trim());
+    this.composerForm.controls.messageBody.markAsDirty();
   }
 
   saveTemplate() {

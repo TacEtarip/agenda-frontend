@@ -22,6 +22,7 @@ import {
   callOutline,
   pricetagOutline,
   chatbubblesOutline,
+  cashOutline,
 } from 'ionicons/icons';
 import {
   IonAvatar,
@@ -35,7 +36,8 @@ import {
 } from '@ionic/angular/standalone';
 import { AuthService } from '../../core/services/auth.service';
 import { ClientApiService } from '../../core/services/client-api.service';
-import { AppointmentApiService, IAppointmentApi } from '../../core/services/appointment-api.service';
+import { AppointmentApiService } from '../../core/services/appointment-api.service';
+import { IAppointmentApi } from '../../core/interfaces/appointment-api.interface';
 
 @Component({
   selector: 'app-dashboard',
@@ -89,7 +91,7 @@ export class DashboardPage {
   readonly stats = signal([
     { label: 'Total de clientes', value: 0, icon: 'people-outline', color: 'stat-icon--sky' },
     { label: 'Hoy', value: 0, icon: 'time-outline', color: 'stat-icon--green' },
-    { label: 'Esta semana', value: 0, icon: 'calendar-outline', color: 'stat-icon--indigo' },
+    { label: 'Pagos Pendientes', value: 0, icon: 'cash-outline', color: 'stat-icon--amber' },
   ]);
 
   readonly recentClients = signal<IClient[]>([]);
@@ -159,6 +161,7 @@ export class DashboardPage {
       callOutline,
       pricetagOutline,
       chatbubblesOutline,
+      cashOutline,
     });
   }
 
@@ -191,15 +194,12 @@ export class DashboardPage {
         const todayAppts = appointments.filter((a) =>
           new Date(a.startTime).toDateString() === todayStr,
         );
-        const weekAppts = appointments.filter((a) => {
-          const d = new Date(a.startTime);
-          return d >= startOfWeek && d <= endOfWeek;
-        });
+        const pendingPaymentsAppts = appointments.filter((a) => a.status === 'pending_payment');
 
         this.stats.update((s) =>
           s.map((stat) => {
             if (stat.label === 'Hoy') return { ...stat, value: todayAppts.length };
-            if (stat.label === 'Esta semana') return { ...stat, value: weekAppts.length };
+            if (stat.label === 'Pagos Pendientes') return { ...stat, value: pendingPaymentsAppts.length };
             return stat;
           }),
         );

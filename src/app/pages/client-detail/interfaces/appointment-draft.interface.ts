@@ -4,4 +4,5 @@ export interface IAppointmentDraft {
   date: string;
   startHour: string;
   endHour: string;
+  requestPaymentLink?: boolean;
 }

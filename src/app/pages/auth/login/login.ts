@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { addIcons } from 'ionicons';
@@ -36,7 +36,6 @@ import { AuthService } from '../../../core/services/auth.service';
   ],
   templateUrl: './login.html',
   styleUrl: './login.scss',
-  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class LoginPage {
   private readonly fb = inject(FormBuilder);

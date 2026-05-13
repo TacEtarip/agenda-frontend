@@ -261,6 +261,32 @@ ion-toolbar ion-button {
   }
 }
 
+.composer-stage-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 8px;
+
+  .composer-variables-actions {
+    display: flex;
+    gap: 4px;
+
+    ion-button {
+      --padding-start: 4px;
+      --padding-end: 4px;
+      font-size: 0.8rem;
+      code {
+        padding: 4px 6px;
+        background: var(--ion-color-light);
+        border-radius: 4px;
+        color: var(--ion-color-dark);
+      }
+    }
+  }
+}
+
 .composer-form {
   &__field {
     margin-top: 0.85rem;

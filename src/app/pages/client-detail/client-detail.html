@@ -190,6 +190,13 @@
               <span class="appt-time-text">{{ appt.startTime }} – {{ appt.endTime }}</span>
             </div>
 
+            @if (appt.paymentUrl) {
+              <div class="appt-payment-row">
+                <ion-icon name="cash-outline" color="primary"></ion-icon>
+                <a [href]="appt.paymentUrl" target="_blank" rel="noopener noreferrer">Enlace de pago B2B2C</a>
+              </div>
+            }
+
             <div class="appt-actions">
               <ion-button
                 fill="clear"
@@ -339,6 +346,17 @@
                     </ion-datetime>
                   </ng-template>
                 </ion-modal>
+
+                @if (!editingAppointmentId() && paymentsEnabled()) {
+                  <ion-item lines="none" class="appointment-modal__payment-toggle">
+                    <ion-icon slot="start" name="cash-outline" color="primary"></ion-icon>
+                    <ion-label>Generar link de pago</ion-label>
+                    <ion-toggle
+                      [checked]="appointmentDraft().requestPaymentLink"
+                      (ionChange)="onAppointmentDraftCheckboxChange('requestPaymentLink', $event)">
+                    </ion-toggle>
+                  </ion-item>
+                }
 
                 @if (appointmentDraftError()) {
                   <p class="appointment-modal__error">{{ appointmentDraftError() }}</p>

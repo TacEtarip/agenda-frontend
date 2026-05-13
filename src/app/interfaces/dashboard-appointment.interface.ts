@@ -7,4 +7,6 @@ export interface IDashboardAppointment {
   title: string;
   time: string;
   status: AppointmentStatus;
+  paymentId?: string;
+  paymentUrl?: string;
 }

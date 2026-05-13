@@ -5,4 +5,5 @@ export interface ICreateAppointmentPayload {
   description?: string;
   startTime: string;
   endTime: string;
+  requestPaymentLink?: boolean;
 }

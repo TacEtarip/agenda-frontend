@@ -29,6 +29,12 @@ export const routes: Routes = [
       ),
   },
   {
+    path: 'payments',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./pages/payments/payments').then((m) => m.PaymentsPage),
+  },
+  {
     path: 'settings',
     canActivate: [authGuard],
     loadComponent: () =>

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { addIcons } from 'ionicons';
 import {
@@ -52,7 +52,6 @@ import { VALID_PRODUCT_SORTS } from './constants/product-sort.constants';
   ],
   templateUrl: './products.html',
   styleUrl: './products.scss',
-  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ProductsPage {
   private readonly fb = inject(FormBuilder);

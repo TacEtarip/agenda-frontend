@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, signal } from '@angular/core';
+import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute } from '@angular/router';
 import { ClientStage } from '../../enums/client-stage.enum';
@@ -62,10 +62,16 @@ import {
   IonSelect,
   IonSelectOption,
   IonTextarea,
+  IonToggle,
+  IonItem,
+  IonLabel,
 } from '@ionic/angular/standalone';
 import { ClientDetailSegment } from './enums/client-detail-segment.enum';
 import { IAppointmentDraft } from './interfaces/appointment-draft.interface';
 import { IEnrichedClientProduct } from './interfaces/enriched-client-product.interface';
+
+import { SETTINGS_STORAGE_KEY } from '../settings/constants/settings.constants';
+import { IUserSettingsStorage } from '../settings/interfaces/user-settings-storage.interface';
 
 @Component({
   selector: 'app-client-detail',
@@ -85,6 +91,9 @@ import { IEnrichedClientProduct } from './interfaces/enriched-client-product.int
     IonSelect,
     IonSelectOption,
     IonTextarea,
+    IonToggle,
+    IonItem,
+    IonLabel,
     AppointmentStatusColorPipe,
     AppointmentStatusLabelPipe,
     FormatDatePipe,
@@ -96,7 +105,6 @@ import { IEnrichedClientProduct } from './interfaces/enriched-client-product.int
   ],
   templateUrl: './client-detail.html',
   styleUrl: './client-detail.scss',
-  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ClientDetailPage {
   private readonly route = inject(ActivatedRoute);
@@ -207,6 +215,17 @@ export class ClientDetailPage {
     }
 
     return `https://wa.me/${phone}`;
+  });
+
+  readonly paymentsEnabled = computed(() => {
+    try {
+      const raw = localStorage.getItem(SETTINGS_STORAGE_KEY);
+      if (!raw) return false;
+      const parsed = JSON.parse(raw) as Partial<IUserSettingsStorage>;
+      return parsed.enablePayments === true;
+    } catch {
+      return false;
+    }
   });
 
   constructor() {
@@ -388,6 +407,7 @@ export class ClientDetailPage {
       date: startAt.slice(0, 10),
       startHour: startAt.slice(11, 16),
       endHour: endAt.slice(11, 16),
+      requestPaymentLink: false, // On edit, we don't request payment link again
     });
     this.appointmentDraftError.set(null);
     this.isAppointmentModalOpen.set(true);
@@ -480,6 +500,17 @@ export class ClientDetailPage {
     }));
   }
 
+  onAppointmentDraftCheckboxChange(
+    field: 'requestPaymentLink',
+    event: Event,
+  ) {
+    const target = event.target as HTMLInputElement;
+    this.appointmentDraft.update((draft) => ({
+      ...draft,
+      [field]: target.checked ?? false,
+    }));
+  }
+
   readonly appointmentDraftDateLabel = computed(() => {
     const dateValue = this.appointmentDraft().date;
     if (!dateValue) return 'Seleccionar fecha';
@@ -548,6 +579,7 @@ export class ClientDetailPage {
           description: draft.description.trim() || undefined,
           startTime: startAt,
           endTime: endAt,
+          requestPaymentLink: draft.requestPaymentLink,
         })
         .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe({
@@ -597,6 +629,8 @@ export class ClientDetailPage {
       startTime: `${this.formatAppointmentDay(startDate)} · ${this.formatAppointmentHour(startDate)}`,
       endTime: this.formatAppointmentHour(endDate),
       status: a.status,
+      paymentId: a.paymentId,
+      paymentUrl: a.paymentUrl,
     };
   }
 
@@ -627,6 +661,7 @@ export class ClientDetailPage {
       date: this.formatDateLocal(now),
       startHour: this.formatHourLocal(now),
       endHour: this.formatHourLocal(end),
+      requestPaymentLink: false,
     };
   }
 
