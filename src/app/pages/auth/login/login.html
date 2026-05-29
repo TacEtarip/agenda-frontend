@@ -34,6 +34,10 @@
           <form [formGroup]="form" (ngSubmit)="submit()" class="login-form">
             @if (!isLoginMode()) {
             <div class="form-row">
+              <ion-input formControlName="companyName" label="Nombre de Empresa" labelPlacement="floating" fill="outline"
+                shape="round" class="custom-input"></ion-input>
+            </div>
+            <div class="form-row">
               <ion-input formControlName="firstName" label="Nombre" labelPlacement="floating" fill="outline"
                 shape="round" class="custom-input"></ion-input>
               <ion-input formControlName="lastName" label="Apellido" labelPlacement="floating" fill="outline"

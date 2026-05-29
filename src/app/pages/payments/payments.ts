@@ -1,34 +1,29 @@
 import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { COMMON_ION_PAGE_IMPORTS } from '../../shared/ionic-imports';
-import { AppointmentStatusLabelPipe } from '../../shared/pipes/appointment-status.pipes';
-import { FormatDatePipe } from '../../shared/pipes/format-date.pipe';
-import { addIcons } from 'ionicons';
 import {
-  cashOutline,
-  checkmarkCircleOutline,
-  timeOutline,
-  shareSocialOutline,
-  alertCircleOutline,
-} from 'ionicons/icons';
-import {
+  IonBackButton,
   IonCard,
   IonCardContent,
-  IonAvatar,
   IonChip,
   IonIcon,
-  IonBackButton,
+  IonLabel,
   IonSegment,
   IonSegmentButton,
-  IonLabel,
-  IonItem,
-  IonList,
 } from '@ionic/angular/standalone';
-import { AppointmentApiService } from '../../core/services/appointment-api.service';
+import { addIcons } from 'ionicons';
+import {
+  alertCircleOutline,
+  cashOutline,
+  checkmarkCircleOutline,
+  shareSocialOutline,
+  timeOutline,
+} from 'ionicons/icons';
 import { IAppointmentApi } from '../../core/interfaces/appointment-api.interface';
+import { AppointmentApiService } from '../../core/services/appointment-api.service';
 import { AuthService } from '../../core/services/auth.service';
 import { ClientApiService } from '../../core/services/client-api.service';
 import { IClient } from '../../interfaces/client.interface';
+import { COMMON_ION_PAGE_IMPORTS } from '../../shared/ionic-imports';
 
 @Component({
   selector: 'app-payments',

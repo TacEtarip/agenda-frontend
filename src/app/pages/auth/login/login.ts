@@ -48,6 +48,7 @@ export class LoginPage {
   readonly errorMessage = signal<string | null>(null);
 
   readonly form = this.fb.nonNullable.group({
+    companyName: [''],
     firstName: [''],
     lastName: [''],
     email: ['', [Validators.required, Validators.email]],
@@ -68,14 +69,17 @@ export class LoginPage {
   toggleMode(login: boolean) {
     this.isLoginMode.set(login);
     this.errorMessage.set(null);
-    const { firstName, lastName } = this.form.controls;
+    const { companyName, firstName, lastName } = this.form.controls;
     if (login) {
+      companyName.clearValidators();
       firstName.clearValidators();
       lastName.clearValidators();
     } else {
+      companyName.setValidators([Validators.required, Validators.maxLength(100)]);
       firstName.setValidators([Validators.required, Validators.maxLength(60)]);
       lastName.setValidators([Validators.required, Validators.maxLength(60)]);
     }
+    companyName.updateValueAndValidity();
     firstName.updateValueAndValidity();
     lastName.updateValueAndValidity();
     this.form.reset();
@@ -89,11 +93,11 @@ export class LoginPage {
     this.isLoading.set(true);
     this.errorMessage.set(null);
 
-    const { email, password, firstName, lastName } = this.form.getRawValue();
+    const { email, password, firstName, lastName, companyName } = this.form.getRawValue();
 
     const request$ = this.isLoginMode()
       ? this.authService.login(email, password)
-      : this.authService.register(firstName, lastName, email, password);
+      : this.authService.register(companyName, firstName, lastName, email, password);
 
     request$.subscribe({
       next: () => {

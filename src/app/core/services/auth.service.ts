@@ -32,15 +32,17 @@ export class AuthService {
   }
 
   register(
-    firstName: string,
-    lastName: string,
+    companyName: string,
+    adminFirstName: string,
+    adminLastName: string,
     email: string,
     password: string,
   ): Observable<ILoginResponse> {
     return this.http
-      .post<ILoginResponse>(`${this.baseUrl}/register`, {
-        firstName,
-        lastName,
+      .post<ILoginResponse>(`${this.baseUrl}/register-company`, {
+        companyName,
+        adminFirstName,
+        adminLastName,
         email,
         password,
       })
