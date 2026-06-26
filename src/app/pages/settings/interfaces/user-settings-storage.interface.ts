@@ -5,5 +5,4 @@ export interface IUserSettingsStorage {
   integrationProvider: IntegrationProvider;
   integrationSettings: IIntegrationSettings;
   enablePayments: boolean;
-  paymentGatewayKey: string;
 }

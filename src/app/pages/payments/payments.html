@@ -36,7 +36,7 @@
                 <ion-chip color="warning">Pendiente</ion-chip>
               </div>
               <div class="payment-card__actions">
-                <ion-button fill="clear" size="small" (click)="resendPaymentLink(payment)" color="primary">
+                <ion-button fill="clear" size="small" (click)="resendPaymentLink(payment)" color="primary" [disabled]="!payment.clientPhone || !payment.paymentUrl">
                   <ion-icon slot="start" name="share-social-outline"></ion-icon>
                   Reenviar link
                 </ion-button>

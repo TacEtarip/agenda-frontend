@@ -10,6 +10,7 @@ import {
   IonSegment,
   IonSegmentButton,
 } from '@ionic/angular/standalone';
+import type { SegmentChangeEventDetail } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import {
   alertCircleOutline,
@@ -24,6 +25,19 @@ import { AuthService } from '../../core/services/auth.service';
 import { ClientApiService } from '../../core/services/client-api.service';
 import { IClient } from '../../interfaces/client.interface';
 import { COMMON_ION_PAGE_IMPORTS } from '../../shared/ionic-imports';
+
+type PaymentSegment = 'PENDING' | 'COMPLETED';
+
+interface IPaymentView {
+  readonly id: string;
+  readonly clientName: string;
+  readonly clientPhone: string;
+  readonly title: string;
+  readonly date: string;
+  readonly status: IAppointmentApi['status'];
+  readonly paymentId?: string | null;
+  readonly paymentUrl?: string | null;
+}
 
 @Component({
   selector: 'app-payments',
@@ -48,7 +62,7 @@ export class PaymentsPage {
   private readonly clientApi = inject(ClientApiService);
   private readonly destroyRef = inject(DestroyRef);
 
-  readonly viewSegment = signal<'PENDING' | 'COMPLETED'>('PENDING');
+  readonly viewSegment = signal<PaymentSegment>('PENDING');
 
   readonly allAppointments = signal<IAppointmentApi[]>([]);
   readonly allClients = signal<Map<string, IClient>>(new Map());
@@ -98,12 +112,16 @@ export class PaymentsPage {
       });
   }
 
-  onSegmentChange(event: any) {
-    this.viewSegment.set(event.detail.value);
+  onSegmentChange(event: CustomEvent<SegmentChangeEventDetail>): void {
+    const nextSegment = event.detail.value;
+    if (nextSegment === 'PENDING' || nextSegment === 'COMPLETED') {
+      this.viewSegment.set(nextSegment);
+    }
   }
 
-  resendPaymentLink(payment: any) {
-    // Implementar lógica simple para enviar por ws
+  resendPaymentLink(payment: IPaymentView): void {
+    if (!payment.clientPhone || !payment.paymentUrl) return;
+
     const text = `Hola ${payment.clientName}. Te compartimos de nuevo tu enlace de pago para tu cita del ${payment.date}: ${payment.paymentUrl}`;
     window.open(
       `https://wa.me/${payment.clientPhone.replace('+', '')}?text=${encodeURIComponent(text)}`,
@@ -111,7 +129,7 @@ export class PaymentsPage {
     );
   }
 
-  private mapToPaymentView(a: IAppointmentApi) {
+  private mapToPaymentView(a: IAppointmentApi): IPaymentView {
     const client = this.allClients().get(a.clientId);
     return {
       id: a.id,

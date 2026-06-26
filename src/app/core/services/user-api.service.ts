@@ -9,7 +9,6 @@ export interface IUpdateSettingsPayload {
   syncContacts?: boolean;
   sendDailyDigest?: boolean;
   paymentEnabled?: boolean;
-  paymentGatewayKey?: string;
 }
 
 @Injectable({ providedIn: 'root' })

@@ -248,22 +248,6 @@
                 (ionChange)="updatePaymentSetting($event)">
               </ion-toggle>
             </ion-item>
-
-            @if (enablePayments()) {
-              <ion-item>
-                <ion-label position="stacked">API Key del Gateway (Opcional)</ion-label>
-                <ion-input
-                  [value]="paymentGatewayKey()"
-                  (ionChange)="updatePaymentKey($event)"
-                  (ionBlur)="saveIntegration()"
-                  placeholder="ej. pk_live_xxx..."
-                  type="password"
-                ></ion-input>
-              </ion-item>
-              <p style="font-size: 0.8em; color: var(--ion-color-medium); margin-left: 16px;">
-                *Si el gateway es de testing no necesitas configurarlo por ahora.
-              </p>
-            }
           </ion-list>
         </div>
       </ion-card-content>

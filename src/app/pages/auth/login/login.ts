@@ -1,4 +1,5 @@
 import { Component, inject, signal } from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { addIcons } from 'ionicons';
@@ -85,6 +86,10 @@ export class LoginPage {
     this.form.reset();
   }
 
+  togglePasswordVisibility(): void {
+    this.showPassword.update((visible) => !visible);
+  }
+
   submit() {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
@@ -106,11 +111,35 @@ export class LoginPage {
       },
       error: (err: unknown) => {
         this.isLoading.set(false);
-        const message =
-          (err as { error?: { message?: string } })?.error?.message ??
-          'Error al conectar. Verifica tus datos.';
-        this.errorMessage.set(Array.isArray(message) ? message[0] : message);
+        this.errorMessage.set(this.resolveAuthErrorMessage(err));
       },
     });
+  }
+
+  private resolveAuthErrorMessage(error: unknown): string {
+    if (error instanceof HttpErrorResponse) {
+      if (error.status === 0) {
+        return 'No pudimos conectar con el servidor. Verifica tu conexión e inténtalo nuevamente.';
+      }
+
+      if (error.status === 401) {
+        return 'Correo o contraseña incorrectos. Revisa tus datos e inténtalo otra vez.';
+      }
+
+      if (error.status === 409) {
+        return 'Ya existe una cuenta con ese correo electrónico.';
+      }
+
+      const serverMessage = error.error?.message;
+      if (Array.isArray(serverMessage) && serverMessage.length > 0) {
+        return serverMessage[0];
+      }
+
+      if (typeof serverMessage === 'string' && serverMessage.trim()) {
+        return serverMessage;
+      }
+    }
+
+    return 'No pudimos completar la solicitud. Inténtalo nuevamente en unos momentos.';
   }
 }

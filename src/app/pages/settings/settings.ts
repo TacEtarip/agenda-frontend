@@ -91,7 +91,6 @@ export class SettingsPage {
   );
 
   readonly enablePayments = signal<boolean>(this.storedSettings.enablePayments);
-  readonly paymentGatewayKey = signal<string>(this.storedSettings.paymentGatewayKey);
 
   readonly profileSavedMessage = signal<string | null>(null);
   readonly integrationSavedMessage = signal<string | null>(null);
@@ -232,11 +231,6 @@ export class SettingsPage {
     this.saveIntegration(); // Reuse to auto-save or call persistSettings
   }
 
-  updatePaymentKey(event: Event) {
-    const val = (event as CustomEvent<{ value?: string }>).detail?.value ?? '';
-    this.paymentGatewayKey.set(val);
-  }
-
   saveIntegration() {
     const provider = this.currentIntegration();
     const savedAt = new Date().toLocaleTimeString('es-ES', {
@@ -248,7 +242,6 @@ export class SettingsPage {
       integrationProvider: provider,
       integrationSettings: this.integrationSettings(),
       enablePayments: this.enablePayments(),
-      paymentGatewayKey: this.paymentGatewayKey(),
     };
 
     this.persistSettings(settingsObj);
@@ -260,7 +253,6 @@ export class SettingsPage {
       syncContacts: settingsObj.integrationSettings.syncContacts,
       sendDailyDigest: settingsObj.integrationSettings.sendDailyDigest,
       paymentEnabled: settingsObj.enablePayments,
-      paymentGatewayKey: settingsObj.paymentGatewayKey,
     }).subscribe({
       next: () => {
         if (provider === IntegrationProvider.NONE) {
@@ -292,7 +284,6 @@ export class SettingsPage {
           integrationProvider: IntegrationProvider.NONE,
           integrationSettings: DEFAULT_INTEGRATION_SETTINGS,
           enablePayments: false,
-          paymentGatewayKey: '',
         };
       }
 
@@ -310,14 +301,12 @@ export class SettingsPage {
           ...parsed.integrationSettings,
         },
         enablePayments: parsed.enablePayments ?? false,
-        paymentGatewayKey: parsed.paymentGatewayKey ?? '',
       };
     } catch {
       return {
         integrationProvider: IntegrationProvider.NONE,
         integrationSettings: DEFAULT_INTEGRATION_SETTINGS,
         enablePayments: false,
-        paymentGatewayKey: '',
       };
     }
   }

@@ -56,11 +56,12 @@
               <ion-input formControlName="password" [type]="showPassword() ? 'text' : 'password'" label="Contraseña"
                 labelPlacement="floating" fill="outline" shape="round" class="custom-input">
                 <ion-icon slot="start" name="lock-closed-outline" class="input-icon"></ion-icon>
-                <ion-icon slot="end" [name]="showPassword() ? 'eye-off-outline' : 'eye-outline'"
-                  class="toggle-pw-btn"
-                  role="button" tabindex="0" aria-label="Mostrar u ocultar contraseña"
-                  (click)="showPassword.update(v => !v)" (keydown.enter)="showPassword.update(v => !v)"
-                  (keydown.space)="showPassword.update(v => !v)"></ion-icon>
+                <ion-button slot="end" type="button" fill="clear" class="toggle-pw-btn"
+                  [attr.aria-label]="showPassword() ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+                  [attr.aria-pressed]="showPassword()"
+                  (click)="togglePasswordVisibility()">
+                  <ion-icon [name]="showPassword() ? 'eye-off-outline' : 'eye-outline'" aria-hidden="true"></ion-icon>
+                </ion-button>
               </ion-input>
 
               @if (isLoginMode()) {
@@ -111,5 +112,4 @@
   </div>
 
 </ion-content>
-
 

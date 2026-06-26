@@ -200,22 +200,29 @@
 }
 
 .toggle-pw-btn {
-  cursor: pointer;
-  color: var(--color-text-muted);
-  padding-right: 0.5rem;
+  --padding-start: 0.25rem;
+  --padding-end: 0.5rem;
+  --color: var(--color-text-muted);
+  --background-hover: transparent;
+  --background-activated: transparent;
+  margin: 0;
+  min-width: 2.5rem;
+  height: 2.5rem;
   font-size: 1.25rem;
   transition: color 0.2s ease;
 
   &:hover {
-    color: var(--color-green);
+    --color: var(--color-green);
   }
 }
 
 // Forgot password
 .forgot-password {
   display: flex;
-  justify-content: flex-end;
+  justify-content: center;
+  width: 100%;
   margin-top: 0.75rem;
+  text-align: center;
 
   &__link {
     font-size: 0.8rem;

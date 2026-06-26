@@ -504,10 +504,10 @@ export class ClientDetailPage {
     field: 'requestPaymentLink',
     event: Event,
   ) {
-    const target = event.target as HTMLInputElement;
+    const isChecked = Boolean((event as CustomEvent<{ checked?: boolean }>).detail?.checked);
     this.appointmentDraft.update((draft) => ({
       ...draft,
-      [field]: target.checked ?? false,
+      [field]: isChecked,
     }));
   }
 
@@ -579,7 +579,7 @@ export class ClientDetailPage {
           description: draft.description.trim() || undefined,
           startTime: startAt,
           endTime: endAt,
-          requestPaymentLink: draft.requestPaymentLink,
+          requestPaymentLink: draft.requestPaymentLink === true,
         })
         .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe({
@@ -913,4 +913,3 @@ export class ClientDetailPage {
     return value ?? null;
   }
 }
-
