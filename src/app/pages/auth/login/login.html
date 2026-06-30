@@ -71,6 +71,22 @@
               }
             </div>
 
+            @if (!isLoginMode()) {
+              <div class="form-field">
+                <ion-input formControlName="confirmPassword" [type]="showPassword() ? 'text' : 'password'"
+                  label="Confirmar contraseña" labelPlacement="floating" fill="outline" shape="round"
+                  class="custom-input">
+                  <ion-icon slot="start" name="lock-closed-outline" class="input-icon"></ion-icon>
+                </ion-input>
+
+                @if (form.controls.confirmPassword.touched && form.controls.confirmPassword.hasError('required')) {
+                  <p class="field-validation-msg">Confirma tu contraseña.</p>
+                } @else if (form.controls.confirmPassword.touched && form.hasError('passwordMismatch')) {
+                  <p class="field-validation-msg">Las contraseñas no coinciden.</p>
+                }
+              </div>
+            }
+
             <ion-button expand="block" type="submit" [disabled]="isLoading() || form.invalid"
               class="login-submit-btn" shape="round"
               color="secondary">
@@ -81,7 +97,11 @@
             </ion-button>
 
             @if (errorMessage()) {
-              <p class="form-error-msg">{{ errorMessage() }}</p>
+              <p class="form-error-msg" role="alert">{{ errorMessage() }}</p>
+            }
+
+            @if (successMessage()) {
+              <p class="form-success-msg" role="status" aria-live="polite">{{ successMessage() }}</p>
             }
           </form>
 
@@ -112,4 +132,3 @@
   </div>
 
 </ion-content>
-

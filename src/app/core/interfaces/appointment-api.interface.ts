@@ -9,6 +9,4 @@ export interface IAppointmentApi {
   startTime: string;
   endTime: string;
   status: AppointmentStatus;
-  paymentId?: string;
-  paymentUrl?: string;
 }

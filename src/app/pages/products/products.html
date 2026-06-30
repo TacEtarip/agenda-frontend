@@ -6,18 +6,19 @@
     <ion-title>
       <div class="toolbar-title">
         <span class="toolbar-title__greeting">Catálogo</span>
-        <span class="toolbar-title__name">Productos</span>
+        <h1 class="toolbar-title__name">Productos</h1>
       </div>
     </ion-title>
   </ion-toolbar>
 </ion-header>
 
 <ion-content class="products-content">
-  <div class="stats-grid">
+  <main class="products-main">
+  <div class="stats-grid" aria-label="Resumen del catálogo">
     <ion-card class="stat-card">
       <ion-card-content class="stat-card__content">
         <div class="stat-icon stat-icon--green">
-          <ion-icon name="pricetag-outline"></ion-icon>
+          <ion-icon name="pricetag-outline" aria-hidden="true"></ion-icon>
         </div>
         <p class="stat-value">{{ products().length }}</p>
         <p class="stat-label">Total productos</p>
@@ -27,7 +28,7 @@
     <ion-card class="stat-card">
       <ion-card-content class="stat-card__content">
         <div class="stat-icon stat-icon--sky">
-          <ion-icon name="cash-outline"></ion-icon>
+          <ion-icon name="cash-outline" aria-hidden="true"></ion-icon>
         </div>
         <p class="stat-value">{{ pricedProducts().length }}</p>
         <p class="stat-label">Con precio</p>
@@ -37,7 +38,7 @@
     <ion-card class="stat-card">
       <ion-card-content class="stat-card__content">
         <div class="stat-icon stat-icon--indigo">
-          <ion-icon name="swap-vertical-outline"></ion-icon>
+          <ion-icon name="swap-vertical-outline" aria-hidden="true"></ion-icon>
         </div>
         <p class="stat-value">{{ catalogValue() | formatPrice }}</p>
         <p class="stat-label">Valor catálogo</p>
@@ -47,7 +48,8 @@
 
   <div class="filters">
     <ion-searchbar
-      placeholder="Buscar productos..."
+      placeholder="Buscar productos…"
+      aria-label="Buscar productos"
       [debounce]="200"
       (ionInput)="onSearch($event)"
       class="search-bar">
@@ -67,7 +69,7 @@
   </div>
 
   <div class="average-banner">
-    <ion-icon name="cash-outline"></ion-icon>
+    <ion-icon name="cash-outline" aria-hidden="true"></ion-icon>
     <span>Precio promedio: <strong>{{ formattedAveragePrice() }}</strong></span>
   </div>
 
@@ -81,11 +83,14 @@
               <p class="product-date">Creado {{ product.createdAt | formatDate }}</p>
             </div>
             <div class="product-actions">
-              <ion-button fill="clear" size="small" color="primary" (click)="openEditProductAlert(product)" (keydown.enter)="openEditProductAlert(product)">
-                <ion-icon slot="icon-only" name="create-outline"></ion-icon>
+              <ion-button fill="clear" size="small" color="medium" (click)="toggleProductType(product)" [attr.aria-label]="product.type === productType.SERVICE ? 'Convertir en producto' : 'Convertir en servicio'">
+                <ion-icon slot="icon-only" name="swap-vertical-outline" aria-hidden="true"></ion-icon>
               </ion-button>
-              <ion-button fill="clear" size="small" color="danger" (click)="deleteProduct(product)" (keydown.enter)="deleteProduct(product)">
-                <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
+              <ion-button fill="clear" size="small" color="primary" (click)="openEditProductAlert(product)" aria-label="Editar producto">
+                <ion-icon slot="icon-only" name="create-outline" aria-hidden="true"></ion-icon>
+              </ion-button>
+              <ion-button fill="clear" size="small" color="danger" (click)="deleteProduct(product)" aria-label="Eliminar producto">
+                <ion-icon slot="icon-only" name="trash-outline" aria-hidden="true"></ion-icon>
               </ion-button>
             </div>
           </div>
@@ -96,17 +101,19 @@
 
           <div class="product-card__footer">
             <ion-chip color="primary" class="price-chip">
-              <ion-icon name="cash-outline"></ion-icon>
+              <ion-icon name="cash-outline" aria-hidden="true"></ion-icon>
               <ion-label>{{ product.price | formatPrice }}</ion-label>
             </ion-chip>
+            <ion-chip color="medium">{{ product.type === productType.SERVICE ? 'Servicio' : 'Producto' }}</ion-chip>
           </div>
         </ion-card-content>
       </ion-card>
     }
     @empty {
-      <div class="empty-state">
-        <ion-icon name="pricetag-outline"></ion-icon>
+      <div class="empty-state" role="status">
+        <ion-icon name="pricetag-outline" aria-hidden="true"></ion-icon>
         <p class="empty-state__text">No hay productos para mostrar</p>
+        <p class="empty-state__hint">Agrega tu primera oferta para empezar a vincularla con clientes.</p>
       </div>
     }
   </div>
@@ -114,18 +121,18 @@
   <ion-infinite-scroll
     (ionInfinite)="loadMoreProducts($event)"
     [disabled]="productDisplayLimit() >= visibleProducts().length">
-    <ion-infinite-scroll-content loadingText="Cargando productos..."></ion-infinite-scroll-content>
+    <ion-infinite-scroll-content loadingText="Cargando productos…"></ion-infinite-scroll-content>
   </ion-infinite-scroll>
 
   <ion-fab class="products-fab" slot="fixed" vertical="bottom" horizontal="end">
     <ion-fab-button
       color="primary"
       (click)="openCreateProductModal()"
-      (keydown.enter)="openCreateProductModal()"
       aria-label="Agregar producto">
-      <ion-icon name="add-outline"></ion-icon>
+      <ion-icon name="add-outline" aria-hidden="true"></ion-icon>
     </ion-fab-button>
   </ion-fab>
+  </main>
 </ion-content>
 
 <ion-modal
@@ -172,6 +179,15 @@
                   fill="outline"
                   shape="round">
                 </ion-input>
+
+                <ion-select
+                  formControlName="type"
+                  label="Tipo"
+                  labelPlacement="floating"
+                  fill="outline">
+                  <ion-select-option [value]="productType.PRODUCT">Producto</ion-select-option>
+                  <ion-select-option [value]="productType.SERVICE">Servicio</ion-select-option>
+                </ion-select>
 
                 <ion-input
                   formControlName="price"

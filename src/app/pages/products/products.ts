@@ -28,9 +28,9 @@ import { COMMON_ION_PAGE_IMPORTS } from '../../shared/ionic-imports';
 import { FormatDatePipe } from '../../shared/pipes/format-date.pipe';
 import { FormatPricePipe } from '../../shared/pipes/format-price.pipe';
 import { SalesCatalogStore } from '../../shared/stores/sales-catalog.store';
-import { AuthService } from '../../core/services/auth.service';
 import { ProductSort } from './enums/product-sort.enum';
 import { VALID_PRODUCT_SORTS } from './constants/product-sort.constants';
+import { ProductType } from '../../enums/product-type.enum';
 
 @Component({
   selector: 'app-products',
@@ -57,10 +57,9 @@ export class ProductsPage {
   private readonly fb = inject(FormBuilder);
   private readonly alertCtrl = inject(AlertController);
   private readonly salesCatalogStore = inject(SalesCatalogStore);
-  private readonly authService = inject(AuthService);
-  private readonly priceFormatter = new Intl.NumberFormat('es-ES', {
+  private readonly priceFormatter = new Intl.NumberFormat('es-PE', {
     style: 'currency',
-    currency: 'EUR',
+    currency: 'PEN',
     maximumFractionDigits: 2,
   });
 
@@ -70,10 +69,12 @@ export class ProductsPage {
   readonly productDisplayLimit = signal(20);
   readonly searchQuery = signal('');
   readonly sortMode = signal<ProductSort>(ProductSort.RECENT);
+  readonly productType = ProductType;
   readonly createProductForm = this.fb.nonNullable.group({
     name: ['', [Validators.required, Validators.maxLength(80)]],
     description: ['', [Validators.maxLength(280)]],
     price: ['', [Validators.pattern(/^\d+([.,]\d{1,2})?$/)]],
+    type: [ProductType.PRODUCT],
   });
 
   readonly pricedProducts = computed(() =>
@@ -134,10 +135,7 @@ export class ProductsPage {
   }
 
   ionViewWillEnter(): void {
-    const userId = this.authService.currentUser()?.userId;
-    if (userId) {
-      this.salesCatalogStore.loadProducts(userId);
-    }
+    this.salesCatalogStore.loadProducts();
   }
 
   onSearch(event: CustomEvent) {
@@ -173,7 +171,7 @@ export class ProductsPage {
   }
 
   createProduct() {
-    const { name, description, price } = this.createProductForm.getRawValue();
+    const { name, description, price, type } = this.createProductForm.getRawValue();
     const trimmedName = name.trim();
 
     if (!trimmedName || this.createProductForm.invalid) {
@@ -196,7 +194,7 @@ export class ProductsPage {
       name: trimmedName,
       description: description.trim() || undefined,
       price: parsedPrice,
-      userId: this.authService.currentUser()?.userId,
+      type,
     });
 
     this.closeCreateProductModal();
@@ -207,6 +205,7 @@ export class ProductsPage {
       name: '',
       description: '',
       price: '',
+      type: ProductType.PRODUCT,
     });
     this.createProductForm.markAsPristine();
     this.createProductForm.markAsUntouched();
@@ -276,6 +275,12 @@ export class ProductsPage {
     });
 
     await alert.present();
+  }
+
+  toggleProductType(product: IProduct): void {
+    this.salesCatalogStore.updateProduct(product.id, {
+      type: product.type === ProductType.SERVICE ? ProductType.PRODUCT : ProductType.SERVICE,
+    });
   }
 
   private parsePrice(rawPrice?: string): number | null | undefined {

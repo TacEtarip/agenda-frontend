@@ -1,6 +1,13 @@
 import { Component, inject, signal } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import {
+  AbstractControl,
+  FormBuilder,
+  ReactiveFormsModule,
+  ValidationErrors,
+  ValidatorFn,
+  Validators,
+} from '@angular/forms';
 import { Router } from '@angular/router';
 import { addIcons } from 'ionicons';
 import {
@@ -21,6 +28,17 @@ import {
   IonSpinner,
 } from '@ionic/angular/standalone';
 import { AuthService } from '../../../core/services/auth.service';
+
+export const passwordsMatchValidator: ValidatorFn = (
+  control: AbstractControl,
+): ValidationErrors | null => {
+  const password = control.get('password')?.value;
+  const confirmPassword = control.get('confirmPassword')?.value;
+
+  return confirmPassword && password !== confirmPassword
+    ? { passwordMismatch: true }
+    : null;
+};
 
 @Component({
   selector: 'app-login',
@@ -47,14 +65,19 @@ export class LoginPage {
   readonly isLoading = signal(false);
   readonly showPassword = signal(false);
   readonly errorMessage = signal<string | null>(null);
+  readonly successMessage = signal<string | null>(null);
 
-  readonly form = this.fb.nonNullable.group({
-    companyName: [''],
-    firstName: [''],
-    lastName: [''],
-    email: ['', [Validators.required, Validators.email]],
-    password: ['', [Validators.required, Validators.minLength(8)]],
-  });
+  readonly form = this.fb.nonNullable.group(
+    {
+      companyName: [''],
+      firstName: [''],
+      lastName: [''],
+      email: ['', [Validators.required, Validators.email]],
+      password: ['', [Validators.required, Validators.minLength(8)]],
+      confirmPassword: [''],
+    },
+    { validators: passwordsMatchValidator },
+  );
 
   constructor() {
     addIcons({
@@ -70,19 +93,25 @@ export class LoginPage {
   toggleMode(login: boolean) {
     this.isLoginMode.set(login);
     this.errorMessage.set(null);
-    const { companyName, firstName, lastName } = this.form.controls;
+    this.successMessage.set(null);
+    const { companyName, firstName, lastName, confirmPassword } =
+      this.form.controls;
     if (login) {
       companyName.clearValidators();
       firstName.clearValidators();
       lastName.clearValidators();
+      confirmPassword.clearValidators();
     } else {
       companyName.setValidators([Validators.required, Validators.maxLength(100)]);
       firstName.setValidators([Validators.required, Validators.maxLength(60)]);
       lastName.setValidators([Validators.required, Validators.maxLength(60)]);
+      confirmPassword.setValidators([Validators.required]);
     }
     companyName.updateValueAndValidity();
     firstName.updateValueAndValidity();
     lastName.updateValueAndValidity();
+    confirmPassword.updateValueAndValidity();
+    this.form.updateValueAndValidity();
     this.form.reset();
   }
 
@@ -97,17 +126,28 @@ export class LoginPage {
     }
     this.isLoading.set(true);
     this.errorMessage.set(null);
+    this.successMessage.set(null);
 
     const { email, password, firstName, lastName, companyName } = this.form.getRawValue();
+    const isLogin = this.isLoginMode();
 
-    const request$ = this.isLoginMode()
+    const request$ = isLogin
       ? this.authService.login(email, password)
       : this.authService.register(companyName, firstName, lastName, email, password);
 
     request$.subscribe({
       next: () => {
         this.isLoading.set(false);
-        void this.router.navigate(['/dashboard']);
+        if (isLogin) {
+          void this.router.navigate(['/dashboard']);
+          return;
+        }
+
+        this.toggleMode(true);
+        this.form.controls.email.setValue(email);
+        this.successMessage.set(
+          'Cuenta creada correctamente. Ya puedes iniciar sesión con tu correo y contraseña.',
+        );
       },
       error: (err: unknown) => {
         this.isLoading.set(false);

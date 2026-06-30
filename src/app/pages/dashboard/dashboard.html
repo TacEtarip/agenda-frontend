@@ -3,33 +3,46 @@
     <ion-title>
       <div class="toolbar-title">
         <span class="toolbar-title__greeting">Buenos días,</span>
-        <span class="toolbar-title__name">{{ userName() }} 👋</span>
+        <h1 class="toolbar-title__name">{{ userName() }} <span aria-hidden="true">👋</span></h1>
       </div>
     </ion-title>
     <ion-buttons slot="end">
-      <ion-button aria-label="Ver notificaciones">
-        <ion-icon slot="icon-only" name="notifications-outline"></ion-icon>
+      <ion-button (click)="logout()" aria-label="Cerrar sesión" title="Cerrar sesión">
+        <ion-icon slot="icon-only" name="log-out-outline" aria-hidden="true"></ion-icon>
       </ion-button>
     </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
 <ion-content class="dashboard-content">
+  <main class="dashboard-main">
 
   <!-- Stats Row -->
-  <div class="stats-grid">
+  <section class="stats-grid" aria-label="Resumen del negocio">
     @for (stat of stats(); track stat.label) {
       <ion-card class="stat-card">
         <ion-card-content class="stat-card__content">
           <div class="stat-icon {{ stat.color }}">
-            <ion-icon [name]="stat.icon"></ion-icon>
+            <ion-icon [name]="stat.icon" aria-hidden="true"></ion-icon>
           </div>
           <p class="stat-value">{{ stat.value }}</p>
           <p class="stat-label">{{ stat.label }}</p>
         </ion-card-content>
       </ion-card>
     }
-  </div>
+  </section>
+
+  @if (pendingPaymentCount() > 0) {
+    <a class="priority-action" routerLink="/payments">
+      <ion-icon name="cash-outline" aria-hidden="true"></ion-icon>
+      <span><strong>{{ pendingPaymentCount() }} pagos pendientes</strong> requieren seguimiento.</span>
+      <span class="priority-action__cta">Revisar pagos</span>
+    </a>
+  }
+
+  @if (loadState() === 'error') {
+    <div class="load-feedback load-feedback--error" role="alert">{{ loadError() }}</div>
+  }
 
   <div class="section-header">
     <div class="section-header__row">
@@ -40,46 +53,46 @@
   <div class="quick-links-grid">
     <a class="quick-link-card" routerLink="/products">
       <div class="quick-link-card__icon quick-link-card__icon--sky">
-        <ion-icon name="pricetag-outline"></ion-icon>
+        <ion-icon name="pricetag-outline" aria-hidden="true"></ion-icon>
       </div>
       <div class="quick-link-card__body">
         <p class="quick-link-card__title">Productos</p>
         <p class="quick-link-card__text">Gestiona catálogo y precios.</p>
       </div>
-      <ion-icon name="chevron-forward-outline" class="quick-link-card__arrow"></ion-icon>
+      <ion-icon name="chevron-forward-outline" class="quick-link-card__arrow" aria-hidden="true"></ion-icon>
     </a>
 
     <a class="quick-link-card" routerLink="/settings">
       <div class="quick-link-card__icon quick-link-card__icon--indigo">
-        <ion-icon name="settings-outline"></ion-icon>
+        <ion-icon name="settings-outline" aria-hidden="true"></ion-icon>
       </div>
       <div class="quick-link-card__body">
         <p class="quick-link-card__title">Ajustes</p>
         <p class="quick-link-card__text">Edita tu perfil e integraciones.</p>
       </div>
-      <ion-icon name="chevron-forward-outline" class="quick-link-card__arrow"></ion-icon>
+      <ion-icon name="chevron-forward-outline" class="quick-link-card__arrow" aria-hidden="true"></ion-icon>
     </a>
 
     <a class="quick-link-card" routerLink="/message-templates">
       <div class="quick-link-card__icon quick-link-card__icon--green">
-        <ion-icon name="chatbubbles-outline"></ion-icon>
+        <ion-icon name="chatbubbles-outline" aria-hidden="true"></ion-icon>
       </div>
       <div class="quick-link-card__body">
         <p class="quick-link-card__title">Plantillas</p>
         <p class="quick-link-card__text">Gestiona mensajes por etapa.</p>
       </div>
-      <ion-icon name="chevron-forward-outline" class="quick-link-card__arrow"></ion-icon>
+      <ion-icon name="chevron-forward-outline" class="quick-link-card__arrow" aria-hidden="true"></ion-icon>
     </a>
 
     <a class="quick-link-card" routerLink="/payments">
       <div class="quick-link-card__icon quick-link-card__icon--amber">
-        <ion-icon name="cash-outline"></ion-icon>
+        <ion-icon name="cash-outline" aria-hidden="true"></ion-icon>
       </div>
       <div class="quick-link-card__body">
         <p class="quick-link-card__title">Pagos</p>
         <p class="quick-link-card__text">Control de ingresos y enlaces.</p>
       </div>
-      <ion-icon name="chevron-forward-outline" class="quick-link-card__arrow"></ion-icon>
+      <ion-icon name="chevron-forward-outline" class="quick-link-card__arrow" aria-hidden="true"></ion-icon>
     </a>
   </div>
 
@@ -87,13 +100,15 @@
   <div class="section-header">
     <div class="section-header__row">
       <h2 class="section-title">Citas de hoy</h2>
-      <button
-        type="button"
-        class="see-all-btn"
-        (click)="toggleAppointmentsView()"
-        [attr.aria-expanded]="showAllAppointments()">
-        {{ showAllAppointments() ? 'Ver menos' : 'Ver todas' }}
-      </button>
+      @if (upcomingAppointments().length > 0) {
+        <button
+          type="button"
+          class="see-all-btn"
+          (click)="toggleAppointmentsView()"
+          [attr.aria-expanded]="showAllAppointments()">
+          {{ showAllAppointments() ? 'Ver menos' : 'Ver todas' }}
+        </button>
+      }
     </div>
   </div>
 
@@ -113,18 +128,22 @@
             </div>
           </div>
           <div class="appt-card__footer">
-            <ion-icon name="time-outline" class="appt-time-icon"></ion-icon>
+            <ion-icon name="time-outline" class="appt-time-icon" aria-hidden="true"></ion-icon>
             <span class="appt-time-text">{{ appt.time }}</span>
-            <ion-chip [color]="appt.status === 'pending_payment' ? 'warning' : 'success'" class="appt-status-chip">{{ appt.status | appointmentStatusLabel }}</ion-chip>
+            <ion-chip [color]="appt.status === 'scheduled' ? 'primary' : 'success'" class="appt-status-chip">{{ appt.status | appointmentStatusLabel }}</ion-chip>
           </div>
-          @if (appt.paymentUrl) {
-            <div class="appt-card__payment">
-              <ion-icon name="cash-outline" color="primary"></ion-icon>
-              <a [href]="appt.paymentUrl" target="_blank" rel="noopener noreferrer">Enlace de pago</a>
-            </div>
-          }
         </ion-card-content>
       </ion-card>
+    } @empty {
+      <div class="appointments-empty" role="status">
+        <div class="appointments-empty__icon" aria-hidden="true">
+          <ion-icon name="calendar-outline"></ion-icon>
+        </div>
+        <div>
+          <p class="appointments-empty__title">Tu agenda está libre hoy</p>
+          <p class="appointments-empty__text">Las próximas citas aparecerán aquí para que tengas el día bajo control.</p>
+        </div>
+      </div>
     }
   </div>
 
@@ -132,12 +151,16 @@
   <div class="section-header">
     <div class="section-header__row">
       <h2 class="section-title">Clientes</h2>
-      <ion-badge color="primary">{{ recentClients().length }}</ion-badge>
+      <ion-badge color="primary" [attr.aria-label]="filteredClients().length + ' clientes'">
+        {{ filteredClients().length }}
+      </ion-badge>
     </div>
     <div class="filters-row">
       <ion-searchbar
-        placeholder="Buscar clientes..."
+        placeholder="Buscar clientes…"
+        aria-label="Buscar clientes"
         [debounce]="200"
+        [value]="searchQuery()"
         (ionInput)="onSearch($event)"
         class="search-bar">
       </ion-searchbar>
@@ -181,22 +204,26 @@
         <ion-label class="empty-label">No se encontraron clientes</ion-label>
       </ion-item>
     }
+    @if (loadState() === 'loading') {
+      <div class="load-feedback" role="status">Cargando clientes…</div>
+    }
   </ion-list>
 
   <ion-infinite-scroll
     (ionInfinite)="loadMoreClients($event)"
     [disabled]="clientDisplayLimit() >= filteredClients().length">
-    <ion-infinite-scroll-content loadingText="Cargando clientes..."></ion-infinite-scroll-content>
+    <ion-infinite-scroll-content loadingText="Cargando clientes…"></ion-infinite-scroll-content>
   </ion-infinite-scroll>
+
+  </main>
 
   <!-- FAB -->
   <ion-fab slot="fixed" vertical="bottom" horizontal="end">
     <ion-fab-button
       color="primary"
       (click)="openAddClientModal()"
-      (keydown.enter)="openAddClientModal()"
       aria-label="Agregar cliente">
-      <ion-icon name="add-outline"></ion-icon>
+      <ion-icon name="add-outline" aria-hidden="true"></ion-icon>
     </ion-fab-button>
   </ion-fab>
 
@@ -212,8 +239,8 @@
       <ion-toolbar>
         <ion-title>Agregar cliente</ion-title>
         <ion-buttons slot="end">
-          <ion-button (click)="closeAddClientModal()" (keydown.enter)="closeAddClientModal()" aria-label="Cerrar modal">
-            <ion-icon slot="icon-only" name="close-outline"></ion-icon>
+          <ion-button (click)="closeAddClientModal()" aria-label="Cerrar modal">
+            <ion-icon slot="icon-only" name="close-outline" aria-hidden="true"></ion-icon>
           </ion-button>
         </ion-buttons>
       </ion-toolbar>
@@ -225,7 +252,7 @@
           <ion-card-content class="app-modal-card__content">
             <div class="app-modal-header">
               <div class="app-modal-icon">
-                <ion-icon name="people-outline"></ion-icon>
+                <ion-icon name="people-outline" aria-hidden="true"></ion-icon>
               </div>
 
               <div class="app-modal-copy">
@@ -289,19 +316,19 @@
                 (addClientForm.controls.firstName.touched && addClientForm.controls.firstName.invalid) ||
                 (addClientForm.controls.lastName.touched && addClientForm.controls.lastName.invalid)
               ) {
-                <p class="form-feedback form-feedback--error">
+                <p class="form-feedback form-feedback--error" role="alert">
                   Nombre y apellido son obligatorios.
                 </p>
               }
 
               @if (addClientForm.controls.email.touched && addClientForm.controls.email.invalid) {
-                <p class="form-feedback form-feedback--error">
+                <p class="form-feedback form-feedback--error" role="alert">
                   Ingresa un correo electrónico válido.
                 </p>
               }
 
               @if (addClientForm.controls.phone.touched && addClientForm.controls.phone.invalid) {
-                <p class="form-feedback form-feedback--error">
+                <p class="form-feedback form-feedback--error" role="alert">
                   El teléfono es obligatorio.
                 </p>
               }
@@ -311,13 +338,12 @@
                   fill="clear"
                   type="button"
                   (click)="resetAddClientForm()"
-                  (keydown.enter)="resetAddClientForm()"
                   [disabled]="!addClientForm.dirty">
                   Limpiar
                 </ion-button>
 
                 <ion-button type="submit">
-                  <ion-icon slot="start" name="add-outline"></ion-icon>
+                  <ion-icon slot="start" name="add-outline" aria-hidden="true"></ion-icon>
                   Agregar
                 </ion-button>
               </div>

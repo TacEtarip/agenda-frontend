@@ -260,6 +260,22 @@
   text-align: center;
 }
 
+.field-validation-msg {
+  margin: 0.4rem 0.75rem 0;
+  color: var(--ion-color-danger, #eb445a);
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.form-success-msg {
+  margin: 0.75rem 0 0;
+  color: var(--color-green);
+  font-size: 0.85rem;
+  font-weight: 700;
+  line-height: 1.4;
+  text-align: center;
+}
+
 ion-button {
   --border-radius: 16px;
   text-transform: none;

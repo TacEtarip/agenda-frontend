@@ -2,9 +2,9 @@ import { Pipe, PipeTransform } from '@angular/core';
 
 @Pipe({ name: 'formatPrice', pure: true, standalone: true })
 export class FormatPricePipe implements PipeTransform {
-  private readonly formatter = new Intl.NumberFormat('es-ES', {
+  private readonly formatter = new Intl.NumberFormat('es-PE', {
     style: 'currency',
-    currency: 'EUR',
+    currency: 'PEN',
     maximumFractionDigits: 2,
   });
 

@@ -5,14 +5,24 @@ import { environment } from '../../../environments/environment';
 import { IMessageTemplate } from '../../interfaces/message-template.interface';
 import { ICreateTemplatePayload } from '../interfaces/create-template-payload.interface';
 import { IUpdateTemplatePayload } from '../interfaces/update-template-payload.interface';
+import { ClientStage } from '../../enums/client-stage.enum';
+import { TemplatePreviewResult, TemplateVariableMetadata } from '../../interfaces/template-variable.interface';
 
 @Injectable({ providedIn: 'root' })
 export class MessageTemplateApiService {
   private readonly http = inject(HttpClient);
   private readonly url = `${environment.apiUrl}/message-templates`;
 
-  getAllByUser(userId: string): Observable<IMessageTemplate[]> {
-    return this.http.get<IMessageTemplate[]>(`${this.url}/user/${userId}`);
+  getAll(): Observable<IMessageTemplate[]> {
+    return this.http.get<IMessageTemplate[]>(this.url);
+  }
+
+  getMetadata(): Observable<{ variables: TemplateVariableMetadata[] }> {
+    return this.http.get<{ variables: TemplateVariableMetadata[] }>(`${this.url}/metadata`);
+  }
+
+  preview(stage: ClientStage, messageBody: string): Observable<TemplatePreviewResult> {
+    return this.http.post<TemplatePreviewResult>(`${this.url}/preview`, { stage, messageBody });
   }
 
   create(payload: ICreateTemplatePayload): Observable<IMessageTemplate> {

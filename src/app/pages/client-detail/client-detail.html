@@ -10,14 +10,18 @@
       </div>
     </ion-title>
     <ion-buttons slot="end">
-      <ion-button aria-label="Editar cliente">
-        <ion-icon slot="icon-only" name="create-outline"></ion-icon>
+      <ion-button
+        aria-label="Editar cliente"
+        (click)="openEditClientModal()"
+        (keydown.enter)="openEditClientModal()">
+        <ion-icon slot="icon-only" name="create-outline" aria-hidden="true"></ion-icon>
       </ion-button>
     </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
 <ion-content class="client-detail-content">
+  <main class="client-detail-main">
 
   <!-- Client Hero Card -->
   <ion-card class="hero-card">
@@ -35,17 +39,15 @@
           <p class="client-hero__email">{{ client().email }}</p>
           <p class="client-hero__phone">{{ client().phone }}</p>
           <p class="client-hero__since">Cliente desde {{ client().createdAt }}</p>
-          <!-- Stage badge + selector -->
+          <!-- Stage selector -->
           <div class="stage-row">
-            <ion-chip [color]="client().stage | stageColor" class="stage-chip">
-              <ion-icon name="swap-horizontal-outline"></ion-icon>
-              <ion-label>{{ client().stage | stageLabel }}</ion-label>
-            </ion-chip>
             <ion-select
               class="stage-select"
               [value]="client().stage"
               interface="action-sheet"
-              placeholder="Cambiar etapa"
+              aria-label="Etapa del cliente"
+              label="Etapa"
+              labelPlacement="start"
               (ionChange)="onStageChange($event)"
               aria-label="Cambiar etapa del cliente">
               @for (s of allStages; track s.value) {
@@ -61,16 +63,17 @@
         <ion-button
           fill="outline" color="success" size="small" class="quick-actions__btn"
           [href]="callWhatsAppUrl()"
-          target="_blank">
-          <ion-icon slot="start" name="logo-whatsapp"></ion-icon>
+          target="_blank"
+          rel="noopener noreferrer">
+          <ion-icon slot="start" name="logo-whatsapp" aria-hidden="true"></ion-icon>
           WhatsApp
         </ion-button>
-        <ion-button fill="outline" color="tertiary" size="small" class="quick-actions__btn">
-          <ion-icon slot="start" name="call-outline"></ion-icon>
+        <ion-button fill="outline" color="tertiary" size="small" class="quick-actions__btn" [href]="callPhoneUrl()">
+          <ion-icon slot="start" name="call-outline" aria-hidden="true"></ion-icon>
           Llamar
         </ion-button>
-        <ion-button fill="outline" color="medium" size="small" class="quick-actions__btn">
-          <ion-icon slot="start" name="mail-outline"></ion-icon>
+        <ion-button fill="outline" color="medium" size="small" class="quick-actions__btn" [href]="emailUrl()">
+          <ion-icon slot="start" name="mail-outline" aria-hidden="true"></ion-icon>
           Correo
         </ion-button>
       </div>
@@ -81,13 +84,109 @@
     <p class="form-feedback form-feedback--error">{{ actionError() }}</p>
   }
 
+  @defer (when isClientEditModalOpen()) {
+    <ion-modal
+      [isOpen]="isClientEditModalOpen()"
+      (didDismiss)="closeEditClientModal()"
+      class="app-modal">
+      <ng-template>
+        <ion-header>
+          <ion-toolbar>
+            <ion-title>Editar cliente</ion-title>
+            <ion-buttons slot="end">
+              <ion-button
+                aria-label="Cerrar edición de cliente"
+                (click)="closeEditClientModal()"
+                (keydown.enter)="closeEditClientModal()">
+                <ion-icon slot="icon-only" name="close-outline"></ion-icon>
+              </ion-button>
+            </ion-buttons>
+          </ion-toolbar>
+        </ion-header>
+
+        <div class="app-modal-content">
+          <section class="app-modal-shell">
+            <ion-card class="app-modal-card">
+              <ion-card-content class="app-modal-card__content">
+                <div class="app-modal-header">
+                  <div class="app-modal-icon">
+                    <ion-icon name="create-outline"></ion-icon>
+                  </div>
+                  <div class="app-modal-copy">
+                    <p class="app-modal-eyebrow">Contacto</p>
+                    <h2>Editar cliente</h2>
+                    <p>Actualiza los datos principales del contacto.</p>
+                  </div>
+                </div>
+
+                <div class="app-modal-body client-edit-modal">
+                  <ion-input
+                    label="Nombre"
+                    labelPlacement="floating"
+                    fill="outline"
+                    [value]="clientEditDraft().firstName"
+                    (ionInput)="onClientEditDraftChange('firstName', $event)">
+                  </ion-input>
+                  <ion-input
+                    label="Apellido"
+                    labelPlacement="floating"
+                    fill="outline"
+                    [value]="clientEditDraft().lastName"
+                    (ionInput)="onClientEditDraftChange('lastName', $event)">
+                  </ion-input>
+                  <ion-input
+                    type="email"
+                    label="Correo"
+                    labelPlacement="floating"
+                    fill="outline"
+                    [value]="clientEditDraft().email"
+                    (ionInput)="onClientEditDraftChange('email', $event)">
+                  </ion-input>
+                  <ion-input
+                    type="tel"
+                    label="Teléfono"
+                    labelPlacement="floating"
+                    fill="outline"
+                    [value]="clientEditDraft().phoneNumber"
+                    (ionInput)="onClientEditDraftChange('phoneNumber', $event)">
+                  </ion-input>
+
+                  @if (clientEditDraftError()) {
+                    <p class="form-feedback form-feedback--error">{{ clientEditDraftError() }}</p>
+                  }
+
+                  <div class="app-modal-actions">
+                    <ion-button
+                      fill="outline"
+                      color="medium"
+                      (click)="closeEditClientModal()"
+                      (keydown.enter)="closeEditClientModal()">
+                      Cancelar
+                    </ion-button>
+                    <ion-button
+                      [disabled]="isSavingClient()"
+                      (click)="saveClientFromModal()"
+                      (keydown.enter)="saveClientFromModal()">
+                      {{ isSavingClient() ? 'Guardando…' : 'Guardar cambios' }}
+                    </ion-button>
+                  </div>
+                </div>
+              </ion-card-content>
+            </ion-card>
+          </section>
+        </div>
+      </ng-template>
+    </ion-modal>
+  }
+
   <!-- Segment Tabs -->
-  <ion-segment
-    scrollable="true"
-    [value]="activeSegment()"
-    (ionChange)="onSegmentChange($event)"
-    color="primary"
-    class="detail-segment">
+  <div class="detail-segment-scroll" role="region" aria-label="Secciones del cliente">
+    <ion-segment
+      scrollable="true"
+      [value]="activeSegment()"
+      (ionChange)="onSegmentChange($event)"
+      color="primary"
+      class="detail-segment">
     <ion-segment-button value="notes">
       <ion-label>
         Notas
@@ -118,7 +217,8 @@
         Mensajes
       </ion-label>
     </ion-segment-button>
-  </ion-segment>
+    </ion-segment>
+  </div>
 
   <!-- ── Notes Tab ── -->
   @if (activeSegment() === 'notes') {
@@ -128,23 +228,25 @@
           <ion-card-content class="tab-card__content">
             <p class="note-text">{{ note.content }}</p>
             <div class="note-footer">
-              <ion-note class="note-date">{{ note.updatedAt }}</ion-note>
+              <ion-note class="note-date">{{ note.updatedAt | formatDate }}</ion-note>
               <div class="note-actions">
                 <ion-button
                   fill="clear"
                   size="small"
                   color="primary"
                   (click)="openEditNoteModal(note)"
-                  (keydown.enter)="openEditNoteModal(note)">
-                  <ion-icon slot="icon-only" name="create-outline"></ion-icon>
+                  (keydown.enter)="openEditNoteModal(note)"
+                  aria-label="Editar nota">
+                  <ion-icon slot="icon-only" name="create-outline" aria-hidden="true"></ion-icon>
                 </ion-button>
                 <ion-button
                   fill="clear"
                   size="small"
                   color="danger"
                   (click)="deleteNote(note)"
-                  (keydown.enter)="deleteNote(note)">
-                  <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
+                  (keydown.enter)="deleteNote(note)"
+                  aria-label="Eliminar nota">
+                  <ion-icon slot="icon-only" name="trash-outline" aria-hidden="true"></ion-icon>
                 </ion-button>
               </div>
             </div>
@@ -190,11 +292,25 @@
               <span class="appt-time-text">{{ appt.startTime }} – {{ appt.endTime }}</span>
             </div>
 
-            @if (appt.paymentUrl) {
-              <div class="appt-payment-row">
-                <ion-icon name="cash-outline" color="primary"></ion-icon>
-                <a [href]="appt.paymentUrl" target="_blank" rel="noopener noreferrer">Enlace de pago B2B2C</a>
+            @if (paymentFor(paymentSourceType.APPOINTMENT, appt.id); as payment) {
+              <div class="payment-state" [class.payment-state--paid]="payment.status === paymentStatus.PAID">
+                <div>
+                  <ion-icon name="cash-outline" aria-hidden="true" />
+                  <strong>{{ paymentStatusLabel(payment.status) }}</strong>
+                  <span>{{ payment.amount | formatPrice }}</span>
+                </div>
+                @if (payment.status === paymentStatus.PENDING) {
+                  <div class="payment-state__actions">
+                    <ion-button fill="clear" size="small" (click)="copyPaymentLink(payment)">Copiar enlace</ion-button>
+                    <ion-button fill="clear" size="small" color="success" (click)="sendPaymentLink(payment)">WhatsApp</ion-button>
+                    <ion-button fill="clear" size="small" color="danger" (click)="cancelPayment(payment)">Cancelar cobro</ion-button>
+                  </div>
+                }
               </div>
+            } @else {
+              <ion-button fill="outline" size="small" class="create-payment-button" (click)="openAppointmentPayment(appt)">
+                <ion-icon slot="start" name="cash-outline" aria-hidden="true" />Crear cobro
+              </ion-button>
             }
 
             <div class="appt-actions">
@@ -202,6 +318,7 @@
                 fill="clear"
                 size="small"
                 color="primary"
+                [attr.aria-label]="appt.status === 'completed' ? 'Editar descripción de cita completada' : 'Editar cita'"
                 (click)="openEditAppointmentModal(appt)"
                 (keydown.enter)="openEditAppointmentModal(appt)">
                 <ion-icon slot="icon-only" name="create-outline"></ion-icon>
@@ -210,20 +327,31 @@
                 fill="outline"
                 size="small"
                 color="success"
-                [disabled]="appt.status === 'completed'"
+                [disabled]="appt.status === 'completed' || appt.status === 'cancelled'"
                 (click)="updateAppointmentStatus(appt, 'completed')"
                 (keydown.enter)="updateAppointmentStatus(appt, 'completed')">
                 Completar
               </ion-button>
-              <ion-button
-                fill="outline"
-                size="small"
-                color="danger"
-                [disabled]="appt.status === 'cancelled'"
-                (click)="updateAppointmentStatus(appt, 'cancelled')"
-                (keydown.enter)="updateAppointmentStatus(appt, 'cancelled')">
-                Cancelar
-              </ion-button>
+              @if (appt.status === 'cancelled') {
+                <ion-button
+                  fill="outline"
+                  size="small"
+                  color="primary"
+                  (click)="updateAppointmentStatus(appt, 'scheduled')"
+                  (keydown.enter)="updateAppointmentStatus(appt, 'scheduled')">
+                  Reprogramar
+                </ion-button>
+              } @else {
+                <ion-button
+                  fill="outline"
+                  size="small"
+                  color="danger"
+                  [disabled]="appt.status === 'completed'"
+                  (click)="updateAppointmentStatus(appt, 'cancelled')"
+                  (keydown.enter)="updateAppointmentStatus(appt, 'cancelled')">
+                  Cancelar
+                </ion-button>
+              }
             </div>
           </ion-card-content>
         </ion-card>
@@ -276,6 +404,7 @@
                   labelPlacement="floating"
                   fill="outline"
                   class="appointment-modal__field"
+                  [disabled]="isEditingCompletedAppointment()"
                   [value]="appointmentDraft().title"
                   (ionInput)="onAppointmentDraftTextChange('title', $event)">
                 </ion-input>
@@ -292,19 +421,28 @@
                 <div class="appointment-modal__pickers">
                   <div class="appointment-modal__selector-card">
                     <p class="appointment-modal__picker-title">Fecha</p>
-                    <ion-datetime-button datetime="appt-date-picker"></ion-datetime-button>
+                    <ion-datetime-button
+                      datetime="appt-date-picker"
+                      [disabled]="isEditingCompletedAppointment()">
+                    </ion-datetime-button>
                     <p class="appointment-modal__selector-value">{{ appointmentDraftDateLabel() }}</p>
                   </div>
 
                   <div class="appointment-modal__selector-card">
                     <p class="appointment-modal__picker-title">Desde</p>
-                    <ion-datetime-button datetime="appt-start-hour-picker"></ion-datetime-button>
+                    <ion-datetime-button
+                      datetime="appt-start-hour-picker"
+                      [disabled]="isEditingCompletedAppointment()">
+                    </ion-datetime-button>
                     <p class="appointment-modal__selector-value">{{ appointmentDraftStartHourLabel() }}</p>
                   </div>
 
                   <div class="appointment-modal__selector-card">
                     <p class="appointment-modal__picker-title">Hasta</p>
-                    <ion-datetime-button datetime="appt-end-hour-picker"></ion-datetime-button>
+                    <ion-datetime-button
+                      datetime="appt-end-hour-picker"
+                      [disabled]="isEditingCompletedAppointment()">
+                    </ion-datetime-button>
                     <p class="appointment-modal__selector-value">{{ appointmentDraftEndHourLabel() }}</p>
                   </div>
                 </div>
@@ -346,17 +484,6 @@
                     </ion-datetime>
                   </ng-template>
                 </ion-modal>
-
-                @if (!editingAppointmentId() && paymentsEnabled()) {
-                  <ion-item lines="none" class="appointment-modal__payment-toggle">
-                    <ion-icon slot="start" name="cash-outline" color="primary"></ion-icon>
-                    <ion-label>Generar link de pago</ion-label>
-                    <ion-toggle
-                      [checked]="appointmentDraft().requestPaymentLink"
-                      (ionChange)="onAppointmentDraftCheckboxChange('requestPaymentLink', $event)">
-                    </ion-toggle>
-                  </ion-item>
-                }
 
                 @if (appointmentDraftError()) {
                   <p class="appointment-modal__error">{{ appointmentDraftError() }}</p>
@@ -542,8 +669,8 @@
             <p class="file-meta">{{ file.fileType }} · {{ file.fileSize }}</p>
             <p class="file-date">{{ file.uploadedAt }}</p>
           </ion-label>
-          <ion-button slot="end" fill="clear" color="primary">
-            <ion-icon slot="icon-only" name="cloud-download-outline"></ion-icon>
+          <ion-button slot="end" fill="clear" color="primary" aria-label="Descargar archivo">
+            <ion-icon slot="icon-only" name="cloud-download-outline" aria-hidden="true"></ion-icon>
           </ion-button>
         </ion-item>
       }
@@ -570,7 +697,7 @@
               placeholder="Selecciona un producto"
               (ionChange)="onDraftProductChange($event)"
               aria-label="Seleccionar producto para cliente">
-              @for (product of products(); track product.id) {
+              @for (product of availableProducts(); track product.id) {
                 <ion-select-option [value]="product.id">
                   {{ product.name }} · {{ product.price | formatPrice }}
                 </ion-select-option>
@@ -591,18 +718,27 @@
             </ion-select>
           </div>
 
+          @if (availableProducts().length === 0) {
+            <p class="form-feedback">Todos los productos del catálogo ya están vinculados a este cliente.</p>
+          }
+
+          @if (productLinkError()) {
+            <p class="form-feedback form-feedback--error" role="alert">{{ productLinkError() }}</p>
+          }
+
           <ion-textarea
             [value]="draftProductNotes()"
             autoGrow="true"
             rows="3"
             class="product-linker-notes"
-            placeholder="Notas de seguimiento (opcional)..."
+            placeholder="Notas de seguimiento (opcional)…"
             (ionInput)="onDraftProductNotesChange($event)">
           </ion-textarea>
 
           <ion-button
             expand="block"
             class="product-linker-button"
+            [disabled]="!draftProductId()"
             (click)="addProductToClient()"
             (keydown.enter)="addProductToClient()">
             <ion-icon slot="start" name="add-outline"></ion-icon>
@@ -619,6 +755,7 @@
                 <p class="product-offer-product">
                   <ion-icon name="pricetag-outline"></ion-icon>
                   {{ offer.resolvedProductName }}
+                  <ion-chip class="product-type-chip">{{ offer.resolvedProductType === productType.SERVICE ? 'Servicio' : 'Producto' }}</ion-chip>
                 </p>
                 <p class="product-offer-price">
                   <ion-icon name="cash-outline"></ion-icon>
@@ -631,6 +768,27 @@
             </div>
 
             <p class="appt-desc">{{ offer.notes || 'Sin notas de seguimiento.' }}</p>
+
+            @if (paymentFor(paymentSourceType.CLIENT_PRODUCT, offer.id); as payment) {
+              <div class="payment-state" [class.payment-state--paid]="payment.status === paymentStatus.PAID">
+                <div>
+                  <ion-icon name="cash-outline" aria-hidden="true" />
+                  <strong>{{ paymentStatusLabel(payment.status) }}</strong>
+                  <span>{{ payment.amount | formatPrice }}</span>
+                </div>
+                @if (payment.status === paymentStatus.PENDING) {
+                  <div class="payment-state__actions">
+                    <ion-button fill="clear" size="small" (click)="copyPaymentLink(payment)">Copiar enlace</ion-button>
+                    <ion-button fill="clear" size="small" color="success" (click)="sendPaymentLink(payment)">WhatsApp</ion-button>
+                    <ion-button fill="clear" size="small" color="danger" (click)="cancelPayment(payment)">Cancelar cobro</ion-button>
+                  </div>
+                }
+              </div>
+            } @else {
+              <ion-button fill="outline" size="small" class="create-payment-button" (click)="openProductPayment(offer)">
+                <ion-icon slot="start" name="cash-outline" aria-hidden="true" />Crear cobro
+              </ion-button>
+            }
 
             <div class="product-offer-meta">
               <span>Ofrecido {{ offer.offeredAt | formatDate }}</span>
@@ -667,16 +825,18 @@
                 size="small"
                 color="primary"
                 (click)="openEditProductNotesAlert(offer)"
-                (keydown.enter)="openEditProductNotesAlert(offer)">
-                <ion-icon slot="icon-only" name="create-outline"></ion-icon>
+                (keydown.enter)="openEditProductNotesAlert(offer)"
+                aria-label="Editar notas del producto">
+                <ion-icon slot="icon-only" name="create-outline" aria-hidden="true"></ion-icon>
               </ion-button>
               <ion-button
                 fill="clear"
                 size="small"
                 color="danger"
                 (click)="deleteProductOffer(offer)"
-                (keydown.enter)="deleteProductOffer(offer)">
-                <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
+                (keydown.enter)="deleteProductOffer(offer)"
+                aria-label="Eliminar producto del cliente">
+                <ion-icon slot="icon-only" name="trash-outline" aria-hidden="true"></ion-icon>
               </ion-button>
             </div>
           </ion-card-content>
@@ -702,12 +862,13 @@
           {{ currentStageTemplates().length === 1 ? 'plantilla' : 'plantillas' }} para la etapa
           <strong>{{ client().stage | stageLabel }}</strong>
         </span>
-        <ion-button fill="clear" size="small" color="primary"
-          (click)="openEditTemplateAlert(null)"
-          (keydown.enter)="openEditTemplateAlert(null)">
-          <ion-icon slot="start" name="add-outline"></ion-icon>
-          Nueva plantilla
-        </ion-button>
+        @if (currentStageTemplates().length > 0) {
+          <ion-button fill="clear" size="small" color="primary"
+            (click)="openEditTemplateAlert(null)">
+            <ion-icon slot="start" name="add-outline" aria-hidden="true"></ion-icon>
+            Nueva plantilla
+          </ion-button>
+        }
       </div>
 
       @if (currentStageTemplates().length > 0) {
@@ -721,14 +882,16 @@
               </ion-card-title>
               <div class="template-header-actions">
                 <ion-button fill="clear" size="small" color="primary"
+                  aria-label="Editar plantilla"
                   (click)="openEditTemplateAlert(tpl)"
                   (keydown.enter)="openEditTemplateAlert(tpl)">
-                  <ion-icon slot="icon-only" name="create-outline"></ion-icon>
+                  <ion-icon slot="icon-only" name="create-outline" aria-hidden="true"></ion-icon>
                 </ion-button>
                 <ion-button fill="clear" size="small" color="danger"
+                  aria-label="Eliminar plantilla"
                   (click)="deleteTemplate(tpl)"
                   (keydown.enter)="deleteTemplate(tpl)">
-                  <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
+                  <ion-icon slot="icon-only" name="trash-outline" aria-hidden="true"></ion-icon>
                 </ion-button>
               </div>
             </ion-card-header>
@@ -742,8 +905,9 @@
                   size="small"
                   class="template-wa-btn"
                   [href]="getTemplateWhatsAppUrl(tpl)"
-                  target="_blank">
-                  <ion-icon slot="start" name="logo-whatsapp"></ion-icon>
+                  target="_blank"
+                  rel="noopener noreferrer">
+                  <ion-icon slot="start" name="logo-whatsapp" aria-hidden="true"></ion-icon>
                   Enviar por WhatsApp
                 </ion-button>
               </div>
@@ -752,20 +916,20 @@
         }
       } @else {
         <div class="empty-state">
-          <ion-icon name="chatbubbles-outline"></ion-icon>
+          <ion-icon name="chatbubbles-outline" aria-hidden="true"></ion-icon>
           <p class="empty-state__text">No hay plantillas para {{ client().stage | stageLabel }}</p>
           <ion-button fill="outline" color="primary" size="small" class="empty-state__cta"
             (click)="openEditTemplateAlert(null)"
             (keydown.enter)="openEditTemplateAlert(null)">
-            <ion-icon slot="start" name="add-outline"></ion-icon>
+            <ion-icon slot="start" name="add-outline" aria-hidden="true"></ion-icon>
             Crear plantilla
           </ion-button>
         </div>
       }
 
-      <h4 class="all-templates-title">Plantillas de otras etapas</h4>
-      @for (tpl of messageTemplates(); track tpl.id) {
-        @if (tpl.stage !== client().stage) {
+      @if (otherStageTemplates().length > 0) {
+        <h3 class="all-templates-title">Plantillas de otras etapas</h3>
+        @for (tpl of otherStageTemplates(); track tpl.id) {
           <ion-card class="template-card template-card--other">
             <ion-card-header class="template-card__header">
               <ion-chip [color]="tpl.stage | stageColor" class="template-stage-chip">
@@ -773,14 +937,16 @@
               </ion-chip>
               <div class="template-header-actions">
                 <ion-button fill="clear" size="small" color="primary"
+                  aria-label="Editar plantilla"
                   (click)="openEditTemplateAlert(tpl)"
                   (keydown.enter)="openEditTemplateAlert(tpl)">
-                  <ion-icon slot="icon-only" name="create-outline"></ion-icon>
+                  <ion-icon slot="icon-only" name="create-outline" aria-hidden="true"></ion-icon>
                 </ion-button>
                 <ion-button fill="clear" size="small" color="danger"
+                  aria-label="Eliminar plantilla"
                   (click)="deleteTemplate(tpl)"
                   (keydown.enter)="deleteTemplate(tpl)">
-                  <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
+                  <ion-icon slot="icon-only" name="trash-outline" aria-hidden="true"></ion-icon>
                 </ion-button>
               </div>
             </ion-card-header>
@@ -796,6 +962,8 @@
     </div>
   }
 
+  </main>
+
   <!-- FAB (hidden on messages tab) -->
   @if (canShowPrimaryFab()) {
     <ion-fab class="client-detail-fab" slot="fixed" vertical="bottom" horizontal="end">
@@ -804,9 +972,22 @@
         (click)="openPrimaryActionModal()"
         (keydown.enter)="openPrimaryActionModal()"
         [attr.aria-label]="primaryFabLabel()">
-        <ion-icon name="add-outline"></ion-icon>
+        <ion-icon name="add-outline" aria-hidden="true"></ion-icon>
       </ion-fab-button>
     </ion-fab>
+  }
+
+  @if (paymentModalTarget(); as target) {
+    <app-payment-form-modal
+      [opened]="true"
+      [sourceType]="target.sourceType"
+      [sourceId]="target.sourceId"
+      [concept]="target.concept"
+      [suggestedAmount]="target.amount"
+      [clientName]="client().firstName + ' ' + client().lastName"
+      [clientPhone]="client().phone"
+      (closed)="closePaymentModal()"
+      (paymentCompleted)="onPaymentCompleted($event)" />
   }
 
 </ion-content>

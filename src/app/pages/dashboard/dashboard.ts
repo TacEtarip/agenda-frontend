@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ClientStage } from '../../enums/client-stage.enum';
 import { IClient } from '../../interfaces/client.interface';
 import { IDashboardAppointment } from '../../interfaces/dashboard-appointment.interface';
@@ -16,7 +16,7 @@ import {
   timeOutline,
   addOutline,
   settingsOutline,
-  notificationsOutline,
+  logOutOutline,
   chevronForwardOutline,
   closeOutline,
   callOutline,
@@ -38,6 +38,9 @@ import { AuthService } from '../../core/services/auth.service';
 import { ClientApiService } from '../../core/services/client-api.service';
 import { AppointmentApiService } from '../../core/services/appointment-api.service';
 import { IAppointmentApi } from '../../core/interfaces/appointment-api.interface';
+import { PaymentApiService } from '../../core/services/payment-api.service';
+import { PaymentStatus } from '../../enums/payment-status.enum';
+import { UiState } from '../../shared/types/ui-state.type';
 
 @Component({
   selector: 'app-dashboard',
@@ -67,11 +70,19 @@ export class DashboardPage {
   private readonly authService = inject(AuthService);
   private readonly clientApi = inject(ClientApiService);
   private readonly appointmentApi = inject(AppointmentApiService);
+  private readonly paymentApi = inject(PaymentApiService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
 
   readonly userName = computed(() => {
     const user = this.authService.currentUser();
-    return user?.firstName ?? user?.email?.split('@')[0] ?? 'Usuario';
+    return (
+      user?.companyName ??
+      user?.firstName ??
+      user?.email?.split('@')[0] ??
+      'Tu empresa'
+    );
   });
   readonly searchQuery = signal('');
   readonly stageFilter = signal<ClientStage | 'ALL'>('ALL');
@@ -80,6 +91,8 @@ export class DashboardPage {
   readonly isCreatingClient = signal(false);
   readonly clientDisplayLimit = signal(20);
   readonly stageOptions = signal(CLIENT_STAGE_OPTIONS);
+  readonly loadState = signal<UiState>('idle');
+  readonly loadError = signal<string | null>(null);
   readonly addClientForm = this.fb.nonNullable.group({
     firstName: ['', [Validators.required, Validators.maxLength(60)]],
     lastName: ['', [Validators.required, Validators.maxLength(60)]],
@@ -93,6 +106,7 @@ export class DashboardPage {
     { label: 'Hoy', value: 0, icon: 'time-outline', color: 'stat-icon--green' },
     { label: 'Pagos Pendientes', value: 0, icon: 'cash-outline', color: 'stat-icon--amber' },
   ]);
+  readonly pendingPaymentCount = computed(() => this.stats().find((stat) => stat.label === 'Pagos Pendientes')?.value ?? 0);
 
   readonly recentClients = signal<IClient[]>([]);
   readonly appointmentsToday = signal<IAppointmentApi[]>([]);
@@ -155,7 +169,7 @@ export class DashboardPage {
       timeOutline,
       addOutline,
       settingsOutline,
-      notificationsOutline,
+      logOutOutline,
       chevronForwardOutline,
       closeOutline,
       callOutline,
@@ -163,13 +177,22 @@ export class DashboardPage {
       chatbubblesOutline,
       cashOutline,
     });
+    const query = this.route.snapshot.queryParamMap;
+    this.searchQuery.set(query.get('q') ?? '');
+    const stage = query.get('stage');
+    if (stage === 'ALL' || CLIENT_STAGE_OPTIONS.some((option) => option.value === stage)) {
+      this.stageFilter.set((stage ?? 'ALL') as ClientStage | 'ALL');
+    }
+  }
+
+  logout(): void {
+    this.authService.logout();
   }
 
   ionViewWillEnter(): void {
-    const userId = this.authService.currentUser()?.userId;
-    if (!userId) return;
-
-    this.clientApi.getAllByUser(userId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+    this.loadState.set('loading');
+    this.loadError.set(null);
+    this.clientApi.getAll().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (clients) => {
         this.recentClients.set(clients);
         this.stats.update((s) =>
@@ -179,10 +202,15 @@ export class DashboardPage {
               : stat,
           ),
         );
+        this.loadState.set('success');
+      },
+      error: () => {
+        this.loadState.set('error');
+        this.loadError.set('No se pudieron cargar los clientes. Recarga la página para intentarlo nuevamente.');
       },
     });
 
-    this.appointmentApi.getAllByUser(userId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+    this.appointmentApi.getAll().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (appointments) => {
         const today = new Date();
         const todayStr = today.toDateString();
@@ -194,12 +222,9 @@ export class DashboardPage {
         const todayAppts = appointments.filter((a) =>
           new Date(a.startTime).toDateString() === todayStr,
         );
-        const pendingPaymentsAppts = appointments.filter((a) => a.status === 'pending_payment');
-
         this.stats.update((s) =>
           s.map((stat) => {
             if (stat.label === 'Hoy') return { ...stat, value: todayAppts.length };
-            if (stat.label === 'Pagos Pendientes') return { ...stat, value: pendingPaymentsAppts.length };
             return stat;
           }),
         );
@@ -207,6 +232,15 @@ export class DashboardPage {
         this.appointmentsToday.set(todayAppts);
       },
     });
+
+    this.paymentApi.list({ status: PaymentStatus.PENDING, page: 1, limit: 1 })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: ({ total }) => this.stats.update((stats) => stats.map((stat) =>
+          stat.label === 'Pagos Pendientes' ? { ...stat, value: total } : stat,
+        )),
+        error: () => this.loadError.set('No se pudo cargar el resumen de pagos.'),
+      });
   }
 
   private getClientInitials(clientName: string): string {
@@ -221,6 +255,7 @@ export class DashboardPage {
   onSearch(event: CustomEvent) {
     this.searchQuery.set(event.detail.value ?? '');
     this.clientDisplayLimit.set(20);
+    this.syncFiltersToUrl();
   }
 
   onStageFilterChange(event: CustomEvent) {
@@ -228,6 +263,7 @@ export class DashboardPage {
     if (!stage) return;
     this.stageFilter.set(stage);
     this.clientDisplayLimit.set(20);
+    this.syncFiltersToUrl();
   }
 
   loadMoreClients(event: Event): void {
@@ -272,13 +308,9 @@ export class DashboardPage {
       return;
     }
 
-    const userId = this.authService.currentUser()?.userId;
-    if (!userId) return;
-
     this.isCreatingClient.set(true);
     this.clientApi
       .create({
-        userId,
         firstName: trimmedFirstName,
         lastName: trimmedLastName,
         email: trimmedEmail || undefined,
@@ -320,6 +352,15 @@ export class DashboardPage {
   private getEventValue<T>(event: Event): T | null {
     const value = (event as CustomEvent<{ value?: T }>).detail?.value;
     return value ?? null;
+  }
+
+  private syncFiltersToUrl(): void {
+    void this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { q: this.searchQuery() || null, stage: this.stageFilter() === 'ALL' ? null : this.stageFilter() },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
   }
 
 }

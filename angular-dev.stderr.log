@@ -1,0 +1,1222 @@
+[1m[33m[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mDuplicate member "getMetadata" in class body[0m [duplicate-class-member]
+
+    src/app/core/services/message-template-api.service.ts:17:4:
+[37m      17 │     [32mgetMetadata[37m() {
+         ╵     [32m~~~~~~~~~~~[0m
+
+  The original member "getMetadata" is here:
+
+    src/app/core/services/message-template-api.service.ts:11:4:
+[37m      11 │     [32mgetMetadata[37m() {
+         ╵     [32m~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mDuplicate member "preview" in class body[0m [duplicate-class-member]
+
+    src/app/core/services/message-template-api.service.ts:20:4:
+[37m      20 │     [32mpreview[37m(stage, messageBody) {
+         ╵     [32m~~~~~~~[0m
+
+  The original member "preview" is here:
+
+    src/app/core/services/message-template-api.service.ts:14:4:
+[37m      14 │     [32mpreview[37m(stage, messageBody) {
+         ╵     [32m~~~~~~~[0m
+
+[39m[22m
+[1m[31m[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2300: Duplicate identifier 'ClientStage'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/core/services/message-template-api.service.ts:8:9:
+[37m      8 │ import { [32mClientStage[37m } from '../../enums/client-stage.enum';
+        ╵          [32m~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2300: Duplicate identifier 'TemplatePreviewResult'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/core/services/message-template-api.service.ts:9:9:
+[37m      9 │ import { [32mTemplatePreviewResult[37m, TemplateVariableMetadata } from '.....
+        ╵          [32m~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2300: Duplicate identifier 'TemplateVariableMetadata'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/core/services/message-template-api.service.ts:9:32:
+[37m      9 │ ...platePreviewResult, [32mTemplateVariableMetadata[37m } from '../../inter...
+        ╵                        [32m~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2300: Duplicate identifier 'ClientStage'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/core/services/message-template-api.service.ts:10:9:
+[37m      10 │ import { [32mClientStage[37m } from '../../enums/client-stage.enum';
+         ╵          [32m~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2300: Duplicate identifier 'TemplatePreviewResult'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/core/services/message-template-api.service.ts:11:9:
+[37m      11 │ import { [32mTemplatePreviewResult[37m, TemplateVariableMetadata } from '....
+         ╵          [32m~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2300: Duplicate identifier 'TemplateVariableMetadata'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/core/services/message-template-api.service.ts:11:32:
+[37m      11 │ ...platePreviewResult, [32mTemplateVariableMetadata[37m } from '../../inte...
+         ╵                        [32m~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2393: Duplicate function implementation.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/core/services/message-template-api.service.ts:22:2:
+[37m      22 │   [32mgetMetadata[37m(): Observable<{ variables: TemplateVariableMetadata[...
+         ╵   [32m~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2393: Duplicate function implementation.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/core/services/message-template-api.service.ts:26:2:
+[37m      26 │   [32mpreview[37m(stage: ClientStage, messageBody: string): Observable<Tem...
+         ╵   [32m~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2393: Duplicate function implementation.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/core/services/message-template-api.service.ts:30:2:
+[37m      30 │   [32mgetMetadata[37m(): Observable<{ variables: TemplateVariableMetadata[...
+         ╵   [32m~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2393: Duplicate function implementation.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/core/services/message-template-api.service.ts:34:2:
+[37m      34 │   [32mpreview[37m(stage: ClientStage, messageBody: string): Observable<Tem...
+         ╵   [32m~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2345: Argument of type '"{{name}}"' is not assignable to parameter of type '"name" | "date" | "paymentUrl"'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/message-templates/message-templates.html:152:80:
+[37m      152 │ ...ar" (click)="insertVariable([32m'{{name}}'[37m)" title="Insertar nombre">
+          ╵                                [32m~~~~~~~~~~[0m
+
+  Error occurs in the template of component MessageTemplatesPage.
+
+    src/app/pages/message-templates/message-templates.ts:41:15:
+[37m      41 │   templateUrl: [32m'./message-templates.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2345: Argument of type '"{{date}}"' is not assignable to parameter of type '"name" | "date" | "paymentUrl"'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/message-templates/message-templates.html:155:80:
+[37m      155 │ ...ear" (click)="insertVariable([32m'{{date}}'[37m)" title="Insertar fecha">
+          ╵                                 [32m~~~~~~~~~~[0m
+
+  Error occurs in the template of component MessageTemplatesPage.
+
+    src/app/pages/message-templates/message-templates.ts:41:15:
+[37m      41 │   templateUrl: [32m'./message-templates.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2345: Argument of type '"{{paymentUrl}}"' is not assignable to parameter of type '"name" | "date" | "paymentUrl"'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/message-templates/message-templates.html:158:80:
+[37m      158 │ ...(click)="insertVariable([32m'{{paymentUrl}}'[37m)" title="Insertar pago">
+          ╵                            [32m~~~~~~~~~~~~~~~~[0m
+
+  Error occurs in the template of component MessageTemplatesPage.
+
+    src/app/pages/message-templates/message-templates.ts:41:15:
+[37m      41 │   templateUrl: [32m'./message-templates.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[39m[22m
+[1m[33m[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mDuplicate member "getMetadata" in class body[0m [duplicate-class-member]
+
+    src/app/core/services/message-template-api.service.ts:17:4:
+[37m      17 │     [32mgetMetadata[37m() {
+         ╵     [32m~~~~~~~~~~~[0m
+
+  The original member "getMetadata" is here:
+
+    src/app/core/services/message-template-api.service.ts:11:4:
+[37m      11 │     [32mgetMetadata[37m() {
+         ╵     [32m~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mDuplicate member "preview" in class body[0m [duplicate-class-member]
+
+    src/app/core/services/message-template-api.service.ts:20:4:
+[37m      20 │     [32mpreview[37m(stage, messageBody) {
+         ╵     [32m~~~~~~~[0m
+
+  The original member "preview" is here:
+
+    src/app/core/services/message-template-api.service.ts:14:4:
+[37m      14 │     [32mpreview[37m(stage, messageBody) {
+         ╵     [32m~~~~~~~[0m
+
+[39m[22m
+[1m[31m[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2300: Duplicate identifier 'ClientStage'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/core/services/message-template-api.service.ts:8:9:
+[37m      8 │ import { [32mClientStage[37m } from '../../enums/client-stage.enum';
+        ╵          [32m~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2300: Duplicate identifier 'TemplatePreviewResult'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/core/services/message-template-api.service.ts:9:9:
+[37m      9 │ import { [32mTemplatePreviewResult[37m, TemplateVariableMetadata } from '.....
+        ╵          [32m~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2300: Duplicate identifier 'TemplateVariableMetadata'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/core/services/message-template-api.service.ts:9:32:
+[37m      9 │ ...platePreviewResult, [32mTemplateVariableMetadata[37m } from '../../inter...
+        ╵                        [32m~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2300: Duplicate identifier 'ClientStage'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/core/services/message-template-api.service.ts:10:9:
+[37m      10 │ import { [32mClientStage[37m } from '../../enums/client-stage.enum';
+         ╵          [32m~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2300: Duplicate identifier 'TemplatePreviewResult'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/core/services/message-template-api.service.ts:11:9:
+[37m      11 │ import { [32mTemplatePreviewResult[37m, TemplateVariableMetadata } from '....
+         ╵          [32m~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2300: Duplicate identifier 'TemplateVariableMetadata'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/core/services/message-template-api.service.ts:11:32:
+[37m      11 │ ...platePreviewResult, [32mTemplateVariableMetadata[37m } from '../../inte...
+         ╵                        [32m~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2393: Duplicate function implementation.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/core/services/message-template-api.service.ts:22:2:
+[37m      22 │   [32mgetMetadata[37m(): Observable<{ variables: TemplateVariableMetadata[...
+         ╵   [32m~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2393: Duplicate function implementation.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/core/services/message-template-api.service.ts:26:2:
+[37m      26 │   [32mpreview[37m(stage: ClientStage, messageBody: string): Observable<Tem...
+         ╵   [32m~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2393: Duplicate function implementation.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/core/services/message-template-api.service.ts:30:2:
+[37m      30 │   [32mgetMetadata[37m(): Observable<{ variables: TemplateVariableMetadata[...
+         ╵   [32m~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2393: Duplicate function implementation.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/core/services/message-template-api.service.ts:34:2:
+[37m      34 │   [32mpreview[37m(stage: ClientStage, messageBody: string): Observable<Tem...
+         ╵   [32m~~~~~~~[0m
+
+[39m[22m
+[1m[33m[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mDuplicate member "getMetadata" in class body[0m [duplicate-class-member]
+
+    src/app/core/services/message-template-api.service.ts:17:4:
+[37m      17 │     [32mgetMetadata[37m() {
+         ╵     [32m~~~~~~~~~~~[0m
+
+  The original member "getMetadata" is here:
+
+    src/app/core/services/message-template-api.service.ts:11:4:
+[37m      11 │     [32mgetMetadata[37m() {
+         ╵     [32m~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mDuplicate member "preview" in class body[0m [duplicate-class-member]
+
+    src/app/core/services/message-template-api.service.ts:20:4:
+[37m      20 │     [32mpreview[37m(stage, messageBody) {
+         ╵     [32m~~~~~~~[0m
+
+  The original member "preview" is here:
+
+    src/app/core/services/message-template-api.service.ts:14:4:
+[37m      14 │     [32mpreview[37m(stage, messageBody) {
+         ╵     [32m~~~~~~~[0m
+
+[39m[22m
+[1m[31m[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2300: Duplicate identifier 'ClientStage'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/core/services/message-template-api.service.ts:8:9:
+[37m      8 │ import { [32mClientStage[37m } from '../../enums/client-stage.enum';
+        ╵          [32m~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2300: Duplicate identifier 'TemplatePreviewResult'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/core/services/message-template-api.service.ts:9:9:
+[37m      9 │ import { [32mTemplatePreviewResult[37m, TemplateVariableMetadata } from '.....
+        ╵          [32m~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2300: Duplicate identifier 'TemplateVariableMetadata'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/core/services/message-template-api.service.ts:9:32:
+[37m      9 │ ...platePreviewResult, [32mTemplateVariableMetadata[37m } from '../../inter...
+        ╵                        [32m~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2300: Duplicate identifier 'ClientStage'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/core/services/message-template-api.service.ts:10:9:
+[37m      10 │ import { [32mClientStage[37m } from '../../enums/client-stage.enum';
+         ╵          [32m~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2300: Duplicate identifier 'TemplatePreviewResult'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/core/services/message-template-api.service.ts:11:9:
+[37m      11 │ import { [32mTemplatePreviewResult[37m, TemplateVariableMetadata } from '....
+         ╵          [32m~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2300: Duplicate identifier 'TemplateVariableMetadata'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/core/services/message-template-api.service.ts:11:32:
+[37m      11 │ ...platePreviewResult, [32mTemplateVariableMetadata[37m } from '../../inte...
+         ╵                        [32m~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2393: Duplicate function implementation.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/core/services/message-template-api.service.ts:22:2:
+[37m      22 │   [32mgetMetadata[37m(): Observable<{ variables: TemplateVariableMetadata[...
+         ╵   [32m~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2393: Duplicate function implementation.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/core/services/message-template-api.service.ts:26:2:
+[37m      26 │   [32mpreview[37m(stage: ClientStage, messageBody: string): Observable<Tem...
+         ╵   [32m~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2393: Duplicate function implementation.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/core/services/message-template-api.service.ts:30:2:
+[37m      30 │   [32mgetMetadata[37m(): Observable<{ variables: TemplateVariableMetadata[...
+         ╵   [32m~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2393: Duplicate function implementation.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/core/services/message-template-api.service.ts:34:2:
+[37m      34 │   [32mpreview[37m(stage: ClientStage, messageBody: string): Observable<Tem...
+         ╵   [32m~~~~~~~[0m
+
+[39m[22m
+[1m[31mComponent update failed: ctx.callPhoneUrl is not a function
+TypeError: ctx.callPhoneUrl is not a function
+    at ClientDetailPage_Template (http://localhost:4200/@ng/component?c=src%2Fapp%2Fpages%2Fclient-detail%2Fclient-detail.ts%40ClientDetailPage&t=1782832732076:1158:46)
+    at executeTemplate (http://localhost:4200/@fs/D:/TRABAJO/agenda/agenda-frontend/.angular/cache/21.2.0/frontend/vite/deps/chunk-JYPEDGZB.js?v=ede34bae:5317:5)
+    at refreshView (http://localhost:4200/@fs/D:/TRABAJO/agenda/agenda-frontend/.angular/cache/21.2.0/frontend/vite/deps/chunk-JYPEDGZB.js?v=ede34bae:5977:7)
+    at recreate (http://localhost:4200/@fs/D:/TRABAJO/agenda/agenda-frontend/.angular/cache/21.2.0/frontend/vite/deps/chunk-JYPEDGZB.js?v=ede34bae:17042:5)
+    at executeWithInvalidateFallback (http://localhost:4200/@fs/D:/TRABAJO/agenda/agenda-frontend/.angular/cache/21.2.0/frontend/vite/deps/chunk-JYPEDGZB.js?v=ede34bae:17052:5)
+    at http://localhost:4200/@fs/D:/TRABAJO/agenda/agenda-frontend/.angular/cache/21.2.0/frontend/vite/deps/chunk-JYPEDGZB.js?v=ede34bae:17047:20
+    at NoopNgZone.run (http://localhost:4200/@fs/D:/TRABAJO/agenda/agenda-frontend/.angular/cache/21.2.0/frontend/vite/deps/chunk-UBQZ7RUA.js?v=ede34bae:3141:15)
+    at recreateLView (http://localhost:4200/@fs/D:/TRABAJO/agenda/agenda-frontend/.angular/cache/21.2.0/frontend/vite/deps/chunk-JYPEDGZB.js?v=ede34bae:17047:10)
+    at recreateMatchingLViews (http://localhost:4200/@fs/D:/TRABAJO/agenda/agenda-frontend/.angular/cache/21.2.0/frontend/vite/deps/chunk-JYPEDGZB.js?v=ede34bae:16997:5)
+    at recreateMatchingLViews (http://localhost:4200/@fs/D:/TRABAJO/agenda/agenda-frontend/.angular/cache/21.2.0/frontend/vite/deps/chunk-JYPEDGZB.js?v=ede34bae:17010:7)
+Please consider reporting the error at https://github.com/angular/angular-cli/issues[39m[22m
+[1m[31mComponent update failed: ctx.callPhoneUrl is not a function
+TypeError: ctx.callPhoneUrl is not a function
+    at ClientDetailPage_Template (http://localhost:4200/@ng/component?c=src%2Fapp%2Fpages%2Fclient-detail%2Fclient-detail.ts%40ClientDetailPage&t=1782832733022:1158:46)
+    at executeTemplate (http://localhost:4200/@fs/D:/TRABAJO/agenda/agenda-frontend/.angular/cache/21.2.0/frontend/vite/deps/chunk-JYPEDGZB.js?v=ede34bae:5317:5)
+    at refreshView (http://localhost:4200/@fs/D:/TRABAJO/agenda/agenda-frontend/.angular/cache/21.2.0/frontend/vite/deps/chunk-JYPEDGZB.js?v=ede34bae:5977:7)
+    at recreate (http://localhost:4200/@fs/D:/TRABAJO/agenda/agenda-frontend/.angular/cache/21.2.0/frontend/vite/deps/chunk-JYPEDGZB.js?v=ede34bae:17042:5)
+    at executeWithInvalidateFallback (http://localhost:4200/@fs/D:/TRABAJO/agenda/agenda-frontend/.angular/cache/21.2.0/frontend/vite/deps/chunk-JYPEDGZB.js?v=ede34bae:17052:5)
+    at http://localhost:4200/@fs/D:/TRABAJO/agenda/agenda-frontend/.angular/cache/21.2.0/frontend/vite/deps/chunk-JYPEDGZB.js?v=ede34bae:17047:20
+    at NoopNgZone.run (http://localhost:4200/@fs/D:/TRABAJO/agenda/agenda-frontend/.angular/cache/21.2.0/frontend/vite/deps/chunk-UBQZ7RUA.js?v=ede34bae:3141:15)
+    at recreateLView (http://localhost:4200/@fs/D:/TRABAJO/agenda/agenda-frontend/.angular/cache/21.2.0/frontend/vite/deps/chunk-JYPEDGZB.js?v=ede34bae:17047:10)
+    at recreateMatchingLViews (http://localhost:4200/@fs/D:/TRABAJO/agenda/agenda-frontend/.angular/cache/21.2.0/frontend/vite/deps/chunk-JYPEDGZB.js?v=ede34bae:16997:5)
+    at recreateMatchingLViews (http://localhost:4200/@fs/D:/TRABAJO/agenda/agenda-frontend/.angular/cache/21.2.0/frontend/vite/deps/chunk-JYPEDGZB.js?v=ede34bae:17010:7)
+Please consider reporting the error at https://github.com/angular/angular-cli/issues[39m[22m
+[1m[31m[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG5002: @empty block can only be used after an @for block.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/dashboard/dashboard.html:211:4:
+[37m      211 │     [32m@empty {[37m
+          ╵     [32m~~~~~~~~[0m
+
+  Error occurs in the template of component DashboardPage.
+
+    src/app/pages/dashboard/dashboard.ts:62:15:
+[37m      62 │   templateUrl: [32m'./dashboard.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~~~[0m
+
+[39m[22m
+[1m[31m[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG5002: @empty block can only be used after an @for block.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/dashboard/dashboard.html:211:4:
+[37m      211 │     [32m@empty {[37m
+          ╵     [32m~~~~~~~~[0m
+
+  Error occurs in the template of component DashboardPage.
+
+    src/app/pages/dashboard/dashboard.ts:62:15:
+[37m      62 │   templateUrl: [32m'./dashboard.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~~~[0m
+
+[39m[22m
+[1m[31m[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'paymentId' does not exist on type 'IAppointmentApi'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/client-detail/client-detail.ts:765:19:
+[37m      765 │       paymentId: a.[32mpaymentId[37m,
+          ╵                    [32m~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'paymentUrl' does not exist on type 'IAppointmentApi'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/client-detail/client-detail.ts:766:20:
+[37m      766 │       paymentUrl: a.[32mpaymentUrl[37m,
+          ╵                     [32m~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'paymentId' does not exist on type 'IAppointmentApi'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/payments/payments.ts:82:51:
+[37m      82 │       .filter((a) => a.status === 'scheduled' && a.[32mpaymentId[37m)
+         ╵                                                    [32m~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'paymentId' does not exist on type 'IAppointmentApi'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/payments/payments.ts:153:19:
+[37m      153 │       paymentId: a.[32mpaymentId[37m,
+          ╵                    [32m~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'paymentUrl' does not exist on type 'IAppointmentApi'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/payments/payments.ts:154:20:
+[37m      154 │       paymentUrl: a.[32mpaymentUrl[37m,
+          ╵                     [32m~~~~~~~~~~[0m
+
+[39m[22m
+[1m[31m[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2353: Object literal may only specify known properties, and 'requestPaymentLink' does not exist in type 'ICreateAppointmentPayload'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/client-detail/client-detail.ts:711:10:
+[37m      711 │           [32mrequestPaymentLink[37m: draft.requestPaymentLink === true,
+          ╵           [32m~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'paymentId' does not exist on type 'IAppointmentApi'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/client-detail/client-detail.ts:765:19:
+[37m      765 │       paymentId: a.[32mpaymentId[37m,
+          ╵                    [32m~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'paymentUrl' does not exist on type 'IAppointmentApi'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/client-detail/client-detail.ts:766:20:
+[37m      766 │       paymentUrl: a.[32mpaymentUrl[37m,
+          ╵                     [32m~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'paymentId' does not exist on type 'IAppointmentApi'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/payments/payments.ts:82:51:
+[37m      82 │       .filter((a) => a.status === 'scheduled' && a.[32mpaymentId[37m)
+         ╵                                                    [32m~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'paymentId' does not exist on type 'IAppointmentApi'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/payments/payments.ts:153:19:
+[37m      153 │       paymentId: a.[32mpaymentId[37m,
+          ╵                    [32m~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'paymentUrl' does not exist on type 'IAppointmentApi'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/payments/payments.ts:154:20:
+[37m      154 │       paymentUrl: a.[32mpaymentUrl[37m,
+          ╵                     [32m~~~~~~~~~~[0m
+
+[39m[22m
+[1m[31m[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2353: Object literal may only specify known properties, and 'requestPaymentLink' does not exist in type 'IAppointmentDraft'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/client-detail/client-detail.ts:515:6:
+[37m      515 │       [32mrequestPaymentLink[37m: false, // On edit, we don't request pay...
+          ╵       [32m~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2353: Object literal may only specify known properties, and 'requestPaymentLink' does not exist in type 'ICreateAppointmentPayload'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/client-detail/client-detail.ts:711:10:
+[37m      711 │           [32mrequestPaymentLink[37m: draft.requestPaymentLink === true,
+          ╵           [32m~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'requestPaymentLink' does not exist on type 'IAppointmentDraft'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/client-detail/client-detail.ts:711:36:
+[37m      711 │           requestPaymentLink: draft.[32mrequestPaymentLink[37m === true,
+          ╵                                     [32m~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'paymentId' does not exist on type 'IAppointmentApi'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/client-detail/client-detail.ts:765:19:
+[37m      765 │       paymentId: a.[32mpaymentId[37m,
+          ╵                    [32m~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'paymentUrl' does not exist on type 'IAppointmentApi'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/client-detail/client-detail.ts:766:20:
+[37m      766 │       paymentUrl: a.[32mpaymentUrl[37m,
+          ╵                     [32m~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2353: Object literal may only specify known properties, and 'requestPaymentLink' does not exist in type 'IAppointmentDraft'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/client-detail/client-detail.ts:797:6:
+[37m      797 │       [32mrequestPaymentLink[37m: false,
+          ╵       [32m~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'paymentId' does not exist on type 'IAppointmentApi'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/payments/payments.ts:82:51:
+[37m      82 │       .filter((a) => a.status === 'scheduled' && a.[32mpaymentId[37m)
+         ╵                                                    [32m~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'paymentId' does not exist on type 'IAppointmentApi'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/payments/payments.ts:153:19:
+[37m      153 │       paymentId: a.[32mpaymentId[37m,
+          ╵                    [32m~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'paymentUrl' does not exist on type 'IAppointmentApi'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/payments/payments.ts:154:20:
+[37m      154 │       paymentUrl: a.[32mpaymentUrl[37m,
+          ╵                     [32m~~~~~~~~~~[0m
+
+[39m[22m
+[1m[31m[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2353: Object literal may only specify known properties, and 'requestPaymentLink' does not exist in type 'IAppointmentDraft'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/client-detail/client-detail.ts:515:6:
+[37m      515 │       [32mrequestPaymentLink[37m: false, // On edit, we don't request pay...
+          ╵       [32m~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2353: Object literal may only specify known properties, and 'requestPaymentLink' does not exist in type 'ICreateAppointmentPayload'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/client-detail/client-detail.ts:711:10:
+[37m      711 │           [32mrequestPaymentLink[37m: draft.requestPaymentLink === true,
+          ╵           [32m~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'requestPaymentLink' does not exist on type 'IAppointmentDraft'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/client-detail/client-detail.ts:711:36:
+[37m      711 │           requestPaymentLink: draft.[32mrequestPaymentLink[37m === true,
+          ╵                                     [32m~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2353: Object literal may only specify known properties, and 'paymentId' does not exist in type 'IClientAppointment'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/client-detail/client-detail.ts:765:6:
+[37m      765 │       [32mpaymentId[37m: a.paymentId,
+          ╵       [32m~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'paymentId' does not exist on type 'IAppointmentApi'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/client-detail/client-detail.ts:765:19:
+[37m      765 │       paymentId: a.[32mpaymentId[37m,
+          ╵                    [32m~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'paymentUrl' does not exist on type 'IAppointmentApi'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/client-detail/client-detail.ts:766:20:
+[37m      766 │       paymentUrl: a.[32mpaymentUrl[37m,
+          ╵                     [32m~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2353: Object literal may only specify known properties, and 'requestPaymentLink' does not exist in type 'IAppointmentDraft'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/client-detail/client-detail.ts:797:6:
+[37m      797 │       [32mrequestPaymentLink[37m: false,
+          ╵       [32m~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'paymentId' does not exist on type 'IAppointmentApi'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/payments/payments.ts:82:51:
+[37m      82 │       .filter((a) => a.status === 'scheduled' && a.[32mpaymentId[37m)
+         ╵                                                    [32m~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'paymentId' does not exist on type 'IAppointmentApi'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/payments/payments.ts:153:19:
+[37m      153 │       paymentId: a.[32mpaymentId[37m,
+          ╵                    [32m~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'paymentUrl' does not exist on type 'IAppointmentApi'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/payments/payments.ts:154:20:
+[37m      154 │       paymentUrl: a.[32mpaymentUrl[37m,
+          ╵                     [32m~~~~~~~~~~[0m
+
+[39m[22m
+[1m[31m[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2322: Type '{ resolvedProductName: string; resolvedProductPrice: number | undefined; id: string; clientId: string; productId: string; status: ClientProductStatus; offeredAt: string; updatedAt: string; notes?: string | undefined; }[]' is not assignable to type 'IEnrichedClientProduct[]'.
+  Property 'resolvedProductType' is missing in type '{ resolvedProductName: string; resolvedProductPrice: number | undefined; id: string; clientId: string; productId: string; status: ClientProductStatus; offeredAt: string; updatedAt: string; notes?: string; }' but required in type 'IEnrichedClientProduct'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/client-detail/client-detail.ts:186:4:
+[37m      186 │     [32mreturn[37m this.salesCatalogStore
+          ╵     [32m~~~~~~[0m
+
+  'resolvedProductType' is declared here.
+
+    src/app/pages/client-detail/interfaces/enriched-client-product.interface.ts:7:2:
+[37m      7 │   [32mresolvedProductType[37m: ProductType;
+        ╵   [32m~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2353: Object literal may only specify known properties, and 'requestPaymentLink' does not exist in type 'IAppointmentDraft'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/client-detail/client-detail.ts:515:6:
+[37m      515 │       [32mrequestPaymentLink[37m: false, // On edit, we don't request pay...
+          ╵       [32m~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2353: Object literal may only specify known properties, and 'requestPaymentLink' does not exist in type 'ICreateAppointmentPayload'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/client-detail/client-detail.ts:711:10:
+[37m      711 │           [32mrequestPaymentLink[37m: draft.requestPaymentLink === true,
+          ╵           [32m~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'requestPaymentLink' does not exist on type 'IAppointmentDraft'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/client-detail/client-detail.ts:711:36:
+[37m      711 │           requestPaymentLink: draft.[32mrequestPaymentLink[37m === true,
+          ╵                                     [32m~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2353: Object literal may only specify known properties, and 'paymentId' does not exist in type 'IClientAppointment'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/client-detail/client-detail.ts:765:6:
+[37m      765 │       [32mpaymentId[37m: a.paymentId,
+          ╵       [32m~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'paymentId' does not exist on type 'IAppointmentApi'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/client-detail/client-detail.ts:765:19:
+[37m      765 │       paymentId: a.[32mpaymentId[37m,
+          ╵                    [32m~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'paymentUrl' does not exist on type 'IAppointmentApi'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/client-detail/client-detail.ts:766:20:
+[37m      766 │       paymentUrl: a.[32mpaymentUrl[37m,
+          ╵                     [32m~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2353: Object literal may only specify known properties, and 'requestPaymentLink' does not exist in type 'IAppointmentDraft'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/client-detail/client-detail.ts:797:6:
+[37m      797 │       [32mrequestPaymentLink[37m: false,
+          ╵       [32m~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'paymentId' does not exist on type 'IAppointmentApi'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/payments/payments.ts:82:51:
+[37m      82 │       .filter((a) => a.status === 'scheduled' && a.[32mpaymentId[37m)
+         ╵                                                    [32m~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'paymentId' does not exist on type 'IAppointmentApi'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/payments/payments.ts:153:19:
+[37m      153 │       paymentId: a.[32mpaymentId[37m,
+          ╵                    [32m~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'paymentUrl' does not exist on type 'IAppointmentApi'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/payments/payments.ts:154:20:
+[37m      154 │       paymentUrl: a.[32mpaymentUrl[37m,
+          ╵                     [32m~~~~~~~~~~[0m
+
+[39m[22m
+[1m[33m[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8113: PaymentFormModal is not used within the template of ClientDetailPage[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/client-detail/client-detail.ts:113:4:
+[37m      113 │     [32mPaymentFormModal[37m,
+          ╵     [32m~~~~~~~~~~~~~~~~[0m
+
+[39m[22m
+[1m[31m[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'paymentUrl' does not exist on type 'IClientAppointment'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/client-detail/client-detail.html:295:22:
+[37m      295 │             @if (appt.[32mpaymentUrl[37m) {
+          ╵                       [32m~~~~~~~~~~[0m
+
+  Error occurs in the template of component ClientDetailPage.
+
+    src/app/pages/client-detail/client-detail.ts:115:15:
+[37m      115 │   templateUrl: [32m'./client-detail.html'[37m,
+          ╵                [32m~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'paymentUrl' does not exist on type 'IClientAppointment'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/client-detail/client-detail.html:298:32:
+[37m      298 │ ...          <a [href]="appt.[32mpaymentUrl[37m" target="_blank" rel="noo...
+          ╵                              [32m~~~~~~~~~~[0m
+
+  Error occurs in the template of component ClientDetailPage.
+
+    src/app/pages/client-detail/client-detail.ts:115:15:
+[37m      115 │   templateUrl: [32m'./client-detail.html'[37m,
+          ╵                [32m~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'paymentsEnabled' does not exist on type 'ClientDetailPage'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/client-detail/client-detail.html:474:48:
+[37m      474 │                 @if (!editingAppointmentId() && [32mpaymentsEnabled[37m()) {
+          ╵                                                 [32m~~~~~~~~~~~~~~~[0m
+
+  Error occurs in the template of component ClientDetailPage.
+
+    src/app/pages/client-detail/client-detail.ts:115:15:
+[37m      115 │   templateUrl: [32m'./client-detail.html'[37m,
+          ╵                [32m~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG8001: 'ion-toggle' is not a known element:
+1. If 'ion-toggle' is an Angular component, then verify that it is included in the '@Component.imports' of this component.
+2. If 'ion-toggle' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@Component.schemas' of this component to suppress this message.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/client-detail/client-detail.html:478:20:
+[37m      478 │                     [32m<ion-toggle[37m
+          ╵                     [32m~~~~~~~~~~~[0m
+
+  Error occurs in the template of component ClientDetailPage.
+
+    src/app/pages/client-detail/client-detail.ts:115:15:
+[37m      115 │   templateUrl: [32m'./client-detail.html'[37m,
+          ╵                [32m~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG8002: Can't bind to 'checked' since it isn't a known property of 'ion-toggle'.
+1. If 'ion-toggle' is an Angular component and it has 'checked' input, then verify that it is included in the '@Component.imports' of this component.
+2. If 'ion-toggle' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@Component.schemas' of this component to suppress this message.
+3. To allow any property add 'NO_ERRORS_SCHEMA' to the '@Component.schemas' of this component.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/client-detail/client-detail.html:479:22:
+[37m      479 │ ...                [32m[checked]="appointmentDraft().requestPaymentLink"[37m
+          ╵                    [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+  Error occurs in the template of component ClientDetailPage.
+
+    src/app/pages/client-detail/client-detail.ts:115:15:
+[37m      115 │   templateUrl: [32m'./client-detail.html'[37m,
+          ╵                [32m~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'requestPaymentLink' does not exist on type 'IAppointmentDraft'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/client-detail/client-detail.html:479:52:
+[37m      479 │ ...                [checked]="appointmentDraft().[32mrequestPaymentLink[37m"
+          ╵                                                  [32m~~~~~~~~~~~~~~~~~~[0m
+
+  Error occurs in the template of component ClientDetailPage.
+
+    src/app/pages/client-detail/client-detail.ts:115:15:
+[37m      115 │   templateUrl: [32m'./client-detail.html'[37m,
+          ╵                [32m~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2551: Property 'onAppointmentDraftCheckboxChange' does not exist on type 'ClientDetailPage'. Did you mean 'onAppointmentDraftTextChange'?[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/client-detail/client-detail.html:480:35:
+[37m      480 │ ...  (ionChange)="[32monAppointmentDraftCheckboxChange[37m('requestPaymen...
+          ╵                   [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+  Error occurs in the template of component ClientDetailPage.
+
+    src/app/pages/client-detail/client-detail.ts:115:15:
+[37m      115 │   templateUrl: [32m'./client-detail.html'[37m,
+          ╵                [32m~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'paymentId' does not exist on type 'IAppointmentApi'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/payments/payments.ts:82:51:
+[37m      82 │       .filter((a) => a.status === 'scheduled' && a.[32mpaymentId[37m)
+         ╵                                                    [32m~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'paymentId' does not exist on type 'IAppointmentApi'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/payments/payments.ts:153:19:
+[37m      153 │       paymentId: a.[32mpaymentId[37m,
+          ╵                    [32m~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'paymentUrl' does not exist on type 'IAppointmentApi'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/payments/payments.ts:154:20:
+[37m      154 │       paymentUrl: a.[32mpaymentUrl[37m,
+          ╵                     [32m~~~~~~~~~~[0m
+
+[39m[22m
+[1m[33m[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8113: PaymentFormModal is not used within the template of ClientDetailPage[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/client-detail/client-detail.ts:113:4:
+[37m      113 │     [32mPaymentFormModal[37m,
+          ╵     [32m~~~~~~~~~~~~~~~~[0m
+
+[39m[22m
+[1m[31m[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'paymentUrl' does not exist on type 'IClientAppointment'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/client-detail/client-detail.html:295:22:
+[37m      295 │             @if (appt.[32mpaymentUrl[37m) {
+          ╵                       [32m~~~~~~~~~~[0m
+
+  Error occurs in the template of component ClientDetailPage.
+
+    src/app/pages/client-detail/client-detail.ts:115:15:
+[37m      115 │   templateUrl: [32m'./client-detail.html'[37m,
+          ╵                [32m~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'paymentUrl' does not exist on type 'IClientAppointment'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/client-detail/client-detail.html:298:32:
+[37m      298 │ ...          <a [href]="appt.[32mpaymentUrl[37m" target="_blank" rel="noo...
+          ╵                              [32m~~~~~~~~~~[0m
+
+  Error occurs in the template of component ClientDetailPage.
+
+    src/app/pages/client-detail/client-detail.ts:115:15:
+[37m      115 │   templateUrl: [32m'./client-detail.html'[37m,
+          ╵                [32m~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'paymentsEnabled' does not exist on type 'ClientDetailPage'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/client-detail/client-detail.html:474:48:
+[37m      474 │                 @if (!editingAppointmentId() && [32mpaymentsEnabled[37m()) {
+          ╵                                                 [32m~~~~~~~~~~~~~~~[0m
+
+  Error occurs in the template of component ClientDetailPage.
+
+    src/app/pages/client-detail/client-detail.ts:115:15:
+[37m      115 │   templateUrl: [32m'./client-detail.html'[37m,
+          ╵                [32m~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG8001: 'ion-toggle' is not a known element:
+1. If 'ion-toggle' is an Angular component, then verify that it is included in the '@Component.imports' of this component.
+2. If 'ion-toggle' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@Component.schemas' of this component to suppress this message.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/client-detail/client-detail.html:478:20:
+[37m      478 │                     [32m<ion-toggle[37m
+          ╵                     [32m~~~~~~~~~~~[0m
+
+  Error occurs in the template of component ClientDetailPage.
+
+    src/app/pages/client-detail/client-detail.ts:115:15:
+[37m      115 │   templateUrl: [32m'./client-detail.html'[37m,
+          ╵                [32m~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG8002: Can't bind to 'checked' since it isn't a known property of 'ion-toggle'.
+1. If 'ion-toggle' is an Angular component and it has 'checked' input, then verify that it is included in the '@Component.imports' of this component.
+2. If 'ion-toggle' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@Component.schemas' of this component to suppress this message.
+3. To allow any property add 'NO_ERRORS_SCHEMA' to the '@Component.schemas' of this component.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/client-detail/client-detail.html:479:22:
+[37m      479 │ ...                [32m[checked]="appointmentDraft().requestPaymentLink"[37m
+          ╵                    [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+  Error occurs in the template of component ClientDetailPage.
+
+    src/app/pages/client-detail/client-detail.ts:115:15:
+[37m      115 │   templateUrl: [32m'./client-detail.html'[37m,
+          ╵                [32m~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'requestPaymentLink' does not exist on type 'IAppointmentDraft'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/client-detail/client-detail.html:479:52:
+[37m      479 │ ...                [checked]="appointmentDraft().[32mrequestPaymentLink[37m"
+          ╵                                                  [32m~~~~~~~~~~~~~~~~~~[0m
+
+  Error occurs in the template of component ClientDetailPage.
+
+    src/app/pages/client-detail/client-detail.ts:115:15:
+[37m      115 │   templateUrl: [32m'./client-detail.html'[37m,
+          ╵                [32m~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2551: Property 'onAppointmentDraftCheckboxChange' does not exist on type 'ClientDetailPage'. Did you mean 'onAppointmentDraftTextChange'?[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/client-detail/client-detail.html:480:35:
+[37m      480 │ ...  (ionChange)="[32monAppointmentDraftCheckboxChange[37m('requestPaymen...
+          ╵                   [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+  Error occurs in the template of component ClientDetailPage.
+
+    src/app/pages/client-detail/client-detail.ts:115:15:
+[37m      115 │   templateUrl: [32m'./client-detail.html'[37m,
+          ╵                [32m~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'paymentId' does not exist on type 'IAppointmentApi'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/payments/payments.ts:82:51:
+[37m      82 │       .filter((a) => a.status === 'scheduled' && a.[32mpaymentId[37m)
+         ╵                                                    [32m~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'paymentId' does not exist on type 'IAppointmentApi'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/payments/payments.ts:153:19:
+[37m      153 │       paymentId: a.[32mpaymentId[37m,
+          ╵                    [32m~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'paymentUrl' does not exist on type 'IAppointmentApi'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/payments/payments.ts:154:20:
+[37m      154 │       paymentUrl: a.[32mpaymentUrl[37m,
+          ╵                     [32m~~~~~~~~~~[0m
+
+[39m[22m
+[1m[33m[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8113: PaymentFormModal is not used within the template of ClientDetailPage[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/client-detail/client-detail.ts:113:4:
+[37m      113 │     [32mPaymentFormModal[37m,
+          ╵     [32m~~~~~~~~~~~~~~~~[0m
+
+[39m[22m
+[1m[31m[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'paymentId' does not exist on type 'IAppointmentApi'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/payments/payments.ts:82:51:
+[37m      82 │       .filter((a) => a.status === 'scheduled' && a.[32mpaymentId[37m)
+         ╵                                                    [32m~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'paymentId' does not exist on type 'IAppointmentApi'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/payments/payments.ts:153:19:
+[37m      153 │       paymentId: a.[32mpaymentId[37m,
+          ╵                    [32m~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'paymentUrl' does not exist on type 'IAppointmentApi'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/payments/payments.ts:154:20:
+[37m      154 │       paymentUrl: a.[32mpaymentUrl[37m,
+          ╵                     [32m~~~~~~~~~~[0m
+
+[39m[22m
+[1m[31m[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'paymentId' does not exist on type 'IAppointmentApi'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/payments/payments.ts:82:51:
+[37m      82 │       .filter((a) => a.status === 'scheduled' && a.[32mpaymentId[37m)
+         ╵                                                    [32m~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'paymentId' does not exist on type 'IAppointmentApi'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/payments/payments.ts:153:19:
+[37m      153 │       paymentId: a.[32mpaymentId[37m,
+          ╵                    [32m~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'paymentUrl' does not exist on type 'IAppointmentApi'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/payments/payments.ts:154:20:
+[37m      154 │       paymentUrl: a.[32mpaymentUrl[37m,
+          ╵                     [32m~~~~~~~~~~[0m
+
+[39m[22m
+[1m[31m[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'paymentId' does not exist on type 'IAppointmentApi'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/payments/payments.ts:82:51:
+[37m      82 │       .filter((a) => a.status === 'scheduled' && a.[32mpaymentId[37m)
+         ╵                                                    [32m~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'paymentId' does not exist on type 'IAppointmentApi'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/payments/payments.ts:153:19:
+[37m      153 │       paymentId: a.[32mpaymentId[37m,
+          ╵                    [32m~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'paymentUrl' does not exist on type 'IAppointmentApi'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/payments/payments.ts:154:20:
+[37m      154 │       paymentUrl: a.[32mpaymentUrl[37m,
+          ╵                     [32m~~~~~~~~~~[0m
+
+[39m[22m
+[1m[31m[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'paymentId' does not exist on type 'IAppointmentApi'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/payments/payments.ts:82:51:
+[37m      82 │       .filter((a) => a.status === 'scheduled' && a.[32mpaymentId[37m)
+         ╵                                                    [32m~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'paymentId' does not exist on type 'IAppointmentApi'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/payments/payments.ts:153:19:
+[37m      153 │       paymentId: a.[32mpaymentId[37m,
+          ╵                    [32m~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'paymentUrl' does not exist on type 'IAppointmentApi'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/payments/payments.ts:154:20:
+[37m      154 │       paymentUrl: a.[32mpaymentUrl[37m,
+          ╵                     [32m~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2353: Object literal may only specify known properties, and 'type' does not exist in type '{ name: string; description?: string | undefined; price?: number | undefined; }'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/products/products.ts:197:6:
+[37m      197 │       [32mtype[37m,
+          ╵       [32m~~~~[0m
+
+[39m[22m
+[1m[31m[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'paymentId' does not exist on type 'IAppointmentApi'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/payments/payments.ts:82:51:
+[37m      82 │       .filter((a) => a.status === 'scheduled' && a.[32mpaymentId[37m)
+         ╵                                                    [32m~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'paymentId' does not exist on type 'IAppointmentApi'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/payments/payments.ts:153:19:
+[37m      153 │       paymentId: a.[32mpaymentId[37m,
+          ╵                    [32m~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'paymentUrl' does not exist on type 'IAppointmentApi'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/payments/payments.ts:154:20:
+[37m      154 │       paymentUrl: a.[32mpaymentUrl[37m,
+          ╵                     [32m~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2353: Object literal may only specify known properties, and 'type' does not exist in type '{ name: string; description?: string | undefined; price?: number | undefined; }'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/products/products.ts:197:6:
+[37m      197 │       [32mtype[37m,
+          ╵       [32m~~~~[0m
+
+[39m[22m
+[1m[31m[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'paymentId' does not exist on type 'IAppointmentApi'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/payments/payments.ts:82:51:
+[37m      82 │       .filter((a) => a.status === 'scheduled' && a.[32mpaymentId[37m)
+         ╵                                                    [32m~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'paymentId' does not exist on type 'IAppointmentApi'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/payments/payments.ts:153:19:
+[37m      153 │       paymentId: a.[32mpaymentId[37m,
+          ╵                    [32m~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'paymentUrl' does not exist on type 'IAppointmentApi'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/payments/payments.ts:154:20:
+[37m      154 │       paymentUrl: a.[32mpaymentUrl[37m,
+          ╵                     [32m~~~~~~~~~~[0m
+
+[39m[22m
+[1m[31m[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2307: Cannot find module './pages/payments/payments' or its corresponding type declarations.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/app.routes.ts:40:13:
+[37m      40 │       import([32m'./pages/payments/payments'[37m).then((m) => m.PaymentsPa...
+         ╵              [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "./pages/payments/payments"[0m
+
+    src/app/app.routes.ts:27:36:
+[37m      27 │ ...ent: () => import([32m'./pages/payments/payments'[37m).then((m) => m.Pa...
+         ╵                      [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[39m[22m
+[1m[31m[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2307: Cannot find module './pages/payments/payments' or its corresponding type declarations.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/app.routes.ts:40:13:
+[37m      40 │       import([32m'./pages/payments/payments'[37m).then((m) => m.PaymentsPa...
+         ╵              [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "./pages/payments/payments"[0m
+
+    src/app/app.routes.ts:27:36:
+[37m      27 │ ...ent: () => import([32m'./pages/payments/payments'[37m).then((m) => m.Pa...
+         ╵                      [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[39m[22m
+[1m[31m[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2307: Cannot find module './pages/payments/payments' or its corresponding type declarations.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/app.routes.ts:40:13:
+[37m      40 │       import([32m'./pages/payments/payments'[37m).then((m) => m.PaymentsPa...
+         ╵              [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "./pages/payments/payments"[0m
+
+    src/app/app.routes.ts:27:36:
+[37m      27 │ ...ent: () => import([32m'./pages/payments/payments'[37m).then((m) => m.Pa...
+         ╵                      [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[39m[22m
+[1m[31m[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2307: Cannot find module './pages/payments/payments' or its corresponding type declarations.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/app.routes.ts:40:13:
+[37m      40 │       import([32m'./pages/payments/payments'[37m).then((m) => m.PaymentsPa...
+         ╵              [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "./pages/payments/payments"[0m
+
+    src/app/app.routes.ts:27:36:
+[37m      27 │ ...ent: () => import([32m'./pages/payments/payments'[37m).then((m) => m.Pa...
+         ╵                      [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[39m[22m
+[1m[33m[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8113: IonInput is not used within the template of PaymentsPage[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/payments/payments.ts:54:4:
+[37m      54 │     [32mIonInput[37m,
+         ╵     [32m~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8113: IonSelect is not used within the template of PaymentsPage[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/payments/payments.ts:58:4:
+[37m      58 │     [32mIonSelect[37m,
+         ╵     [32m~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8113: IonSelectOption is not used within the template of PaymentsPage[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/payments/payments.ts:59:4:
+[37m      59 │     [32mIonSelectOption[37m,
+         ╵     [32m~~~~~~~~~~~~~~~[0m
+
+[39m[22m
+[1m[31m[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2305: Module '"../../interfaces/payment.interface"' has no exported member 'ICreatePaymentLinkPayload'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/core/services/payment-api.service.ts:8:2:
+[37m      8 │   [32mICreatePaymentLinkPayload[37m,
+        ╵   [32m~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2305: Module '"../../interfaces/payment.interface"' has no exported member 'IPaymentListResult'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/core/services/payment-api.service.ts:10:2:
+[37m      10 │   [32mIPaymentListResult[37m,
+         ╵   [32m~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2305: Module '"../../interfaces/payment.interface"' has no exported member 'IRegisterManualPaymentPayload'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/core/services/payment-api.service.ts:11:2:
+[37m      11 │   [32mIRegisterManualPaymentPayload[37m,
+         ╵   [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2305: Module '"../../interfaces/payment.interface"' has no exported member 'ICreatePaymentLinkPayload'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/shared/stores/payment.store.ts:6:2:
+[37m      6 │   [32mICreatePaymentLinkPayload[37m,
+        ╵   [32m~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2305: Module '"../../interfaces/payment.interface"' has no exported member 'IRegisterManualPaymentPayload'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/shared/stores/payment.store.ts:8:2:
+[37m      8 │   [32mIRegisterManualPaymentPayload[37m,
+        ╵   [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[39m[22m
+[1m[31m[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2305: Module '"../../core/services/payment-api.service"' has no exported member 'PaymentListFilters'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/shared/stores/payment.store.ts:3:28:
+[37m      3 │ ...t { PaymentApiService, [32mPaymentListFilters[37m } from '../../core/ser...
+        ╵                           [32m~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2305: Module '"../../interfaces/payment.interface"' has no exported member 'ICreatePaymentLinkPayload'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/shared/stores/payment.store.ts:6:2:
+[37m      6 │   [32mICreatePaymentLinkPayload[37m,
+        ╵   [32m~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2305: Module '"../../interfaces/payment.interface"' has no exported member 'IRegisterManualPaymentPayload'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/shared/stores/payment.store.ts:8:2:
+[37m      8 │   [32mIRegisterManualPaymentPayload[37m,
+        ╵   [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[39m[22m
+[1m[31m[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2305: Module '"../../core/services/whatsapp-api.service"' has no exported member 'MessagingStatus'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/settings/settings.ts:40:29:
+[37m      40 │ ...t { WhatsAppApiService, [32mMessagingStatus[37m } from '../../core/serv...
+         ╵                            [32m~~~~~~~~~~~~~~~[0m
+
+[39m[22m
+[1m[31m[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2305: Module '"../../core/services/whatsapp-api.service"' has no exported member 'MessagingStatus'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/settings/settings.ts:40:29:
+[37m      40 │ ...t { WhatsAppApiService, [32mMessagingStatus[37m } from '../../core/serv...
+         ╵                            [32m~~~~~~~~~~~~~~~[0m
+
+[39m[22m
+[1m[31m[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2305: Module '"../../core/services/whatsapp-api.service"' has no exported member 'MessagingStatus'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/settings/settings.ts:40:29:
+[37m      40 │ ...t { WhatsAppApiService, [32mMessagingStatus[37m } from '../../core/serv...
+         ╵                            [32m~~~~~~~~~~~~~~~[0m
+
+[39m[22m

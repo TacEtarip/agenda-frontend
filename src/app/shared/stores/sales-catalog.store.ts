@@ -3,14 +3,13 @@ import { IClientProduct } from '../../interfaces/client-product.interface';
 import { IProduct } from '../../interfaces/product.interface';
 import { ProductApiService } from '../../core/services/product-api.service';
 import { ClientProductApiService } from '../../core/services/client-product-api.service';
-import { AuthService } from '../../core/services/auth.service';
 import { ICreateClientProductInput } from './interfaces/create-client-product-input.interface';
+import { ProductType } from '../../enums/product-type.enum';
 
 @Injectable({ providedIn: 'root' })
 export class SalesCatalogStore {
   private readonly productApi = inject(ProductApiService);
   private readonly clientProductApi = inject(ClientProductApiService);
-  private readonly authService = inject(AuthService);
   private productsLoadRequestId = 0;
   private clientProductsLoadRequestId = 0;
 
@@ -28,11 +27,11 @@ export class SalesCatalogStore {
   readonly productsError = this.productsErrorState.asReadonly();
   readonly clientProductsError = this.clientProductsErrorState.asReadonly();
 
-  loadProducts(userId: string): void {
+  loadProducts(): void {
     const requestId = ++this.productsLoadRequestId;
     this.productsLoadingState.set(true);
     this.productsErrorState.set(null);
-    this.productApi.getAllByUser(userId).subscribe({
+    this.productApi.getAll().subscribe({
       next: (products) => {
         if (requestId !== this.productsLoadRequestId) return;
         this.productsState.set(products);
@@ -68,12 +67,11 @@ export class SalesCatalogStore {
     name: string;
     description?: string;
     price?: number;
-    userId?: string;
+    type?: ProductType;
   }): void {
-    const userId = input.userId ?? this.authService.currentUser()?.userId ?? '';
     this.productsErrorState.set(null);
     this.productApi
-      .create({ userId, name: input.name, description: input.description, price: input.price })
+      .create({ name: input.name, description: input.description, price: input.price, type: input.type })
       .subscribe({
         next: (product) => {
           this.productsState.update((products) => [product, ...products]);

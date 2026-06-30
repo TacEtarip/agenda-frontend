@@ -1,0 +1,11 @@
+.payment-summary { display: flex; gap: .75rem; align-items: center; padding: 1rem; margin-bottom: 1rem; border-radius: 1rem; background: var(--ion-color-light); }
+.payment-summary ion-icon { font-size: 1.5rem; color: var(--ion-color-primary); }
+.payment-summary div { display: grid; gap: .2rem; }
+.payment-summary span { color: var(--ion-color-medium); font-size: .875rem; }
+ion-segment { margin-bottom: .75rem; }
+ion-note { display: block; padding: .75rem 1rem 0; }
+.submit-payment { margin-top: 1.25rem; }
+.payment-result { display: grid; gap: 1rem; text-align: center; padding: 2rem 0; }
+.payment-result > ion-icon { margin: auto; font-size: 3rem; color: var(--ion-color-primary); }
+.payment-result h2, .payment-result p { margin: 0; }
+.payment-result a { overflow-wrap: anywhere; }

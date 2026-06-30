@@ -1,13 +1,11 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { IMessageTemplate } from '../../interfaces/message-template.interface';
 import { MessageTemplateApiService } from '../../core/services/message-template-api.service';
-import { AuthService } from '../../core/services/auth.service';
 import { IUpsertMessageTemplateInput } from './interfaces/upsert-message-template-input.interface';
 
 @Injectable({ providedIn: 'root' })
 export class MessageTemplateStore {
   private readonly templateApi = inject(MessageTemplateApiService);
-  private readonly authService = inject(AuthService);
   private loadRequestId = 0;
   private readonly templatesState = signal<IMessageTemplate[]>([]);
   private readonly templatesLoadingState = signal(false);
@@ -17,11 +15,11 @@ export class MessageTemplateStore {
   readonly templatesLoading = this.templatesLoadingState.asReadonly();
   readonly templatesError = this.templatesErrorState.asReadonly();
 
-  load(userId: string): void {
+  load(): void {
     const requestId = ++this.loadRequestId;
     this.templatesLoadingState.set(true);
     this.templatesErrorState.set(null);
-    this.templateApi.getAllByUser(userId).subscribe({
+    this.templateApi.getAll().subscribe({
       next: (templates) => {
         if (requestId !== this.loadRequestId) return;
         this.templatesState.set(templates);
@@ -39,9 +37,6 @@ export class MessageTemplateStore {
     const messageBody = input.messageBody.trim();
     if (!messageBody) return;
 
-    const userId = this.authService.currentUser()?.userId;
-    if (!userId) return;
-
     this.templatesErrorState.set(null);
 
     if (input.templateId) {
@@ -56,7 +51,7 @@ export class MessageTemplateStore {
         },
       });
     } else {
-      this.templateApi.create({ userId, stage: input.stage, messageBody }).subscribe({
+      this.templateApi.create({ stage: input.stage, messageBody }).subscribe({
         next: (created) => {
           this.templatesState.update((templates) => [created, ...templates]);
         },

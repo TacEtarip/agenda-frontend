@@ -11,8 +11,8 @@ export class ProductApiService {
   private readonly http = inject(HttpClient);
   private readonly url = `${environment.apiUrl}/products`;
 
-  getAllByUser(userId: string): Observable<IProduct[]> {
-    return this.http.get<IProduct[]>(`${this.url}/user/${userId}`);
+  getAll(): Observable<IProduct[]> {
+    return this.http.get<IProduct[]>(this.url);
   }
 
   create(payload: ICreateProductPayload): Observable<IProduct> {

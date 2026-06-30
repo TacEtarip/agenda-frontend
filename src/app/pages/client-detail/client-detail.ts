@@ -1,6 +1,6 @@
 import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { ClientStage } from '../../enums/client-stage.enum';
 import { ClientProductStatus } from '../../enums/client-product-status.enum';
 import { IAttachment } from '../../interfaces/attachment.interface';
@@ -21,7 +21,6 @@ import { MessageTemplateStore } from '../../shared/stores/message-template.store
 import { ClientApiService } from '../../core/services/client-api.service';
 import { NoteApiService } from '../../core/services/note-api.service';
 import { AppointmentApiService } from '../../core/services/appointment-api.service';
-import { AuthService } from '../../core/services/auth.service';
 import { IAppointmentApi } from '../../core/interfaces/appointment-api.interface';
 import { addIcons } from 'ionicons';
 import {
@@ -69,9 +68,13 @@ import {
 import { ClientDetailSegment } from './enums/client-detail-segment.enum';
 import { IAppointmentDraft } from './interfaces/appointment-draft.interface';
 import { IEnrichedClientProduct } from './interfaces/enriched-client-product.interface';
-
-import { SETTINGS_STORAGE_KEY } from '../settings/constants/settings.constants';
-import { IUserSettingsStorage } from '../settings/interfaces/user-settings-storage.interface';
+import { PaymentStore } from '../../shared/stores/payment.store';
+import { PaymentSourceType } from '../../enums/payment-source-type.enum';
+import { PaymentStatus } from '../../enums/payment-status.enum';
+import { ProductType } from '../../enums/product-type.enum';
+import { IPayment } from '../../interfaces/payment.interface';
+import { PaymentFormModal } from '../../shared/components/payment-form-modal/payment-form-modal';
+import { IPaymentModalTarget } from './interfaces/payment-modal-target.interface';
 
 @Component({
   selector: 'app-client-detail',
@@ -91,7 +94,6 @@ import { IUserSettingsStorage } from '../settings/interfaces/user-settings-stora
     IonSelect,
     IonSelectOption,
     IonTextarea,
-    IonToggle,
     IonItem,
     IonLabel,
     AppointmentStatusColorPipe,
@@ -102,19 +104,21 @@ import { IUserSettingsStorage } from '../settings/interfaces/user-settings-stora
     OfferStatusLabelPipe,
     StageLabelPipe,
     StageColorPipe,
+    PaymentFormModal,
   ],
   templateUrl: './client-detail.html',
   styleUrl: './client-detail.scss',
 })
 export class ClientDetailPage {
   private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
   private readonly alertCtrl = inject(AlertController);
   private readonly salesCatalogStore = inject(SalesCatalogStore);
   private readonly messageTemplateStore = inject(MessageTemplateStore);
   private readonly clientApi = inject(ClientApiService);
   private readonly noteApi = inject(NoteApiService);
   private readonly appointmentApi = inject(AppointmentApiService);
-  private readonly authService = inject(AuthService);
+  private readonly paymentStore = inject(PaymentStore);
   private readonly destroyRef = inject(DestroyRef);
   readonly clientId = this.route.snapshot.paramMap.get('id') ?? '';
 
@@ -126,6 +130,7 @@ export class ClientDetailPage {
   readonly draftProductId = signal('');
   readonly draftProductStatus = signal<ClientProductStatus>(ClientProductStatus.OFFERED);
   readonly draftProductNotes = signal('');
+  readonly productLinkError = signal<string | null>(null);
   readonly isNoteModalOpen = signal(false);
   readonly editingNoteId = signal<string | null>(null);
   readonly noteDraft = signal('');
@@ -137,7 +142,21 @@ export class ClientDetailPage {
   readonly isAttachmentModalOpen = signal(false);
   readonly attachmentDraft = signal(this.createDefaultAttachmentDraft());
   readonly attachmentDraftError = signal<string | null>(null);
+  readonly isClientEditModalOpen = signal(false);
+  readonly clientEditDraft = signal({
+    firstName: '',
+    lastName: '',
+    email: '',
+    phoneNumber: '',
+  });
+  readonly clientEditDraftError = signal<string | null>(null);
+  readonly isSavingClient = signal(false);
   readonly actionError = signal<string | null>(null);
+  readonly paymentModalTarget = signal<IPaymentModalTarget | null>(null);
+  readonly paymentSourceType = PaymentSourceType;
+  readonly paymentStatus = PaymentStatus;
+  readonly productType = ProductType;
+  readonly payments = this.paymentStore.payments;
 
   // Client data loaded from API
   readonly client = signal<IClient>({
@@ -155,6 +174,15 @@ export class ClientDetailPage {
   readonly notes = signal<INote[]>([]);
 
   readonly appointments = signal<IClientAppointment[]>([]);
+  readonly isEditingCompletedAppointment = computed(() => {
+    const editingId = this.editingAppointmentId();
+    return Boolean(
+      editingId &&
+        this.appointments().some(
+          (appointment) => appointment.id === editingId && appointment.status === 'completed',
+        ),
+    );
+  });
 
   readonly attachments = signal<IAttachment[]>([
     { id: '1', fileName: 'proposal_v2.pdf', fileType: 'PDF', fileSize: '1.2 MB', uploadedAt: '20 feb 2026', icon: 'document-outline' },
@@ -175,8 +203,16 @@ export class ClientDetailPage {
           ...offer,
           resolvedProductName: product?.name ?? 'Producto desconocido',
           resolvedProductPrice: product?.price,
+          resolvedProductType: product?.type ?? ProductType.PRODUCT,
         };
       });
+  });
+
+  readonly availableProducts = computed(() => {
+    const linkedProductIds = new Set(
+      this.currentClientProducts().map((offer) => offer.productId),
+    );
+    return this.products().filter((product) => !linkedProductIds.has(product.id));
   });
 
   readonly canShowPrimaryFab = computed(() => {
@@ -204,6 +240,12 @@ export class ClientDetailPage {
       .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)),
   );
 
+  readonly otherStageTemplates = computed(() =>
+    this.messageTemplates()
+      .filter((template) => template.stage !== this.client().stage)
+      .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)),
+  );
+
   readonly callWhatsAppUrl = computed(() => {
     const templates = this.currentStageTemplates();
     const phone = this.client().phone.replaceAll(/\D/g, '');
@@ -217,16 +259,8 @@ export class ClientDetailPage {
     return `https://wa.me/${phone}`;
   });
 
-  readonly paymentsEnabled = computed(() => {
-    try {
-      const raw = localStorage.getItem(SETTINGS_STORAGE_KEY);
-      if (!raw) return false;
-      const parsed = JSON.parse(raw) as Partial<IUserSettingsStorage>;
-      return parsed.enablePayments === true;
-    } catch {
-      return false;
-    }
-  });
+  readonly callPhoneUrl = computed(() => `tel:${this.client().phone.replaceAll(/\s/g, '')}`);
+  readonly emailUrl = computed(() => `mailto:${this.client().email}`);
 
   constructor() {
     addIcons({
@@ -252,11 +286,13 @@ export class ClientDetailPage {
       pricetagOutline,
       cashOutline,
     });
+    const tab = this.route.snapshot.queryParamMap.get('tab');
+    if (Object.values(ClientDetailSegment).includes(tab as ClientDetailSegment)) {
+      this.activeSegment.set(tab as ClientDetailSegment);
+    }
   }
 
   ionViewWillEnter(): void {
-    const userId = this.authService.currentUser()?.userId;
-
     if (this.clientId) {
       this.clientApi
         .getById(this.clientId)
@@ -272,12 +308,10 @@ export class ClientDetailPage {
         .getAllByClient(this.clientId)
         .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe((appts) => this.appointments.set(appts.map((a) => this.mapApiAppointment(a))));
-    }
-
-    if (userId) {
-      this.salesCatalogStore.loadProducts(userId);
+      this.paymentStore.load({ clientId: this.clientId, limit: 100 });
+      this.salesCatalogStore.loadProducts();
       this.salesCatalogStore.loadClientProducts(this.clientId);
-      this.messageTemplateStore.load(userId);
+      this.messageTemplateStore.load();
     }
   }
 
@@ -285,6 +319,78 @@ export class ClientDetailPage {
     const segment = this.getEventValue<ClientDetailSegment>(event);
     if (!segment) return;
     this.activeSegment.set(segment);
+    void this.router.navigate([], { relativeTo: this.route, queryParams: { tab: segment === ClientDetailSegment.NOTES ? null : segment }, queryParamsHandling: 'merge', replaceUrl: true });
+  }
+
+  openEditClientModal() {
+    const client = this.client();
+    this.clientEditDraft.set({
+      firstName: client.firstName,
+      lastName: client.lastName,
+      email: client.email,
+      phoneNumber: client.phone,
+    });
+    this.clientEditDraftError.set(null);
+    this.isClientEditModalOpen.set(true);
+  }
+
+  closeEditClientModal() {
+    if (this.isSavingClient()) return;
+    this.isClientEditModalOpen.set(false);
+    this.clientEditDraftError.set(null);
+  }
+
+  onClientEditDraftChange(
+    field: 'firstName' | 'lastName' | 'email' | 'phoneNumber',
+    event: Event,
+  ) {
+    const target = event.target as HTMLInputElement;
+    this.clientEditDraft.update((draft) => ({
+      ...draft,
+      [field]: target.value ?? '',
+    }));
+  }
+
+  saveClientFromModal() {
+    if (this.isSavingClient()) return;
+
+    const draft = this.clientEditDraft();
+    const firstName = draft.firstName.trim();
+    const lastName = draft.lastName.trim();
+    const email = draft.email.trim();
+    const phoneNumber = draft.phoneNumber.trim();
+
+    if (!firstName || !lastName || !phoneNumber) {
+      this.clientEditDraftError.set('Completa nombre, apellido y teléfono.');
+      return;
+    }
+
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      this.clientEditDraftError.set('Ingresa un correo válido.');
+      return;
+    }
+
+    this.isSavingClient.set(true);
+    this.clientEditDraftError.set(null);
+    this.clientApi
+      .update(this.clientId, {
+        firstName,
+        lastName,
+        email: email || undefined,
+        phoneNumber,
+      })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: ({ client }) => {
+          this.client.set(client);
+          this.isSavingClient.set(false);
+          this.isClientEditModalOpen.set(false);
+        },
+        error: () => {
+          this.isSavingClient.set(false);
+          this.clientEditDraftError.set('No se pudo actualizar el cliente.');
+        },
+      });
   }
 
   openPrimaryActionModal() {
@@ -407,7 +513,6 @@ export class ClientDetailPage {
       date: startAt.slice(0, 10),
       startHour: startAt.slice(11, 16),
       endHour: endAt.slice(11, 16),
-      requestPaymentLink: false, // On edit, we don't request payment link again
     });
     this.appointmentDraftError.set(null);
     this.isAppointmentModalOpen.set(true);
@@ -500,17 +605,6 @@ export class ClientDetailPage {
     }));
   }
 
-  onAppointmentDraftCheckboxChange(
-    field: 'requestPaymentLink',
-    event: Event,
-  ) {
-    const isChecked = Boolean((event as CustomEvent<{ checked?: boolean }>).detail?.checked);
-    this.appointmentDraft.update((draft) => ({
-      ...draft,
-      [field]: isChecked,
-    }));
-  }
-
   readonly appointmentDraftDateLabel = computed(() => {
     const dateValue = this.appointmentDraft().date;
     if (!dateValue) return 'Seleccionar fecha';
@@ -526,6 +620,31 @@ export class ClientDetailPage {
   saveAppointmentFromModal() {
     this.actionError.set(null);
     const draft = this.appointmentDraft();
+    const editingId = this.editingAppointmentId();
+    const editingAppointment = editingId
+      ? this.appointments().find((appointment) => appointment.id === editingId)
+      : undefined;
+
+    if (editingId && editingAppointment?.status === 'completed') {
+      this.appointmentApi
+        .update(editingId, { description: draft.description.trim() })
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe({
+          next: (updated) => {
+            this.appointments.update((appts) =>
+              appts.map((appointment) =>
+                appointment.id === editingId ? this.mapApiAppointment(updated) : appointment,
+              ),
+            );
+            this.closeAppointmentModal();
+          },
+          error: () => {
+            this.actionError.set('No se pudo actualizar la descripción de la cita.');
+          },
+        });
+      return;
+    }
+
     const title = draft.title.trim();
     if (!title || !draft.date || !draft.startHour || !draft.endHour) {
       this.appointmentDraftError.set('Completa titulo, fecha, hora inicio y hora fin.');
@@ -547,9 +666,6 @@ export class ClientDetailPage {
       return;
     }
 
-    const userId = this.authService.currentUser()?.userId ?? '';
-    const editingId = this.editingAppointmentId();
-
     if (editingId) {
       this.appointmentApi
         .update(editingId, {
@@ -557,6 +673,9 @@ export class ClientDetailPage {
           description: draft.description.trim() || undefined,
           startTime: startAt,
           endTime: endAt,
+          ...(editingAppointment?.status === 'cancelled'
+            ? { status: 'scheduled' as const }
+            : {}),
         })
         .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe({
@@ -574,12 +693,10 @@ export class ClientDetailPage {
       this.appointmentApi
         .create({
           clientId: this.clientId,
-          userId,
           title,
           description: draft.description.trim() || undefined,
           startTime: startAt,
           endTime: endAt,
-          requestPaymentLink: draft.requestPaymentLink === true,
         })
         .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe({
@@ -599,6 +716,10 @@ export class ClientDetailPage {
     status: IClientAppointment['status'],
   ) {
     if (appointment.status === status) return;
+    if (appointment.status === 'completed') {
+      this.actionError.set('Las citas completadas no se pueden modificar.');
+      return;
+    }
     this.actionError.set(null);
     this.appointmentApi
       .update(appointment.id, { status })
@@ -629,8 +750,6 @@ export class ClientDetailPage {
       startTime: `${this.formatAppointmentDay(startDate)} · ${this.formatAppointmentHour(startDate)}`,
       endTime: this.formatAppointmentHour(endDate),
       status: a.status,
-      paymentId: a.paymentId,
-      paymentUrl: a.paymentUrl,
     };
   }
 
@@ -661,7 +780,6 @@ export class ClientDetailPage {
       date: this.formatDateLocal(now),
       startHour: this.formatHourLocal(now),
       endHour: this.formatHourLocal(end),
-      requestPaymentLink: false,
     };
   }
 
@@ -722,6 +840,7 @@ export class ClientDetailPage {
 
   onDraftProductChange(event: Event) {
     this.draftProductId.set(this.getEventValue<string>(event) ?? '');
+    this.productLinkError.set(null);
   }
 
   onDraftProductStatusChange(event: Event) {
@@ -742,10 +861,19 @@ export class ClientDetailPage {
   }
 
   addProductToClient() {
-    const fallbackProductId = this.products()[0]?.id;
-    const productId = this.draftProductId() || fallbackProductId;
-    if (!productId) return;
+    const productId = this.draftProductId();
+    if (!productId) {
+      this.productLinkError.set('Selecciona un producto antes de agregarlo.');
+      return;
+    }
 
+    if (this.currentClientProducts().some((offer) => offer.productId === productId)) {
+      this.productLinkError.set('Este producto ya está vinculado al cliente.');
+      this.draftProductId.set('');
+      return;
+    }
+
+    this.productLinkError.set(null);
     this.salesCatalogStore.createClientProduct({
       clientId: this.client().id,
       productId,
@@ -906,6 +1034,72 @@ export class ClientDetailPage {
     const phone = this.client().phone.replaceAll(/\D/g, '');
     const message = this.personalizeTemplateMessage(template);
     return `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+  }
+
+  openAppointmentPayment(appointment: IClientAppointment): void {
+    this.paymentModalTarget.set({
+      sourceType: PaymentSourceType.APPOINTMENT,
+      sourceId: appointment.id,
+      concept: appointment.title,
+    });
+  }
+
+  openProductPayment(offer: IEnrichedClientProduct): void {
+    this.paymentModalTarget.set({
+      sourceType: PaymentSourceType.CLIENT_PRODUCT,
+      sourceId: offer.id,
+      concept: offer.resolvedProductName,
+      amount: offer.resolvedProductPrice,
+    });
+  }
+
+  closePaymentModal(): void {
+    this.paymentModalTarget.set(null);
+  }
+
+  paymentFor(sourceType: PaymentSourceType, sourceId: string): IPayment | undefined {
+    return this.payments().find(
+      (payment) =>
+        payment.sourceType === sourceType &&
+        payment.sourceId === sourceId &&
+        (payment.status === PaymentStatus.PAID || payment.status === PaymentStatus.PENDING),
+    );
+  }
+
+  onPaymentCompleted(payment: IPayment): void {
+    if (payment.status === PaymentStatus.PAID && payment.sourceType === PaymentSourceType.CLIENT_PRODUCT) {
+      const offer = this.currentClientProducts().find((item) => item.id === payment.sourceId);
+      if (offer && offer.status !== ClientProductStatus.SOLD) {
+        this.quickSetProductStatus(offer, ClientProductStatus.SOLD);
+      }
+    }
+  }
+
+  async copyPaymentLink(payment: IPayment): Promise<void> {
+    if (payment.checkoutUrl) await navigator.clipboard.writeText(payment.checkoutUrl);
+  }
+
+  sendPaymentLink(payment: IPayment): void {
+    if (!payment.checkoutUrl) return;
+    const phone = this.client().phone.replace(/\D/g, '');
+    const message = `Hola ${this.client().firstName}. Te compartimos el enlace de pago por ${payment.description} (${payment.amount.toFixed(2)} PEN): ${payment.checkoutUrl}`;
+    window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, '_blank', 'noopener');
+  }
+
+  cancelPayment(payment: IPayment): void {
+    this.paymentStore.cancel(payment.id).subscribe({
+      error: () => this.actionError.set('No se pudo cancelar el cobro.'),
+    });
+  }
+
+  paymentStatusLabel(status: PaymentStatus): string {
+    return ({
+      [PaymentStatus.PENDING]: 'Pago pendiente',
+      [PaymentStatus.PAID]: 'Pagado',
+      [PaymentStatus.FAILED]: 'Fallido',
+      [PaymentStatus.CANCELLED]: 'Cancelado',
+      [PaymentStatus.REFUNDED]: 'Reembolsado',
+    })[status];
   }
 
   private getEventValue<T>(event: Event): T | null {

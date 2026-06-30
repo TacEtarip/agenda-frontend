@@ -11,8 +11,8 @@ export class AppointmentApiService {
   private readonly http = inject(HttpClient);
   private readonly url = `${environment.apiUrl}/appointments`;
 
-  getAllByUser(userId: string): Observable<IAppointmentApi[]> {
-    return this.http.get<IAppointmentApi[]>(`${this.url}/user/${userId}`);
+  getAll(): Observable<IAppointmentApi[]> {
+    return this.http.get<IAppointmentApi[]>(this.url);
   }
 
   getAllByClient(clientId: string): Observable<IAppointmentApi[]> {

@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, DestroyRef, ViewChild, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { addIcons } from 'ionicons';
 import {
@@ -23,7 +23,11 @@ import { COMMON_ION_PAGE_IMPORTS } from '../../shared/ionic-imports';
 import { CLIENT_STAGE_OPTIONS } from '../../shared/client-stage.utils';
 import { FormatDatePipe } from '../../shared/pipes/format-date.pipe';
 import { MessageTemplateStore } from '../../shared/stores/message-template.store';
-import { AuthService } from '../../core/services/auth.service';
+import { MessageTemplateApiService } from '../../core/services/message-template-api.service';
+import { TemplatePreviewResult, TemplateVariableMetadata } from '../../interfaces/template-variable.interface';
+import { catchError, debounceTime, distinctUntilChanged, of, switchMap, tap } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { validateTemplateMessage } from './template-validation';
 
 @Component({
   selector: 'app-message-templates',
@@ -39,15 +43,24 @@ import { AuthService } from '../../core/services/auth.service';
   styleUrl: './message-templates.scss',
 })
 export class MessageTemplatesPage {
+  @ViewChild('messageTextarea') private messageTextarea?: IonTextarea;
   private readonly fb = inject(FormBuilder);
+  private readonly destroyRef = inject(DestroyRef);
   private readonly alertCtrl = inject(AlertController);
   private readonly messageTemplateStore = inject(MessageTemplateStore);
-  private readonly authService = inject(AuthService);
+  private readonly templateApi = inject(MessageTemplateApiService);
 
   readonly allStages = CLIENT_STAGE_OPTIONS;
   readonly templates = this.messageTemplateStore.templates;
 
   readonly isComposerModalOpen = signal(false);
+  readonly variables = signal<TemplateVariableMetadata[]>([
+    { key: 'name', label: 'Nombre del cliente', description: '', example: 'Andrea', contexts: ['all'] },
+    { key: 'date', label: 'Fecha de la cita', description: '', example: '15 de julio de 2026, 10:30 a. m.', contexts: ['all'] },
+    { key: 'paymentUrl', label: 'Enlace de pago', description: '', example: 'https://pago.ejemplo.com/abc123', contexts: ['all'] },
+  ]);
+  readonly composerBody = signal('');
+  readonly preview = signal<TemplatePreviewResult | null>(null);
   readonly editingTemplateId = signal<string | null>(null);
   readonly composerStage = signal<ClientStage>(ClientStage.FIRST_CONTACT);
   readonly composerForm = this.fb.nonNullable.group({
@@ -83,6 +96,13 @@ export class MessageTemplatesPage {
       this.allStages[0],
   );
 
+  readonly validation = computed(() => validateTemplateMessage(this.composerBody(), this.variables()));
+  readonly usedVariables = computed(() => {
+    const detected = new Set(this.validation().detectedVariables);
+    return this.variables().filter(({ key }) => detected.has(key));
+  });
+  readonly characterCount = computed(() => this.composerBody().length);
+
   constructor() {
     addIcons({
       addOutline,
@@ -95,13 +115,25 @@ export class MessageTemplatesPage {
       timeOutline,
       trashOutline,
     });
+
+    this.composerForm.controls.messageBody.valueChanges.pipe(
+      takeUntilDestroyed(this.destroyRef),
+      distinctUntilChanged(),
+      tap((messageBody) => this.composerBody.set(messageBody)),
+      debounceTime(250),
+      switchMap((messageBody) => {
+        const validation = validateTemplateMessage(messageBody, this.variables());
+        if (!messageBody.trim() || !validation.valid) return of(null);
+        return this.templateApi.preview(this.composerStage(), messageBody).pipe(catchError(() => of(null)));
+      }),
+    ).subscribe((preview) => this.preview.set(preview));
   }
 
   ionViewWillEnter(): void {
-    const userId = this.authService.currentUser()?.userId;
-    if (userId) {
-      this.messageTemplateStore.load(userId);
-    }
+    this.messageTemplateStore.load();
+    this.templateApi.getMetadata().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: ({ variables }) => this.variables.set(variables),
+    });
   }
 
   openCreateTemplateModal(stage: ClientStage) {
@@ -133,16 +165,24 @@ export class MessageTemplatesPage {
     }
   }
 
-  insertVariable(variable: string) {
-    const current = this.composerForm.controls.messageBody.value;
-    // Agreamos la variable al final del texto por ahora (o podrías manejar cursor if necessary).
-    this.composerForm.controls.messageBody.setValue(`${current} ${variable}`.trim());
+  async insertVariable(key: TemplateVariableMetadata['key']) {
+    const input = await this.messageTextarea?.getInputElement();
+    const control = this.composerForm.controls.messageBody;
+    const current = control.value;
+    const token = `{{${key}}}`;
+    const start = input?.selectionStart ?? current.length;
+    const end = input?.selectionEnd ?? start;
+    control.setValue(`${current.slice(0, start)}${token}${current.slice(end)}`);
     this.composerForm.controls.messageBody.markAsDirty();
+    queueMicrotask(() => {
+      input?.focus();
+      input?.setSelectionRange(start + token.length, start + token.length);
+    });
   }
 
   saveTemplate() {
     const messageBody = this.composerForm.controls.messageBody.value.trim();
-    if (!messageBody || this.composerForm.invalid) {
+    if (!messageBody || this.composerForm.invalid || !this.validation().valid) {
       if (!messageBody) {
         this.composerForm.controls.messageBody.setErrors({ required: true });
       }
@@ -158,6 +198,14 @@ export class MessageTemplatesPage {
     });
 
     this.closeComposerModal();
+  }
+
+  humanizeMessage(message: string): string {
+    return this.variables().reduce((text, variable) => text.replaceAll(`{{${variable.key}}}`, `[${variable.label}]`), message);
+  }
+
+  variableLabel(key: string): string {
+    return this.variables().find((variable) => variable.key === key)?.label ?? key;
   }
 
   async deleteTemplate(template: IMessageTemplate) {

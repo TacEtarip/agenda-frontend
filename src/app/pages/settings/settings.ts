@@ -37,7 +37,8 @@ import {
   IonSpinner,
 } from '@ionic/angular/standalone';
 import { AuthService } from '../../core/services/auth.service';
-import { WhatsAppApiService, MessagingStatus } from '../../core/services/whatsapp-api.service';
+import { WhatsAppApiService } from '../../core/services/whatsapp-api.service';
+import { MessagingStatus } from '../../types/messaging-status.type';
 import { IntegrationProvider } from './enums/integration-provider.enum';
 import { IntegrationPreference } from './enums/integration-preference.enum';
 import { IIntegrationSettings } from './interfaces/integration-settings.interface';

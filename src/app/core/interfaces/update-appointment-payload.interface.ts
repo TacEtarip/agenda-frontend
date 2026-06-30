@@ -1,6 +1,11 @@
 import { AppointmentStatus } from '../../types/appointment-status.type';
-import { ICreateAppointmentPayload } from './create-appointment-payload.interface';
 
-export interface IUpdateAppointmentPayload extends Partial<ICreateAppointmentPayload> {
+export interface IUpdateAppointmentPayload {
+  title?: string;
+  description?: string;
+  startTime?: string;
+  endTime?: string;
   status?: AppointmentStatus;
+  externalEventId?: string;
+  meetingUrl?: string;
 }

@@ -48,6 +48,11 @@ ion-toolbar ion-button {
     linear-gradient(180deg, var(--color-frost-light) 0%, var(--color-surface-alt) 36%, var(--color-surface) 100%);
 }
 
+.client-detail-main {
+  width: min(100%, 72rem);
+  margin: 0 auto;
+}
+
 .hero-card,
 .tab-card,
 .template-card,
@@ -140,20 +145,10 @@ ion-toolbar ion-button {
   align-items: center;
   gap: 0.625rem;
   margin-top: 0.75rem;
-  flex-wrap: wrap;
-}
-
-.stage-chip {
-  cursor: default;
-  font-size: 0.75rem;
-  font-weight: 700;
-  height: 1.75rem;
-  margin: 0;
-  border-radius: 9999px;
 }
 
 .stage-select {
-  min-width: 8.5rem;
+  width: 100%;
   border: 1px solid var(--color-border);
   border-radius: 9999px;
   --background: rgb(var(--color-mint-rgb) / 12%);
@@ -190,15 +185,52 @@ ion-toolbar ion-button {
   }
 }
 
-.detail-segment {
+.detail-segment-scroll {
+  width: calc(100% - 2rem);
   margin: 0 1rem 1rem;
+  border-radius: 1.25rem;
+  overflow-x: auto;
+  overflow-y: hidden;
+  box-sizing: border-box;
+  padding-bottom: 0.25rem;
+  scrollbar-width: thin;
+  scrollbar-color: rgb(var(--color-green-rgb) / 55%) transparent;
+  overscroll-behavior-inline: contain;
+  scroll-behavior: smooth;
+  scroll-snap-type: inline proximity;
+  touch-action: pan-x;
+  -webkit-overflow-scrolling: touch;
+
+  &::-webkit-scrollbar {
+    height: 0.3rem;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    border-radius: 999px;
+    background: rgb(var(--color-green-rgb) / 55%);
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+}
+
+.detail-segment {
+  width: max-content;
+  min-width: 100%;
+  max-width: none;
+  margin: 0;
   padding: 0.3125rem;
   border-radius: 1.25rem;
-  overflow: hidden;
+  box-sizing: border-box;
 }
 
 .detail-segment ion-segment-button {
+  flex: 0 0 auto;
+  min-width: 7rem;
   min-height: 3rem;
+  --padding-start: 0.625rem;
+  --padding-end: 0.625rem;
   --indicator-color: transparent;
   --color: var(--color-text-muted);
   --color-checked: var(--color-green);
@@ -206,6 +238,7 @@ ion-toolbar ion-button {
   font-size: 0.8rem;
   font-weight: 700;
   text-transform: none;
+  scroll-snap-align: start;
 }
 
 .detail-segment ion-segment-button::part(indicator-background) {
@@ -229,12 +262,34 @@ ion-toolbar ion-button {
 
 .segment-tab-icon {
   font-size: 1rem;
+  flex: 0 0 auto;
+}
+
+@media (max-width: 600px) {
+  .detail-segment ion-segment-button {
+    font-size: 0.76rem;
+    --padding-start: 0.5rem;
+    --padding-end: 0.5rem;
+  }
+
+  .detail-segment ion-segment-button ion-label {
+    gap: 0.125rem;
+  }
+
+  .segment-badge {
+    margin-left: 0.125rem;
+  }
 }
 
 .tab-content {
   padding: 0 1rem 6rem;
   display: flex;
   flex-direction: column;
+  gap: 0.875rem;
+}
+
+.client-edit-modal {
+  display: grid;
   gap: 0.875rem;
 }
 
@@ -586,7 +641,7 @@ ion-toolbar ion-button {
 
 .empty-state {
   text-align: center;
-  padding: 2.5rem 1rem;
+  padding: 1.75rem 1rem;
   border: 1px dashed rgb(var(--color-green-rgb) / 22%);
   border-radius: 1.25rem;
   background: rgb(255 255 255 / 72%);
@@ -800,7 +855,7 @@ ion-toolbar ion-button {
   }
 
   .detail-segment ion-segment-button {
-    font-size: 0.74rem;
+    font-size: 0.72rem;
   }
 
   .template-footer {

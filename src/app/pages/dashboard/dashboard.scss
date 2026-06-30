@@ -1,6 +1,22 @@
 // ── Dashboard Page ────────────────────────────────────────────────────────────
 // All colors use the global palette from src/theme/_palette.scss
 
+.dashboard-content {
+  --background: linear-gradient(180deg, var(--color-frost-light) 0, var(--color-surface) 19rem);
+}
+
+.dashboard-main {
+  display: block;
+  width: min(100%, 72rem);
+  margin: 0 auto;
+  padding-bottom: 1rem;
+}
+
+.priority-action { margin: 0 1rem 1rem; padding: 0.8rem 1rem; display: flex; align-items: center; gap: 0.65rem; border: 1px solid rgb(var(--color-amber-rgb) / 35%); border-radius: 1rem; background: var(--color-amber-light); color: var(--color-text); text-decoration: none; }
+.priority-action__cta { margin-left: auto; color: var(--color-amber-shade); font-size: 0.78rem; font-weight: 800; }
+.load-feedback { margin: 0 1rem 1rem; padding: 0.8rem 1rem; border-radius: 0.85rem; background: var(--color-surface-alt); color: var(--color-text-muted); font-size: 0.8rem; }
+.load-feedback--error { color: var(--color-danger); border: 1px solid rgb(var(--color-danger-rgb) / 25%); }
+
 // ── Toolbar ──────────────────────────────────────────────────────────────────
 ion-toolbar {
   --background: linear-gradient(135deg, var(--color-green) 0%, var(--color-sky) 100%);
@@ -31,6 +47,7 @@ ion-toolbar ion-button {
   }
 
   &__name {
+    margin: 0;
     font-size: 1rem;
     font-weight: 700;
     line-height: 1.2;
@@ -49,7 +66,7 @@ ion-toolbar ion-button {
   margin: 0;
   border-radius: 1rem;
   border: 1px solid var(--color-border);
-  box-shadow: 0 4px 12px rgb(var(--color-green-rgb) / 10%);
+  box-shadow: 0 8px 24px -20px rgb(var(--color-green-rgb) / 55%);
 
   &__content {
     padding: 0.75rem;
@@ -84,6 +101,11 @@ ion-toolbar ion-button {
     background-color: var(--color-indigo-light);
     color: var(--color-indigo-shade);
   }
+
+  &.stat-icon--amber {
+    background-color: var(--color-amber-light);
+    color: var(--color-amber-shade);
+  }
 }
 
 .stat-value {
@@ -91,6 +113,7 @@ ion-toolbar ion-button {
   font-weight: 700;
   color: var(--color-text);
   margin: 0;
+  font-variant-numeric: tabular-nums;
 }
 
 .stat-label {
@@ -157,9 +180,22 @@ ion-toolbar ion-button {
   align-items: center;
   gap: 0.65rem;
   background: linear-gradient(180deg, var(--color-surface) 0%, var(--color-surface-alt) 100%);
-  box-shadow: 0 4px 12px rgb(var(--color-green-rgb) / 8%);
+  box-shadow: 0 8px 24px -22px rgb(var(--color-green-rgb) / 45%);
   text-decoration: none;
   color: inherit;
+  min-height: 4rem;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+
+  &:hover {
+    border-color: rgb(var(--color-green-rgb) / 42%);
+    box-shadow: 0 14px 28px -22px rgb(var(--color-green-rgb) / 62%);
+    transform: translateY(-1px);
+  }
+
+  &:focus-visible {
+    outline: 3px solid rgb(var(--color-sky-rgb) / 72%);
+    outline-offset: 3px;
+  }
 
   &__icon {
     width: 2.25rem;
@@ -183,6 +219,11 @@ ion-toolbar ion-button {
     &--indigo {
       color: var(--color-indigo-shade);
       background-color: var(--color-indigo-light);
+    }
+
+    &--amber {
+      color: var(--color-amber-shade);
+      background-color: var(--color-amber-light);
     }
   }
 
@@ -218,13 +259,24 @@ ion-toolbar ion-button {
   background: none;
   border: none;
   cursor: pointer;
-  padding: 0;
+  min-width: 4.75rem;
+  min-height: 2.75rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 9999px;
   transition: color 0.2s ease;
 
   &:hover {
     color: var(--color-green-shade);
+    background: var(--color-green-light);
+  }
+
+  &:focus-visible {
+    outline: 3px solid rgb(var(--color-sky-rgb) / 72%);
+    outline-offset: 2px;
   }
 }
+
+.section-header:has(.filters-row) { position: sticky; top: 0; z-index: 5; padding-top: 0.5rem; padding-bottom: 0.5rem; background: rgb(255 255 255 / 92%); backdrop-filter: blur(10px); }
 
 // ── Appointments horizontal scroll ────────────────────────────────────────────
 .appointments-scroll {
@@ -247,6 +299,49 @@ ion-toolbar ion-button {
   gap: 0.75rem;
   padding: 0 1rem 0.25rem;
   margin-bottom: 1.25rem;
+}
+
+.appointments-empty {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  min-height: 5.75rem;
+  margin: 0 1rem 1.25rem;
+  padding: 1rem;
+  border: 1px dashed rgb(var(--color-green-rgb) / 34%);
+  border-radius: 1rem;
+  background: linear-gradient(110deg, var(--color-green-light), var(--color-sky-light));
+
+  &__icon {
+    display: grid;
+    flex: 0 0 2.75rem;
+    width: 2.75rem;
+    height: 2.75rem;
+    place-items: center;
+    border-radius: 0.875rem;
+    color: var(--color-green-shade);
+    background: rgb(255 255 255 / 72%);
+
+    ion-icon {
+      font-size: 1.35rem;
+    }
+  }
+
+  &__title {
+    margin: 0;
+    color: var(--color-text);
+    font-size: 0.9rem;
+    font-weight: 700;
+  }
+
+  &__text {
+    margin: 0.2rem 0 0;
+    max-width: 34rem;
+    color: var(--color-text-muted);
+    font-size: 0.75rem;
+    line-height: 1.45;
+    text-wrap: pretty;
+  }
 }
 
 .appt-card {
@@ -362,7 +457,7 @@ ion-toolbar ion-button {
   border-radius: 0.75rem;
   margin: 0 1rem;
   overflow: hidden;
-  margin-bottom: 5rem;
+  margin-bottom: 5.5rem;
   border: 1px solid var(--color-border);
 }
 
@@ -437,14 +532,78 @@ ion-toolbar ion-button {
 
 @media (max-width: 560px) {
   .stats-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.5rem;
+    padding: 0.75rem;
   }
 
   .quick-links-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.5rem;
+    padding-inline: 0.75rem;
+  }
+
+  .stat-card__content {
+    padding: 0.65rem 0.35rem;
+  }
+
+  .stat-icon {
+    width: 2.1rem;
+    height: 2.1rem;
+    margin-bottom: 0.35rem;
+  }
+
+  .stat-value {
+    font-size: 1.25rem;
+  }
+
+  .stat-label {
+    font-size: 0.66rem;
+    line-height: 1.25;
+  }
+
+  .quick-link-card {
+    min-height: 4.75rem;
+    padding: 0.7rem;
+
+    &__text {
+      display: none;
+    }
+
+    &__arrow {
+      display: none;
+    }
+  }
+
+  .section-header,
+  .appointments-scroll,
+  .appointments-list {
+    padding-inline: 0.75rem;
+  }
+
+  .appointments-empty,
+  .clients-list {
+    margin-inline: 0.75rem;
+  }
+
+  .filters-row {
+    align-items: stretch;
+    flex-direction: column;
+
+    .stage-filter-select {
+      width: 100%;
+      max-width: none;
+      min-height: 2.75rem;
+    }
   }
 
   .add-client-form__grid {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .quick-link-card {
+    transition: none;
   }
 }

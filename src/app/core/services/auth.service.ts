@@ -14,16 +14,32 @@ export class AuthService {
   private readonly router = inject(Router);
   private readonly baseUrl = `${environment.apiUrl}/auth`;
 
-  private readonly _token = signal<string | null>(
-    localStorage.getItem(TOKEN_KEY),
-  );
-  private readonly _currentUser = signal<IAuthUser | null>(
-    this._loadUserFromStorage(),
-  );
+  private readonly _token = signal<string | null>(null);
+  private readonly _currentUser = signal<IAuthUser | null>(null);
 
   readonly isAuthenticated = computed(() => !!this._token());
   readonly currentUser = this._currentUser.asReadonly();
   readonly token = this._token.asReadonly();
+
+  constructor() {
+    this._restoreSession();
+  }
+
+  hasValidSession(): boolean {
+    const token = this._token() ?? localStorage.getItem(TOKEN_KEY);
+    const user = token ? this._decodeToken(token) : null;
+
+    if (!token || !user) {
+      this.clearSession();
+      return false;
+    }
+
+    this._token.set(token);
+    this._currentUser.set(user);
+    localStorage.setItem(TOKEN_KEY, token);
+    localStorage.setItem(USER_KEY, JSON.stringify(user));
+    return true;
+  }
 
   login(email: string, password: string): Observable<ILoginResponse> {
     return this.http
@@ -38,23 +54,25 @@ export class AuthService {
     email: string,
     password: string,
   ): Observable<ILoginResponse> {
-    return this.http
-      .post<ILoginResponse>(`${this.baseUrl}/register-company`, {
-        companyName,
-        adminFirstName,
-        adminLastName,
-        email,
-        password,
-      })
-      .pipe(tap((res) => this._persist(res)));
+    return this.http.post<ILoginResponse>(`${this.baseUrl}/register-company`, {
+      companyName,
+      firstName: adminFirstName,
+      lastName: adminLastName,
+      email,
+      password,
+    });
   }
 
   logout(): void {
+    this.clearSession();
+    void this.router.navigate(['/login']);
+  }
+
+  clearSession(): void {
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(USER_KEY);
     this._token.set(null);
     this._currentUser.set(null);
-    void this.router.navigate(['/login']);
   }
 
   updateCurrentUser(userPatch: Partial<IAuthUser>): void {
@@ -72,35 +90,60 @@ export class AuthService {
   }
 
   private _persist(res: ILoginResponse): void {
-    localStorage.setItem(TOKEN_KEY, res.accessToken);
-    this._token.set(res.accessToken);
     const user = this._decodeToken(res.accessToken);
-    if (user) {
-      localStorage.setItem(USER_KEY, JSON.stringify(user));
-      this._currentUser.set(user);
+    if (!user) {
+      this.clearSession();
+      return;
     }
+
+    localStorage.setItem(TOKEN_KEY, res.accessToken);
+    localStorage.setItem(USER_KEY, JSON.stringify(user));
+    this._token.set(res.accessToken);
+    this._currentUser.set(user);
   }
 
   private _decodeToken(token: string): IAuthUser | null {
     try {
-      const payload = JSON.parse(atob(token.split('.')[1])) as {
+      const parts = token.split('.');
+      if (parts.length !== 3 || !parts.every(Boolean)) return null;
+
+      const base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+      const padded = base64.padEnd(Math.ceil(base64.length / 4) * 4, '=');
+      const payload = JSON.parse(atob(padded)) as {
         sub?: string;
         email?: string;
+        companyName?: string;
+        exp?: number;
       };
-      if (!payload.sub) return null;
-      return { userId: payload.sub, email: payload.email ?? '' };
+      if (
+        !payload.sub ||
+        typeof payload.exp !== 'number' ||
+        payload.exp <= Math.floor(Date.now() / 1000)
+      ) {
+        return null;
+      }
+      return {
+        userId: payload.sub,
+        email: payload.email ?? '',
+        companyName: payload.companyName,
+      };
     } catch {
       return null;
     }
   }
 
-  private _loadUserFromStorage(): IAuthUser | null {
-    try {
-      const raw = localStorage.getItem(USER_KEY);
-      return raw ? (JSON.parse(raw) as IAuthUser) : null;
-    } catch {
-      return null;
+  private _restoreSession(): void {
+    const token = localStorage.getItem(TOKEN_KEY);
+    const user = token ? this._decodeToken(token) : null;
+
+    if (!token || !user) {
+      this.clearSession();
+      return;
     }
+
+    this._token.set(token);
+    this._currentUser.set(user);
+    localStorage.setItem(USER_KEY, JSON.stringify(user));
   }
 }
 

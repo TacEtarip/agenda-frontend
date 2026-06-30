@@ -9,6 +9,4 @@ export interface IClientAppointment {
   startTime: string;
   endTime: string;
   status: AppointmentStatus;
-  paymentId?: string;
-  paymentUrl?: string;
 }

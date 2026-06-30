@@ -1,0 +1,67 @@
+<ion-modal [isOpen]="opened()" (didPresent)="reset()" (didDismiss)="closed.emit()">
+  <ng-template>
+    <ion-header>
+      <ion-toolbar>
+        <ion-title>Crear cobro</ion-title>
+        <ion-buttons slot="end">
+          <ion-button (click)="closed.emit()" aria-label="Cerrar cobro">
+            <ion-icon slot="icon-only" name="close-outline" aria-hidden="true" />
+          </ion-button>
+        </ion-buttons>
+      </ion-toolbar>
+    </ion-header>
+    <ion-content class="ion-padding">
+      <div class="payment-summary">
+        <ion-icon name="cash-outline" aria-hidden="true" />
+        <div><strong>{{ concept() }}</strong><span>{{ clientName() }}</span></div>
+      </div>
+
+      @if (!generatedPayment()) {
+        <ion-segment [value]="mode()" (ionChange)="changeMode($event)" aria-label="Tipo de cobro">
+          <ion-segment-button value="LINK"><ion-label>Generar enlace</ion-label></ion-segment-button>
+          <ion-segment-button value="MANUAL"><ion-label>Registrar pago</ion-label></ion-segment-button>
+        </ion-segment>
+
+        <ion-item>
+          <ion-input label="Monto (PEN)" labelPlacement="stacked" inputmode="decimal" [value]="amount()" (ionInput)="setText('amount', $event)" />
+        </ion-item>
+        <ion-item>
+          <ion-textarea label="Descripción" labelPlacement="stacked" autoGrow="true" [value]="description()" (ionInput)="setText('description', $event)" />
+        </ion-item>
+
+        @if (mode() === 'MANUAL') {
+          <ion-item>
+            <ion-select label="Método" labelPlacement="stacked" [value]="method()" (ionChange)="setMethod($event)">
+              @for (option of methods; track option) { <ion-select-option [value]="option">{{ methodLabel(option) }}</ion-select-option> }
+            </ion-select>
+          </ion-item>
+          <ion-item>
+            <ion-input type="date" label="Fecha del pago" labelPlacement="stacked" [value]="paidAt()" (ionInput)="setText('paidAt', $event)" />
+          </ion-item>
+          <ion-item>
+            <ion-input label="Referencia (opcional)" labelPlacement="stacked" [value]="reference()" (ionInput)="setText('reference', $event)" />
+          </ion-item>
+        }
+
+        @if (error()) { <ion-note color="danger" role="alert">{{ error() }}</ion-note> }
+        <ion-button expand="block" class="submit-payment" (click)="submit()" [disabled]="submitting()">
+          <ion-icon slot="start" [name]="mode() === 'LINK' ? 'link-outline' : 'cash-outline'" aria-hidden="true" />
+          {{ submitting() ? 'Procesando…' : mode() === 'LINK' ? 'Generar enlace' : 'Registrar como pagado' }}
+        </ion-button>
+      } @else {
+        <div class="payment-result" role="status">
+          <ion-icon name="link-outline" aria-hidden="true" />
+          <h2>Enlace generado</h2>
+          <p>{{ generatedPayment()!.amount | formatPrice }} · {{ generatedPayment()!.description }}</p>
+          <a [href]="generatedPayment()!.checkoutUrl" target="_blank" rel="noopener noreferrer">{{ generatedPayment()!.checkoutUrl }}</a>
+          <ion-button expand="block" fill="outline" (click)="copyLink()">
+            <ion-icon slot="start" name="copy-outline" aria-hidden="true" />{{ copied() ? 'Copiado' : 'Copiar enlace' }}
+          </ion-button>
+          <ion-button expand="block" color="success" (click)="sendWhatsApp()" [disabled]="!clientPhone()">
+            <ion-icon slot="start" name="logo-whatsapp" aria-hidden="true" />Enviar por WhatsApp
+          </ion-button>
+        </div>
+      }
+    </ion-content>
+  </ng-template>
+</ion-modal>

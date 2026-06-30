@@ -6,18 +6,19 @@
     <ion-title>
       <div class="toolbar-title">
         <span class="toolbar-title__greeting">WhatsApp</span>
-        <span class="toolbar-title__name">Plantillas por etapa</span>
+        <h1 class="toolbar-title__name">Plantillas por etapa</h1>
       </div>
     </ion-title>
   </ion-toolbar>
 </ion-header>
 
 <ion-content class="message-templates-content">
-  <div class="stats-grid">
+  <main class="message-templates-main">
+  <div class="stats-grid" aria-label="Resumen de plantillas">
     <ion-card class="stat-card">
       <ion-card-content class="stat-card__content">
         <div class="stat-icon stat-icon--green">
-          <ion-icon name="chatbubbles-outline"></ion-icon>
+          <ion-icon name="chatbubbles-outline" aria-hidden="true"></ion-icon>
         </div>
         <p class="stat-value">{{ totalTemplatesCount() }}</p>
         <p class="stat-label">Total plantillas</p>
@@ -27,7 +28,7 @@
     <ion-card class="stat-card">
       <ion-card-content class="stat-card__content">
         <div class="stat-icon stat-icon--amber">
-          <ion-icon name="checkmark-circle-outline"></ion-icon>
+          <ion-icon name="checkmark-circle-outline" aria-hidden="true"></ion-icon>
         </div>
         <p class="stat-value">{{ stagesWithTemplatesCount() }}</p>
         <p class="stat-label">Etapas cubiertas</p>
@@ -37,7 +38,7 @@
     <ion-card class="stat-card">
       <ion-card-content class="stat-card__content">
         <div class="stat-icon stat-icon--indigo">
-          <ion-icon name="sparkles-outline"></ion-icon>
+          <ion-icon name="sparkles-outline" aria-hidden="true"></ion-icon>
         </div>
         <p class="stat-value">{{ coveragePercentage() }}%</p>
         <p class="stat-label">Cobertura CRM</p>
@@ -46,11 +47,10 @@
   </div>
 
   <div class="page-intro">
-    <ion-icon name="chatbubbles-outline"></ion-icon>
+    <ion-icon name="chatbubbles-outline" aria-hidden="true"></ion-icon>
     <p>
-      Administra varias plantillas por etapa. Usa
-      <code [innerText]="'{{name}}'"></code>, <code [innerText]="'{{date}}'"></code> y <code [innerText]="'{{paymentUrl}}'"></code>
-      para personalizar el mensaje con la información del cliente.
+      Administra varias plantillas por etapa. Los datos del cliente, de la cita y del pago
+      se completarán automáticamente cuando se envíe cada mensaje.
     </p>
   </div>
 
@@ -80,15 +80,15 @@
               @for (template of section.templates; track template.id) {
                 <article class="template-entry">
                   <div class="template-entry__actions">
-                    <ion-button fill="clear" size="small" color="primary" (click)="openEditTemplateModal(template)">
-                      <ion-icon slot="icon-only" name="create-outline"></ion-icon>
+                    <ion-button fill="clear" size="small" color="primary" (click)="openEditTemplateModal(template)" aria-label="Editar plantilla">
+                      <ion-icon slot="icon-only" name="create-outline" aria-hidden="true"></ion-icon>
                     </ion-button>
-                    <ion-button fill="clear" size="small" color="danger" (click)="deleteTemplate(template)">
-                      <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
+                    <ion-button fill="clear" size="small" color="danger" (click)="deleteTemplate(template)" aria-label="Eliminar plantilla">
+                      <ion-icon slot="icon-only" name="trash-outline" aria-hidden="true"></ion-icon>
                     </ion-button>
                   </div>
 
-                  <p class="template-message">{{ template.messageBody }}</p>
+                  <p class="template-message">{{ humanizeMessage(template.messageBody) }}</p>
                   <p class="template-updated">Actualizado {{ template.updatedAt | formatDate }}</p>
                 </article>
               }
@@ -108,6 +108,7 @@
       </ion-card>
     }
   </div>
+  </main>
 </ion-content>
 
 <ion-modal
@@ -148,20 +149,25 @@
                   {{ composerStageMeta().label }}
                 </ion-chip>
 
-                <div class="composer-variables-actions">
-                  <ion-button size="small" fill="clear" (click)="insertVariable('{{name}}')" title="Insertar nombre">
-                    <code [innerText]="'{{name}}'"></code>
-                  </ion-button>
-                  <ion-button size="small" fill="clear" (click)="insertVariable('{{date}}')" title="Insertar fecha">
-                    <code [innerText]="'{{date}}'"></code>
-                  </ion-button>
-                  <ion-button size="small" fill="clear" (click)="insertVariable('{{paymentUrl}}')" title="Insertar pago">
-                    <code [innerText]="'{{url}}'"></code>
-                  </ion-button>
-                </div>
               </div>
 
+              <section class="automatic-data" aria-labelledby="automatic-data-title">
+                <div>
+                  <h3 id="automatic-data-title">Datos automáticos</h3>
+                  <p>Selecciona un dato para insertarlo donde está el cursor. Se completará al enviar.</p>
+                </div>
+                <div class="composer-variables-actions">
+                  @for (variable of variables(); track variable.key) {
+                    <ion-button type="button" size="small" fill="outline" (click)="insertVariable(variable.key)">
+                      <ion-icon slot="start" name="add-outline"></ion-icon>
+                      {{ variable.label }}
+                    </ion-button>
+                  }
+                </div>
+              </section>
+
               <ion-textarea
+                #messageTextarea
                 formControlName="messageBody"
                 label="Mensaje"
                 labelPlacement="floating"
@@ -170,6 +176,13 @@
                 rows="7"
                 class="composer-form__field">
               </ion-textarea>
+
+              <div class="composer-meta">
+                <span>{{ characterCount() }}/700 caracteres</span>
+                @if (usedVariables().length > 0) {
+                  <span>{{ usedVariables().length }} {{ usedVariables().length === 1 ? 'dato automático' : 'datos automáticos' }}</span>
+                }
+              </div>
 
               @if (
                 composerForm.controls.messageBody.touched &&
@@ -185,13 +198,39 @@
                 <p class="form-feedback form-feedback--error">
                   La plantilla no puede superar los 700 caracteres.
                 </p>
+              } @else if (validation().malformedTokens.length > 0) {
+                <p class="form-feedback form-feedback--error">
+                  Revisa la sintaxis de los datos automáticos: {{ validation().malformedTokens.join(', ') }}.
+                </p>
+              } @else if (validation().unknownVariables.length > 0) {
+                <p class="form-feedback form-feedback--error">
+                  Datos automáticos desconocidos: {{ validation().unknownVariables.join(', ') }}.
+                </p>
               }
+
+              <section class="message-preview" aria-live="polite">
+                <p class="message-preview__eyebrow">Así lo verá el cliente</p>
+                @if (preview()?.message && validation().valid) {
+                  <p class="message-preview__message">{{ preview()!.message }}</p>
+                } @else if (composerBody().trim()) {
+                  <p class="message-preview__placeholder">Corrige el mensaje para ver una vista previa.</p>
+                } @else {
+                  <p class="message-preview__placeholder">Escribe un mensaje para generar la vista previa.</p>
+                }
+                @if (usedVariables().length > 0) {
+                  <div class="message-preview__variables">
+                    @for (variable of usedVariables(); track variable.key) {
+                      <ion-chip>{{ variable.label }}</ion-chip>
+                    }
+                  </div>
+                }
+              </section>
 
               <div class="app-modal-actions composer-form__actions">
                 <ion-button fill="outline" color="medium" type="button" (click)="closeComposerModal()">
                   Cancelar
                 </ion-button>
-                <ion-button type="submit">
+                <ion-button type="submit" [disabled]="composerForm.invalid || !validation().valid">
                   <ion-icon slot="start" [name]="isEditing() ? 'create-outline' : 'add-outline'"></ion-icon>
                   {{ isEditing() ? 'Guardar cambios' : 'Guardar plantilla' }}
                 </ion-button>

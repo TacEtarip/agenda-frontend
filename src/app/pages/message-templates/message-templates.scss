@@ -45,6 +45,9 @@ ion-toolbar ion-button {
   --background: linear-gradient(180deg, var(--color-frost-light) 0%, var(--color-surface-alt) 42%, var(--color-surface) 100%);
 }
 
+.message-templates-main { width: min(100%, 72rem); margin: 0 auto; }
+.toolbar-title__name { margin: 0; }
+
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -269,22 +272,49 @@ ion-toolbar ion-button {
   gap: 12px;
   margin-bottom: 8px;
 
-  .composer-variables-actions {
-    display: flex;
-    gap: 4px;
+}
 
-    ion-button {
-      --padding-start: 4px;
-      --padding-end: 4px;
-      font-size: 0.8rem;
-      code {
-        padding: 4px 6px;
-        background: var(--ion-color-light);
-        border-radius: 4px;
-        color: var(--ion-color-dark);
-      }
-    }
-  }
+.automatic-data {
+  margin-top: 0.85rem;
+  padding: 0.85rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.9rem;
+  background: var(--color-frost-light);
+
+  h3 { margin: 0; font-size: 0.9rem; color: var(--color-text); }
+  p { margin: 0.2rem 0 0; font-size: 0.75rem; color: var(--color-text-muted); }
+}
+
+.composer-variables-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.65rem;
+
+  ion-button { margin: 0; font-size: 0.75rem; }
+}
+
+.composer-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-top: 0.35rem;
+  font-size: 0.72rem;
+  color: var(--color-text-muted);
+}
+
+.message-preview {
+  margin-top: 0.9rem;
+  padding: 0.95rem;
+  border-radius: 0.95rem;
+  background: rgb(var(--color-green-rgb) / 8%);
+  border: 1px solid rgb(var(--color-green-rgb) / 20%);
+
+  &__eyebrow { margin: 0; font-size: 0.72rem; font-weight: 800; color: var(--color-green-shade); text-transform: uppercase; letter-spacing: 0.05em; }
+  &__message, &__placeholder { margin: 0.55rem 0 0; font-size: 0.84rem; line-height: 1.55; white-space: pre-wrap; }
+  &__placeholder { color: var(--color-text-muted); }
+  &__variables { display: flex; flex-wrap: wrap; gap: 0.25rem; margin-top: 0.65rem; }
+  ion-chip { margin: 0; min-height: 1.6rem; font-size: 0.7rem; }
 }
 
 .composer-form {
@@ -322,4 +352,3 @@ ion-toolbar ion-button {
     grid-template-columns: 1fr;
   }
 }
-

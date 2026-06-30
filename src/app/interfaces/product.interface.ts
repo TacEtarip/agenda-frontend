@@ -1,3 +1,5 @@
+import { ProductType } from '../enums/product-type.enum';
+
 export interface IProduct {
   id: string;
   userId: string;
@@ -5,4 +7,5 @@ export interface IProduct {
   createdAt: string;
   description?: string;
   price?: number;
+  type: ProductType;
 }

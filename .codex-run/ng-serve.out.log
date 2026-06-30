@@ -1,0 +1,66 @@
+[33m>[39m Building...
+[32m√[39m Building...
+[1mInitial chunk files[22m[2m | [22m[1mNames[22m            [2m | [22m [1mRaw size[22m
+[32mstyles.css[39m         [2m | [22m[2mstyles[22m           [2m | [22m [36m58.24 kB[39m[2m | [22m
+[32mmain.js[39m            [2m | [22m[2mmain[22m             [2m | [22m  [36m4.89 kB[39m[2m | [22m
+[32mchunk-XNGXO4Q4.js[39m  [2m | [22m[2m-[22m                [2m | [22m  [36m4.22 kB[39m[2m | [22m
+
+[1m [22m                  [2m | [22m[1mInitial total[22m    [2m | [22m [1m67.35 kB[22m
+
+[1mLazy chunk files[22m   [2m | [22m[1mNames[22m            [2m | [22m [1mRaw size[22m
+[32mchunk-VSVATRGR.js[39m  [2m | [22m[2mclient-detail[22m    [2m | [22m[36m179.32 kB[39m[2m | [22m
+[32mchunk-PE36VT4C.js[39m  [2m | [22m[2mdashboard[22m        [2m | [22m [36m67.65 kB[39m[2m | [22m
+[32mchunk-RT5D5SK5.js[39m  [2m | [22m[2msettings[22m         [2m | [22m [36m54.15 kB[39m[2m | [22m
+[32mchunk-PJJS6VRM.js[39m  [2m | [22m[2mproducts[22m         [2m | [22m [36m52.10 kB[39m[2m | [22m
+[32mchunk-S2QBJOLI.js[39m  [2m | [22m[2mmessage-templates[22m[2m | [22m [36m48.68 kB[39m[2m | [22m
+[32mchunk-EP4NLOIG.js[39m  [2m | [22m[2mlogin[22m            [2m | [22m [36m32.52 kB[39m[2m | [22m
+[32mchunk-RYEQV3EV.js[39m  [2m | [22m[2mpayments[22m         [2m | [22m [36m20.44 kB[39m[2m | [22m
+[32mchunk-WSUNO2CG.js[39m  [2m | [22m[2m-[22m                [2m | [22m  [36m9.27 kB[39m[2m | [22m
+[32mchunk-UXZKXJP3.js[39m  [2m | [22m[2m-[22m                [2m | [22m  [36m4.68 kB[39m[2m | [22m
+[32mchunk-K5WHEG2J.js[39m  [2m | [22m[2m-[22m                [2m | [22m  [36m3.63 kB[39m[2m | [22m
+[32mchunk-BLZMWFL5.js[39m  [2m | [22m[2m-[22m                [2m | [22m  [36m3.20 kB[39m[2m | [22m
+[32mchunk-N4NXXUXU.js[39m  [2m | [22m[2m-[22m                [2m | [22m  [36m1.17 kB[39m[2m | [22m
+[32mchunk-OASAYBTU.js[39m  [2m | [22m[2m-[22m                [2m | [22m[36m951 bytes[39m[2m | [22m
+[32mchunk-SXHHW6DH.js[39m  [2m | [22m[2m-[22m                [2m | [22m[36m850 bytes[39m[2m | [22m
+[32mchunk-VEWRHM5D.js[39m  [2m | [22m[2m-[22m                [2m | [22m[36m565 bytes[39m[2m | [22m
+
+Application bundle generation complete. [2.460 seconds] - 2026-06-26T09:17:52.731Z
+
+Watch mode enabled. Watching for file changes...
+NOTE: Raw file sizes do not reflect development server per-request transformations.
+[2m4:17:53 a. m.[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m Re-optimizing dependencies because lockfile has changed
+  [32m➜[39m  [1mLocal[22m:   [36mhttp://127.0.0.1:[1m4200[22m/[39m
+[2m[32m  ➜[39m[22m[2m  press [22m[1mh + enter[22m[2m to show help[22m
+[33m>[39m Changes detected. Rebuilding...
+[32m√[39m Changes detected. Rebuilding...
+[1mInitial chunk files[22m[2m | [22m[1mNames[22m[2m | [22m[1mRaw size[22m
+[32mmain.js[39m            [2m | [22m[2mmain[22m [2m | [22m [36m4.89 kB[39m[2m | [22m
+
+[1mLazy chunk files[22m   [2m | [22m[1mNames[22m[2m | [22m[1mRaw size[22m
+[32mchunk-6HW3K3YM.js[39m  [2m | [22m[2mlogin[22m[2m | [22m[36m33.32 kB[39m[2m | [22m
+
+Application bundle generation complete. [0.784 seconds] - 2026-06-26T09:20:57.807Z
+
+Page reload sent to client(s).
+[33m>[39m Changes detected. Rebuilding...
+[32m√[39m Changes detected. Rebuilding...
+[1mInitial chunk files[22m[2m | [22m[1mNames[22m[2m | [22m[1mRaw size[22m
+[32mmain.js[39m            [2m | [22m[2mmain[22m [2m | [22m [36m4.89 kB[39m[2m | [22m
+
+[1mLazy chunk files[22m   [2m | [22m[1mNames[22m[2m | [22m[1mRaw size[22m
+[32mchunk-DZMCJP7Z.js[39m  [2m | [22m[2mlogin[22m[2m | [22m[36m33.36 kB[39m[2m | [22m
+
+Application bundle generation complete. [0.236 seconds] - 2026-06-26T09:23:03.664Z
+
+Component update sent to client(s).
+[33m>[39m Changes detected. Rebuilding...
+[32m√[39m Changes detected. Rebuilding...
+[1mInitial chunk files[22m[2m | [22m[1mNames[22m[2m | [22m[1mRaw size[22m
+[32mmain.js[39m            [2m | [22m[2mmain[22m [2m | [22m [36m4.89 kB[39m[2m | [22m
+
+[1mLazy chunk files[22m   [2m | [22m[1mNames[22m[2m | [22m[1mRaw size[22m
+[32mchunk-36RNQADZ.js[39m  [2m | [22m[2mlogin[22m[2m | [22m[36m33.40 kB[39m[2m | [22m
+
+Application bundle generation complete. [0.246 seconds] - 2026-06-26T09:23:56.511Z
+
+Component update sent to client(s).

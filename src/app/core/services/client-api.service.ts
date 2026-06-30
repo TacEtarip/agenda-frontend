@@ -32,9 +32,9 @@ export class ClientApiService {
   private readonly http = inject(HttpClient);
   private readonly url = `${environment.apiUrl}/clients`;
 
-  getAllByUser(userId: string): Observable<IClient[]> {
+  getAll(): Observable<IClient[]> {
     return this.http
-      .get<IClientApiResponse[]>(`${this.url}/user/${userId}`)
+      .get<IClientApiResponse[]>(this.url)
       .pipe(map((list) => list.map((c, i) => mapApiClientToIClient(c, i))));
   }
 

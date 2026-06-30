@@ -48,6 +48,20 @@ ion-toolbar ion-button {
     linear-gradient(180deg, var(--color-frost-light) 0%, var(--color-surface-alt) 40%, var(--color-surface) 100%);
 }
 
+.products-main {
+  width: min(100%, 72rem);
+  margin: 0 auto;
+  padding-bottom: max(1rem, env(safe-area-inset-bottom));
+}
+
+.toolbar-title__name { margin: 0; }
+
+.empty-state__hint {
+  margin: 0.3rem 0 0;
+  font-size: 0.76rem;
+  color: var(--color-text-muted);
+}
+
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));

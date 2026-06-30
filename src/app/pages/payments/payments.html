@@ -1,81 +1,88 @@
 <ion-header>
   <ion-toolbar>
-    <ion-buttons slot="start">
-      <ion-back-button defaultHref="/dashboard" text="Atrás"></ion-back-button>
-    </ion-buttons>
-    <ion-title>
-      <div class="toolbar-title">
-        <span class="toolbar-title__name">Pagos</span>
-      </div>
-    </ion-title>
-  </ion-toolbar>
-  <ion-toolbar>
-    <ion-segment [value]="viewSegment()" (ionChange)="onSegmentChange($event)" mode="ios">
-      <ion-segment-button value="PENDING">
-        <ion-label>Pendientes</ion-label>
-      </ion-segment-button>
-      <ion-segment-button value="COMPLETED">
-        <ion-label>Completados</ion-label>
-      </ion-segment-button>
-    </ion-segment>
+    <ion-buttons slot="start"><ion-back-button defaultHref="/dashboard" text="Atrás" /></ion-buttons>
+    <ion-title><span class="page-eyebrow">FINANZAS</span><h1>Pagos</h1></ion-title>
   </ion-toolbar>
 </ion-header>
 
 <ion-content class="payments-content">
-  <div class="list-container">
-    @if (viewSegment() === 'PENDING') {
-      @if (pendingPayments().length > 0) {
-        @for (payment of pendingPayments(); track payment.id) {
-          <ion-card class="payment-card">
-            <ion-card-content class="payment-card__content">
-              <div class="payment-card__header">
-                <div class="payment-card__info">
-                  <h2>{{ payment.clientName }}</h2>
-                  <p>{{ payment.title }} - {{ payment.date }}</p>
-                </div>
-                <ion-chip color="warning">Pendiente</ion-chip>
-              </div>
-              <div class="payment-card__actions">
-                <ion-button fill="clear" size="small" (click)="resendPaymentLink(payment)" color="primary" [disabled]="!payment.clientPhone || !payment.paymentUrl">
-                  <ion-icon slot="start" name="share-social-outline"></ion-icon>
-                  Reenviar link
-                </ion-button>
-              </div>
-            </ion-card-content>
-          </ion-card>
-        }
+  <main class="payments-main">
+    <section class="stats-grid" aria-label="Resumen de pagos">
+      <ion-card><ion-card-content><ion-icon name="time-outline" aria-hidden="true" /><div><p class="stat-label">Vista actual</p><p class="stat-value">{{ total() }}</p></div></ion-card-content></ion-card>
+      <ion-card><ion-card-content><ion-icon name="cash-outline" aria-hidden="true" /><div><p class="stat-label">Estado</p><p class="stat-value stat-value--text">{{ viewSegment() === paymentStatus.PENDING ? 'Pendientes' : 'Pagados' }}</p></div></ion-card-content></ion-card>
+    </section>
+
+    <section class="page-intro" aria-labelledby="payments-heading">
+      <div><span class="section-kicker">COBROS</span><h2 id="payments-heading">Historial de pagos</h2><p>Consulta cobros de citas, productos y servicios sin mezclar su estado con la agenda.</p></div>
+    </section>
+
+    <section class="payments-panel" aria-label="Listado de pagos">
+      <ion-segment [value]="viewSegment()" (ionChange)="onSegmentChange($event)" mode="ios" aria-label="Estado del pago">
+        <ion-segment-button [value]="paymentStatus.PENDING"><ion-label>Pendientes</ion-label></ion-segment-button>
+        <ion-segment-button [value]="paymentStatus.PAID"><ion-label>Pagados</ion-label></ion-segment-button>
+      </ion-segment>
+
+      <div class="payment-filters" aria-label="Filtros de pagos">
+        <ion-select label="Cliente" labelPlacement="stacked" interface="popover" [value]="clientFilter()" (ionChange)="setFilter('client', $event)">
+          <ion-select-option value="">Todos</ion-select-option>
+          @for (client of clients().values(); track client.id) {
+            <ion-select-option [value]="client.id">{{ client.firstName }} {{ client.lastName }}</ion-select-option>
+          }
+        </ion-select>
+        <ion-select label="Concepto" labelPlacement="stacked" interface="popover" [value]="sourceFilter()" (ionChange)="setFilter('source', $event)">
+          <ion-select-option value="">Todos</ion-select-option>
+          <ion-select-option [value]="sourceType.APPOINTMENT">Citas</ion-select-option>
+          <ion-select-option [value]="sourceType.CLIENT_PRODUCT">Productos y servicios</ion-select-option>
+        </ion-select>
+        <ion-input type="date" label="Desde" labelPlacement="stacked" [value]="fromFilter()" (ionChange)="setFilter('from', $event)" />
+        <ion-input type="date" label="Hasta" labelPlacement="stacked" [value]="toFilter()" (ionChange)="setFilter('to', $event)" />
+        <ion-button fill="clear" size="small" (click)="clearFilters()">Limpiar</ion-button>
+      </div>
+
+      @if (loading()) {
+        <div class="payments-feedback" role="status">Cargando pagos…</div>
+      } @else if (loadError()) {
+        <div class="payments-feedback payments-feedback--error" role="alert">{{ loadError() }}</div>
       } @else {
-        <div class="empty-state">
-          <ion-icon name="checkmark-circle-outline" color="success"></ion-icon>
-          <p>No tienes pagos pendientes.</p>
-        </div>
-      }
-    } @else {
-      @if (completedPayments().length > 0) {
-        @for (payment of completedPayments(); track payment.id) {
+        @for (payment of payments(); track payment.id) {
           <ion-card class="payment-card">
             <ion-card-content class="payment-card__content">
               <div class="payment-card__header">
-                <div class="payment-card__info">
-                  <h2>{{ payment.clientName }}</h2>
-                  <p>{{ payment.title }} - {{ payment.date }}</p>
+                <div class="payment-card__identity">
+                  <div class="payment-card__icon" [class.payment-card__icon--green]="payment.status === paymentStatus.PAID"><ion-icon [name]="payment.status === paymentStatus.PAID ? 'checkmark-circle-outline' : 'time-outline'" aria-hidden="true" /></div>
+                  <div class="payment-card__info"><h3>{{ clientName(payment) }}</h3><p>{{ payment.description }}</p></div>
                 </div>
-                <ion-chip color="success">Pagado</ion-chip>
+                <ion-chip [color]="payment.status === paymentStatus.PAID ? 'success' : 'warning'">{{ payment.status === paymentStatus.PAID ? 'Pagado' : 'Pendiente' }}</ion-chip>
               </div>
-              @if (payment.paymentId) {
-                <div class="payment-card__meta">
-                  <small>Ref: {{ payment.paymentId }}</small>
+              <div class="payment-card__details">
+                <strong>{{ payment.amount | formatPrice }}</strong>
+                <span>{{ sourceLabel(payment) }}</span>
+                <span>{{ methodLabel(payment.method) }}</span>
+                <span>{{ (payment.paidAt || payment.createdAt) | formatDate }}</span>
+                @if (payment.reference) { <span class="payment-reference">Ref. {{ payment.reference }}</span> }
+              </div>
+              @if (payment.status === paymentStatus.PENDING) {
+                <div class="payment-card__actions">
+                  <ion-button fill="outline" size="small" (click)="copyLink(payment)" [disabled]="!payment.checkoutUrl"><ion-icon slot="start" name="copy-outline" aria-hidden="true" />Copiar</ion-button>
+                  <ion-button fill="outline" size="small" color="success" (click)="sendLink(payment)" [disabled]="!payment.checkoutUrl"><ion-icon slot="start" name="logo-whatsapp" aria-hidden="true" />WhatsApp</ion-button>
+                  <ion-button fill="clear" size="small" (click)="regenerate(payment)"><ion-icon slot="start" name="refresh-outline" aria-hidden="true" />Regenerar</ion-button>
+                  <ion-button fill="clear" size="small" color="danger" (click)="cancel(payment)"><ion-icon slot="start" name="trash-outline" aria-hidden="true" />Cancelar</ion-button>
                 </div>
               }
             </ion-card-content>
           </ion-card>
+        } @empty {
+          <div class="payments-feedback" role="status">No hay pagos en este estado.</div>
         }
-      } @else {
-        <div class="empty-state">
-          <ion-icon name="alert-circle-outline" color="medium"></ion-icon>
-          <p>Aún no hay pagos completados.</p>
-        </div>
+
+        @if (totalPages() > 1) {
+          <nav class="payments-pagination" aria-label="Paginación de pagos">
+            <ion-button fill="clear" (click)="previousPage()" [disabled]="page() === 1">Anterior</ion-button>
+            <span>Página {{ page() }} de {{ totalPages() }}</span>
+            <ion-button fill="clear" (click)="nextPage()" [disabled]="page() === totalPages()">Siguiente</ion-button>
+          </nav>
+        }
       }
-    }
-  </div>
+    </section>
+  </main>
 </ion-content>
