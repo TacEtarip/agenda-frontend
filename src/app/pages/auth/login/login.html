@@ -43,6 +43,16 @@
               <ion-input formControlName="lastName" label="Apellido" labelPlacement="floating" fill="outline"
                 shape="round" class="custom-input"></ion-input>
             </div>
+            <div class="form-field">
+              <ion-input formControlName="phone" type="tel" inputmode="tel" autocomplete="tel"
+                label="Número de celular" labelPlacement="floating" fill="outline"
+                shape="round" class="custom-input"></ion-input>
+              @if (form.controls.phone.touched && form.controls.phone.hasError('required')) {
+                <p class="field-validation-msg">El número de celular es obligatorio.</p>
+              } @else if (form.controls.phone.touched && form.controls.phone.hasError('pattern')) {
+                <p class="field-validation-msg">Ingresa un número de celular válido.</p>
+              }
+            </div>
             }
 
             <div class="form-field">

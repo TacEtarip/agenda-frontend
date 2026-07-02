@@ -1,6 +1,6 @@
 import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ClientStage } from '../../enums/client-stage.enum';
 import { ClientProductStatus } from '../../enums/client-product-status.enum';
 import { IAttachment } from '../../interfaces/attachment.interface';
@@ -53,8 +53,6 @@ import {
   IonCardTitle,
   IonDatetime,
   IonDatetimeButton,
-  IonFab,
-  IonFabButton,
   IonNote,
   IonSegment,
   IonSegmentButton,
@@ -86,8 +84,6 @@ import { IPaymentModalTarget } from './interfaces/payment-modal-target.interface
     IonCardTitle,
     IonDatetime,
     IonDatetimeButton,
-    IonFab,
-    IonFabButton,
     IonSegment,
     IonSegmentButton,
     IonNote,
@@ -96,6 +92,7 @@ import { IPaymentModalTarget } from './interfaces/payment-modal-target.interface
     IonTextarea,
     IonItem,
     IonLabel,
+    RouterLink,
     AppointmentStatusColorPipe,
     AppointmentStatusLabelPipe,
     FormatDatePipe,
@@ -213,23 +210,6 @@ export class ClientDetailPage {
       this.currentClientProducts().map((offer) => offer.productId),
     );
     return this.products().filter((product) => !linkedProductIds.has(product.id));
-  });
-
-  readonly canShowPrimaryFab = computed(() => {
-    const segment = this.activeSegment();
-    return (
-      segment === ClientDetailSegment.NOTES ||
-      segment === ClientDetailSegment.APPOINTMENTS ||
-      segment === ClientDetailSegment.ATTACHMENTS
-    );
-  });
-
-  readonly primaryFabLabel = computed(() => {
-    const segment = this.activeSegment();
-    if (segment === ClientDetailSegment.NOTES) return 'Agregar nota';
-    if (segment === ClientDetailSegment.APPOINTMENTS) return 'Programar cita';
-    if (segment === ClientDetailSegment.ATTACHMENTS) return 'Agregar archivo';
-    return 'Agregar';
   });
 
   readonly messageTemplates = this.messageTemplateStore.templates;
@@ -391,23 +371,6 @@ export class ClientDetailPage {
           this.clientEditDraftError.set('No se pudo actualizar el cliente.');
         },
       });
-  }
-
-  openPrimaryActionModal() {
-    const segment = this.activeSegment();
-    if (segment === ClientDetailSegment.NOTES) {
-      this.openCreateNoteModal();
-      return;
-    }
-
-    if (segment === ClientDetailSegment.APPOINTMENTS) {
-      this.openCreateAppointmentModal();
-      return;
-    }
-
-    if (segment === ClientDetailSegment.ATTACHMENTS) {
-      this.openCreateAttachmentModal();
-    }
   }
 
   openCreateNoteModal() {
@@ -975,16 +938,16 @@ export class ClientDetailPage {
       });
   }
 
-  async openEditTemplateAlert(template: IMessageTemplate | null) {
-    const stage = template?.stage ?? this.client().stage;
+  async openEditTemplateAlert(template: IMessageTemplate) {
+    const stage = template.stage;
     const alert = await this.alertCtrl.create({
-      header: `${template ? 'Editar' : 'Crear'} plantilla — ${getStageLabel(stage)}`,
+      header: `Editar plantilla — ${getStageLabel(stage)}`,
       inputs: [
         {
           name: 'messageBody',
           type: 'textarea',
           placeholder: 'Escribe tu plantilla aquí. Usa {{name}} para el nombre del cliente.',
-          value: template?.messageBody ?? '',
+          value: template.messageBody,
           attributes: { rows: 6 },
         },
       ],
@@ -996,7 +959,7 @@ export class ClientDetailPage {
             if (!data.messageBody.trim()) return false;
 
             this.messageTemplateStore.saveTemplate({
-              templateId: template?.id,
+              templateId: template.id,
               stage,
               messageBody: data.messageBody,
             });

@@ -15,10 +15,10 @@
 <ion-content class="settings-content">
   <main class="settings-main">
   <nav class="settings-nav" aria-label="Secciones de ajustes">
-    <a href="#profile-settings">Perfil</a>
-    <a href="#calendar-settings">Calendarios</a>
-    <a href="#whatsapp-settings">WhatsApp</a>
-    <a href="#payment-settings">Pagos</a>
+    <button type="button" aria-controls="profile-settings" (click)="scrollToSection('profile-settings')">Perfil</button>
+    <button type="button" aria-controls="calendar-settings" (click)="scrollToSection('calendar-settings')">Calendarios</button>
+    <button type="button" aria-controls="whatsapp-settings" (click)="scrollToSection('whatsapp-settings')">WhatsApp</button>
+    <button type="button" aria-controls="payment-settings" (click)="scrollToSection('payment-settings')">Pagos</button>
   </nav>
   <div class="settings-sections">
   <section class="settings-section" id="profile-settings">

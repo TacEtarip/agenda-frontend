@@ -14,8 +14,10 @@
   </ion-toolbar>
 </ion-header>
 
+<a class="skip-link" href="#dashboard-main">Saltar al contenido principal</a>
+
 <ion-content class="dashboard-content">
-  <main class="dashboard-main">
+  <main id="dashboard-main" class="dashboard-main" tabindex="-1">
 
   <!-- Stats Row -->
   <section class="stats-grid" aria-label="Resumen del negocio">
@@ -171,7 +173,7 @@
         interface="popover"
         placeholder="Filtrar por etapa"
         aria-label="Filtrar por etapa">
-        <ion-select-option value="ALL">Todas las etapas</ion-select-option>
+        <ion-select-option value="ALL">Etapas</ion-select-option>
         @for (option of stageOptions(); track option.value) {
           <ion-select-option [value]="option.value">
             {{ option.label }}
@@ -179,6 +181,17 @@
         }
       </ion-select>
     </div>
+  </div>
+
+  <div class="clients-context-action">
+    <ion-button
+      expand="block"
+      fill="outline"
+      class="contextual-create-btn"
+      (click)="openAddClientModal()">
+      <ion-icon slot="start" name="add-outline" aria-hidden="true"></ion-icon>
+      Agregar cliente
+    </ion-button>
   </div>
 
   <ion-list lines="inset" class="clients-list">
@@ -216,16 +229,6 @@
   </ion-infinite-scroll>
 
   </main>
-
-  <!-- FAB -->
-  <ion-fab slot="fixed" vertical="bottom" horizontal="end">
-    <ion-fab-button
-      color="primary"
-      (click)="openAddClientModal()"
-      aria-label="Agregar cliente">
-      <ion-icon name="add-outline" aria-hidden="true"></ion-icon>
-    </ion-fab-button>
-  </ion-fab>
 
 </ion-content>
 
@@ -266,6 +269,8 @@
               <div class="add-client-form__grid">
                 <ion-input
                   formControlName="firstName"
+                  name="firstName"
+                  autocomplete="given-name"
                   label="Nombre"
                   labelPlacement="floating"
                   fill="outline"
@@ -274,6 +279,8 @@
 
                 <ion-input
                   formControlName="lastName"
+                  name="lastName"
+                  autocomplete="family-name"
                   label="Apellido"
                   labelPlacement="floating"
                   fill="outline"
@@ -282,7 +289,11 @@
 
                 <ion-input
                   formControlName="email"
+                  name="email"
+                  autocomplete="email"
                   type="email"
+                  inputmode="email"
+                  [spellcheck]="false"
                   label="Correo electrónico"
                   labelPlacement="floating"
                   fill="outline"
@@ -291,25 +302,37 @@
 
                 <ion-input
                   formControlName="phone"
+                  name="phone"
+                  autocomplete="tel"
                   type="tel"
+                  inputmode="tel"
                   label="Número de teléfono"
                   labelPlacement="floating"
                   fill="outline"
                   shape="round">
                 </ion-input>
 
-                <ion-select
-                  formControlName="stage"
-                  label="Etapa del cliente"
-                  labelPlacement="floating"
-                  fill="outline"
-                  shape="round">
-                  @for (option of stageOptions(); track option.value) {
-                    <ion-select-option [value]="option.value">
-                      {{ option.label }}
-                    </ion-select-option>
-                  }
-                </ion-select>
+                <div
+                  class="add-client-stage"
+                  [style.--stage-color]="'var(--ion-color-' + (addClientForm.controls.stage.value | stageColor) + ')'">
+                  <ion-select
+                    formControlName="stage"
+                    label="Etapa del cliente"
+                    labelPlacement="floating"
+                    fill="outline"
+                    shape="round"
+                    aria-describedby="add-client-stage-context">
+                    @for (option of stageOptions(); track option.value) {
+                      <ion-select-option [value]="option.value">
+                        {{ option.label }}
+                      </ion-select-option>
+                    }
+                  </ion-select>
+                  <p id="add-client-stage-context" class="add-client-stage__context">
+                    <ion-icon name="pricetag-outline" aria-hidden="true"></ion-icon>
+                    Etapa inicial del seguimiento: <strong>{{ addClientForm.controls.stage.value | stageLabel }}</strong>
+                  </p>
+                </div>
               </div>
 
               @if (
@@ -342,9 +365,13 @@
                   Limpiar
                 </ion-button>
 
-                <ion-button type="submit">
-                  <ion-icon slot="start" name="add-outline" aria-hidden="true"></ion-icon>
-                  Agregar
+                <ion-button type="submit" [disabled]="isCreatingClient()">
+                  @if (isCreatingClient()) {
+                    <ion-spinner slot="start" name="crescent" aria-hidden="true"></ion-spinner>
+                  } @else {
+                    <ion-icon slot="start" name="add-outline" aria-hidden="true"></ion-icon>
+                  }
+                  {{ isCreatingClient() ? 'Creando…' : 'Agregar' }}
                 </ion-button>
               </div>
             </form>

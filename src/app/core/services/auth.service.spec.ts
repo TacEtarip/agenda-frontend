@@ -34,6 +34,7 @@ describe('AuthService registration', () => {
         'Agenda Test',
         'Ada',
         'Lovelace',
+        '+51987654321',
         'ada@example.test',
         'password123',
       ),
@@ -45,6 +46,7 @@ describe('AuthService registration', () => {
       companyName: 'Agenda Test',
       firstName: 'Ada',
       lastName: 'Lovelace',
+      phone: '+51987654321',
       email: 'ada@example.test',
       password: 'password123',
     });

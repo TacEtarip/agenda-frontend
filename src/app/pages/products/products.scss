@@ -106,6 +106,13 @@ ion-toolbar ion-button {
   }
 }
 
+.currency-prefix {
+  color: var(--color-green-shade);
+  font-size: 0.85rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
 .stat-card {
   margin: 0;
   border-radius: 1rem;
@@ -191,6 +198,19 @@ ion-toolbar ion-button {
   }
 }
 
+.products-context-action {
+  padding: 0.75rem 1rem 0;
+}
+
+.contextual-create-btn {
+  margin: 0;
+  min-height: 2.75rem;
+  --border-radius: 0.9rem;
+  --border-width: 1.5px;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
 .average-banner {
   margin: 0.9rem 1rem 0;
   padding: 0.7rem 0.85rem;
@@ -219,7 +239,7 @@ ion-toolbar ion-button {
 }
 
 .products-list {
-  padding: 0.9rem 1rem 5.6rem;
+  padding: 0.9rem 1rem 1rem;
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
@@ -312,21 +332,6 @@ ion-toolbar ion-button {
   }
 }
 
-.products-fab {
-  position: fixed;
-  right: 1rem;
-  bottom: calc(1rem + var(--ion-safe-area-bottom, 0px));
-  z-index: 20;
-}
-
-.products-fab ion-fab-button {
-  --background: var(--color-green);
-  --background-hover: var(--color-green-shade);
-  --background-activated: var(--color-green-shade);
-  --box-shadow: 0 20px 28px -16px rgb(var(--color-green-rgb) / 55%);
-  --color: var(--color-text-inverse);
-}
-
 @media (max-width: 560px) {
   .stats-grid {
     grid-template-columns: 1fr;
@@ -336,8 +341,4 @@ ion-toolbar ion-button {
     grid-template-columns: 1fr;
   }
 
-  .products-fab {
-    right: 0.875rem;
-    bottom: calc(0.875rem + var(--ion-safe-area-bottom, 0px));
-  }
 }

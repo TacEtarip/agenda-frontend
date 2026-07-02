@@ -14,8 +14,6 @@ import {
 import {
   AlertController,
   IonBackButton,
-  IonFab,
-  IonFabButton,
   IonInfiniteScroll,
   IonInfiniteScrollContent,
   IonSearchbar,
@@ -39,8 +37,6 @@ import { ProductType } from '../../enums/product-type.enum';
     ReactiveFormsModule,
     ...COMMON_ION_PAGE_IMPORTS,
     IonBackButton,
-    IonFab,
-    IonFabButton,
     IonInfiniteScroll,
     IonInfiniteScrollContent,
     IonSearchbar,
@@ -150,6 +146,35 @@ export class ProductsPage {
       this.sortMode.set(nextSort);
       this.productDisplayLimit.set(20);
     }
+  }
+
+  onPriceInput(event: Event): void {
+    const rawValue = String(
+      (event as CustomEvent<{ value?: string | null }>).detail?.value ?? '',
+    );
+    const decimalValue = rawValue.replace(',', '.').replace(/[^\d.]/g, '');
+    const [integerPart = '', ...decimalParts] = decimalValue.split('.');
+    const sanitizedValue = decimalParts.length
+      ? `${integerPart}.${decimalParts.join('').slice(0, 2)}`
+      : integerPart;
+
+    if (sanitizedValue !== rawValue) {
+      this.createProductForm.controls.price.setValue(sanitizedValue, {
+        emitEvent: false,
+      });
+    }
+  }
+
+  formatPriceInput(): void {
+    const control = this.createProductForm.controls.price;
+    const parsedPrice = this.parsePrice(control.value);
+    if (parsedPrice === undefined) return;
+    if (parsedPrice === null) {
+      control.markAsTouched();
+      return;
+    }
+
+    control.setValue(parsedPrice.toFixed(2), { emitEvent: false });
   }
 
   loadMoreProducts(event: Event): void {

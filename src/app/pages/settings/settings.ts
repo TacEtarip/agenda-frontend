@@ -5,6 +5,7 @@ import {
   inject,
   signal,
   DestroyRef,
+  viewChild,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -35,6 +36,7 @@ import {
   IonRadioGroup,
   IonToggle,
   IonSpinner,
+  IonContent,
 } from '@ionic/angular/standalone';
 import { AuthService } from '../../core/services/auth.service';
 import { WhatsAppApiService } from '../../core/services/whatsapp-api.service';
@@ -69,6 +71,7 @@ import { UserApiService } from '../../core/services/user-api.service';
 })
 export class SettingsPage {
   readonly IntegrationPreference = IntegrationPreference;
+  private readonly content = viewChild.required(IonContent);
 
   private readonly fb = inject(FormBuilder);
   private readonly authService = inject(AuthService);
@@ -94,6 +97,7 @@ export class SettingsPage {
   readonly enablePayments = signal<boolean>(this.storedSettings.enablePayments);
 
   readonly profileSavedMessage = signal<string | null>(null);
+  readonly isProfileLoading = signal(false);
   readonly integrationSavedMessage = signal<string | null>(null);
 
   // WhatsApp Signals
@@ -153,6 +157,21 @@ export class SettingsPage {
     });
 
     this.checkWhatsappStatus();
+    this.loadProfile();
+  }
+
+  private loadProfile(): void {
+    const userId = this.authService.currentUser()?.userId;
+    if (!userId) return;
+
+    this.isProfileLoading.set(true);
+    this.userApi.getUser(userId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: (user) => {
+        this.authService.updateCurrentUser(user);
+        this.isProfileLoading.set(false);
+      },
+      error: () => this.isProfileLoading.set(false),
+    });
   }
 
   checkWhatsappStatus() {
@@ -169,6 +188,28 @@ export class SettingsPage {
       },
       error: () => this.isPollingQr.set(false)
     });
+  }
+
+  async scrollToSection(sectionId: string): Promise<void> {
+    const target = document.getElementById(sectionId);
+    if (!target) return;
+
+    const content = this.content();
+    const scrollElement = await content.getScrollElement();
+    const maxScrollTop = scrollElement.scrollHeight - scrollElement.clientHeight;
+    const targetTop =
+      scrollElement.scrollTop +
+      target.getBoundingClientRect().top -
+      scrollElement.getBoundingClientRect().top -
+      16;
+
+    await content.scrollToPoint(
+      0,
+      sectionId === 'payment-settings'
+        ? maxScrollTop
+        : Math.min(Math.max(targetTop, 0), maxScrollTop),
+      300,
+    );
   }
 
   private fetchWhatsappQr() {
@@ -195,19 +236,24 @@ export class SettingsPage {
     }
 
     const { firstName, lastName, email, phone } = this.profileForm.getRawValue();
-    this.authService.updateCurrentUser({
+    const profile = {
       firstName: firstName.trim(),
       lastName: lastName.trim(),
       email: email.trim(),
       phone: phone.trim(),
+    };
+    this.userApi.updateMyProfile(profile).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: (user) => {
+        this.authService.updateCurrentUser(user);
+        this.profileForm.markAsPristine();
+        const savedAt = new Date().toLocaleTimeString('es-ES', {
+          hour: '2-digit',
+          minute: '2-digit',
+        });
+        this.profileSavedMessage.set(`Perfil actualizado a las ${savedAt}.`);
+      },
+      error: () => this.profileSavedMessage.set('No se pudo actualizar el perfil.'),
     });
-
-    this.profileForm.markAsPristine();
-    const savedAt = new Date().toLocaleTimeString('es-ES', {
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-    this.profileSavedMessage.set(`Perfil actualizado a las ${savedAt}.`);
   }
 
   setIntegration(event: Event) {

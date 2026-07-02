@@ -51,6 +51,7 @@ export class AuthService {
     companyName: string,
     adminFirstName: string,
     adminLastName: string,
+    phone: string,
     email: string,
     password: string,
   ): Observable<ILoginResponse> {
@@ -58,6 +59,7 @@ export class AuthService {
       companyName,
       firstName: adminFirstName,
       lastName: adminLastName,
+      phone: phone.trim(),
       email,
       password,
     });

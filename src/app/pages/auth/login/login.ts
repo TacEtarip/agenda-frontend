@@ -72,6 +72,7 @@ export class LoginPage {
       companyName: [''],
       firstName: [''],
       lastName: [''],
+      phone: [''],
       email: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required, Validators.minLength(8)]],
       confirmPassword: [''],
@@ -94,22 +95,28 @@ export class LoginPage {
     this.isLoginMode.set(login);
     this.errorMessage.set(null);
     this.successMessage.set(null);
-    const { companyName, firstName, lastName, confirmPassword } =
+    const { companyName, firstName, lastName, phone, confirmPassword } =
       this.form.controls;
     if (login) {
       companyName.clearValidators();
       firstName.clearValidators();
       lastName.clearValidators();
+      phone.clearValidators();
       confirmPassword.clearValidators();
     } else {
       companyName.setValidators([Validators.required, Validators.maxLength(100)]);
       firstName.setValidators([Validators.required, Validators.maxLength(60)]);
       lastName.setValidators([Validators.required, Validators.maxLength(60)]);
+      phone.setValidators([
+        Validators.required,
+        Validators.pattern(/^\+?[0-9\s()-]{7,20}$/),
+      ]);
       confirmPassword.setValidators([Validators.required]);
     }
     companyName.updateValueAndValidity();
     firstName.updateValueAndValidity();
     lastName.updateValueAndValidity();
+    phone.updateValueAndValidity();
     confirmPassword.updateValueAndValidity();
     this.form.updateValueAndValidity();
     this.form.reset();
@@ -128,12 +135,12 @@ export class LoginPage {
     this.errorMessage.set(null);
     this.successMessage.set(null);
 
-    const { email, password, firstName, lastName, companyName } = this.form.getRawValue();
+    const { email, password, firstName, lastName, phone, companyName } = this.form.getRawValue();
     const isLogin = this.isLoginMode();
 
     const request$ = isLogin
       ? this.authService.login(email, password)
-      : this.authService.register(companyName, firstName, lastName, email, password);
+      : this.authService.register(companyName, firstName, lastName, phone, email, password);
 
     request$.subscribe({
       next: () => {

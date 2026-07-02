@@ -12,6 +12,20 @@
   padding-bottom: 1rem;
 }
 
+.skip-link {
+  position: fixed;
+  top: 0.5rem;
+  left: 0.5rem;
+  z-index: 100;
+  padding: 0.65rem 0.9rem;
+  border-radius: 0.75rem;
+  background: var(--color-text);
+  color: var(--color-text-inverse);
+  transform: translateY(-150%);
+
+  &:focus-visible { transform: translateY(0); }
+}
+
 .priority-action { margin: 0 1rem 1rem; padding: 0.8rem 1rem; display: flex; align-items: center; gap: 0.65rem; border: 1px solid rgb(var(--color-amber-rgb) / 35%); border-radius: 1rem; background: var(--color-amber-light); color: var(--color-text); text-decoration: none; }
 .priority-action__cta { margin-left: auto; color: var(--color-amber-shade); font-size: 0.78rem; font-weight: 800; }
 .load-feedback { margin: 0 1rem 1rem; padding: 0.8rem 1rem; border-radius: 0.85rem; background: var(--color-surface-alt); color: var(--color-text-muted); font-size: 0.8rem; }
@@ -125,7 +139,7 @@ ion-toolbar ion-button {
 // ── Section header ────────────────────────────────────────────────────────────
 .section-header {
   padding: 0 1rem;
-  margin-bottom: 0.25rem;
+  margin: 0.5rem 0 0.4rem;
 
   &__row {
     display: flex;
@@ -276,6 +290,18 @@ ion-toolbar ion-button {
   }
 }
 
+.clients-context-action {
+  padding: 0 1rem 0.875rem;
+}
+
+.contextual-create-btn {
+  margin: 0;
+  --border-radius: 0.95rem;
+  --border-color: rgb(var(--color-green-rgb) / 35%);
+  --color: var(--color-green-shade);
+  font-weight: 700;
+}
+
 .section-header:has(.filters-row) { position: sticky; top: 0; z-index: 5; padding-top: 0.5rem; padding-bottom: 0.5rem; background: rgb(255 255 255 / 92%); backdrop-filter: blur(10px); }
 
 // ── Appointments horizontal scroll ────────────────────────────────────────────
@@ -299,6 +325,11 @@ ion-toolbar ion-button {
   gap: 0.75rem;
   padding: 0 1rem 0.25rem;
   margin-bottom: 1.25rem;
+}
+
+.appointments-scroll .appt-card {
+  flex: 1 0 min(16rem, 80vw);
+  max-width: 22rem;
 }
 
 .appointments-empty {
@@ -459,6 +490,11 @@ ion-toolbar ion-button {
   overflow: hidden;
   margin-bottom: 5.5rem;
   border: 1px solid var(--color-border);
+
+  ion-item { --transition: background-color 0.18s ease; }
+
+  ion-item:hover,
+  ion-item:focus-within { --background: var(--color-mint-light); }
 }
 
 // ── Client avatars ────────────────────────────────────────────────────────────
@@ -602,8 +638,28 @@ ion-toolbar ion-button {
   }
 }
 
+.add-client-stage {
+  grid-column: 1 / -1;
+
+  ion-select { width: 100%; }
+
+  &__context {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin: 0.45rem 0 0;
+    color: var(--color-text-muted);
+    font-size: 0.75rem;
+
+    ion-icon,
+    strong { color: var(--stage-color); }
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .quick-link-card {
+  .quick-link-card,
+  .skip-link,
+  .clients-list ion-item {
     transition: none;
   }
 }

@@ -46,10 +46,14 @@ ion-toolbar ion-button {
 }
 
 .settings-main { width: min(100%, 72rem); margin: 0 auto; padding: 1rem 1rem max(2rem, env(safe-area-inset-bottom)); display: grid; grid-template-columns: 11rem minmax(0, 1fr); gap: 1rem; }
-.settings-sections { min-width: 0; display: grid; gap: 1rem; }
+.settings-sections {
+  min-width: 0;
+  display: grid;
+  gap: 1rem;
+}
 .settings-nav { position: sticky; top: 1rem; align-self: start; display: grid; gap: 0.25rem; padding: 0.5rem; border: 1px solid var(--color-border); border-radius: 1rem; background: var(--color-surface); }
-.settings-nav a { padding: 0.65rem 0.75rem; border-radius: 0.7rem; color: var(--color-text-muted); font-size: 0.8rem; font-weight: 700; text-decoration: none; }
-.settings-nav a:hover, .settings-nav a:focus-visible { color: var(--color-green-shade); background: var(--color-green-light); }
+.settings-nav button { padding: 0.65rem 0.75rem; border: 0; border-radius: 0.7rem; color: var(--color-text-muted); background: transparent; font: inherit; font-size: 0.8rem; font-weight: 700; text-align: left; cursor: pointer; }
+.settings-nav button:hover, .settings-nav button:focus-visible { color: var(--color-green-shade); background: var(--color-green-light); }
 .settings-section { scroll-margin-top: 1rem; }
 .section-heading__brand-icon { font-size: 1.5rem; margin-right: 0.75rem; }
 .whatsapp-status-container, .integration-config--spaced { margin-top: 1rem; }
@@ -66,11 +70,15 @@ ion-toolbar ion-button {
 @media (max-width: 760px) {
   .settings-main { grid-template-columns: 1fr; }
   .settings-nav { position: static; display: flex; overflow-x: auto; }
-  .settings-nav a { flex: 0 0 auto; }
+  .settings-nav button { flex: 0 0 auto; }
 }
 
 .settings-section {
   padding: 1rem 1rem 0;
+}
+
+#payment-settings {
+  padding-bottom: 6rem;
 }
 
 .settings-card {

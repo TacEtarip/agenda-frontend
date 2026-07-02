@@ -26,13 +26,12 @@ import {
 } from 'ionicons/icons';
 import {
   IonAvatar,
-  IonFab,
-  IonFabButton,
   IonInfiniteScroll,
   IonInfiniteScrollContent,
   IonSearchbar,
   IonSelect,
   IonSelectOption,
+  IonSpinner,
 } from '@ionic/angular/standalone';
 import { AuthService } from '../../core/services/auth.service';
 import { ClientApiService } from '../../core/services/client-api.service';
@@ -50,13 +49,12 @@ import { UiState } from '../../shared/types/ui-state.type';
     RouterLink,
     ...COMMON_ION_PAGE_IMPORTS,
     IonAvatar,
-    IonFab,
-    IonFabButton,
     IonInfiniteScroll,
     IonInfiniteScrollContent,
     IonSearchbar,
     IonSelect,
     IonSelectOption,
+    IonSpinner,
     StageLabelPipe,
     StageColorPipe,
     AppointmentStatusLabelPipe,
@@ -289,6 +287,8 @@ export class DashboardPage {
   }
 
   createClient() {
+    if (this.isCreatingClient()) return;
+
     if (this.addClientForm.invalid) {
       this.addClientForm.markAllAsTouched();
       return;

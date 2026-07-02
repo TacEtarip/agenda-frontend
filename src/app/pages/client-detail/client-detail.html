@@ -40,14 +40,17 @@
           <p class="client-hero__phone">{{ client().phone }}</p>
           <p class="client-hero__since">Cliente desde {{ client().createdAt }}</p>
           <!-- Stage selector -->
-          <div class="stage-row">
+          <div
+            class="stage-row"
+            [style.--stage-color]="'var(--ion-color-' + (client().stage | stageColor) + ')'">
+            <span class="stage-row__label">
+              <ion-icon name="swap-horizontal-outline" aria-hidden="true"></ion-icon>
+              Etapa actual
+            </span>
             <ion-select
               class="stage-select"
               [value]="client().stage"
               interface="action-sheet"
-              aria-label="Etapa del cliente"
-              label="Etapa"
-              labelPlacement="start"
               (ionChange)="onStageChange($event)"
               aria-label="Cambiar etapa del cliente">
               @for (s of allStages; track s.value) {
@@ -213,8 +216,8 @@
     </ion-segment-button>
     <ion-segment-button value="messages">
       <ion-label>
-        <ion-icon name="chatbubbles-outline" class="segment-tab-icon"></ion-icon>
         Mensajes
+        <ion-badge color="primary" class="segment-badge">{{ currentStageTemplates().length }}</ion-badge>
       </ion-label>
     </ion-segment-button>
     </ion-segment>
@@ -223,6 +226,15 @@
   <!-- ── Notes Tab ── -->
   @if (activeSegment() === 'notes') {
     <div class="tab-content">
+      <ion-button
+        expand="block"
+        fill="outline"
+        class="contextual-create-btn"
+        (click)="openCreateNoteModal()">
+        <ion-icon slot="start" name="add-outline" aria-hidden="true"></ion-icon>
+        Agregar nota
+      </ion-button>
+
       @for (note of notes(); track note.id) {
         <ion-card class="tab-card">
           <ion-card-content class="tab-card__content">
@@ -268,16 +280,15 @@
       <ion-button
         expand="block"
         fill="outline"
-        class="appt-create-btn"
-        (click)="openCreateAppointmentModal()"
-        (keydown.enter)="openCreateAppointmentModal()">
-        <ion-icon slot="start" name="add-outline"></ion-icon>
+        class="contextual-create-btn"
+        (click)="openCreateAppointmentModal()">
+        <ion-icon slot="start" name="add-outline" aria-hidden="true"></ion-icon>
         Programar cita
       </ion-button>
 
       @for (appt of appointments(); track appt.id) {
-        <ion-card class="tab-card">
-          <ion-card-content class="tab-card__content">
+        <ion-card class="tab-card appointment-card">
+          <ion-card-content class="tab-card__content appointment-card__content">
             <div class="appt-header">
               <h3 class="appt-title">{{ appt.title }}</h3>
               <ion-chip [color]="appt.status | appointmentStatusColor" class="appt-status-chip">
@@ -287,33 +298,42 @@
             @if (appt.description) {
               <p class="appt-desc">{{ appt.description }}</p>
             }
-            <div class="appt-time-row">
-              <ion-icon name="time-outline" class="time-icon"></ion-icon>
-              <span class="appt-time-text">{{ appt.startTime }} – {{ appt.endTime }}</span>
+
+            <div class="appointment-card__details">
+              <section class="appointment-card__section" aria-label="Fecha y hora">
+                <span class="appointment-card__section-label">Fecha y hora</span>
+                <div class="appt-time-row">
+                  <ion-icon name="time-outline" class="time-icon" aria-hidden="true"></ion-icon>
+                  <span class="appt-time-text">{{ appt.startTime }} – {{ appt.endTime }}</span>
+                </div>
+              </section>
+
+              <section class="appointment-card__section appointment-card__billing" aria-label="Cobro">
+                <span class="appointment-card__section-label">Cobro</span>
+                @if (paymentFor(paymentSourceType.APPOINTMENT, appt.id); as payment) {
+                  <div class="payment-state" [class.payment-state--paid]="payment.status === paymentStatus.PAID">
+                    <div>
+                      <ion-icon name="cash-outline" aria-hidden="true" />
+                      <strong>{{ paymentStatusLabel(payment.status) }}</strong>
+                      <span>{{ payment.amount | formatPrice }}</span>
+                    </div>
+                    @if (payment.status === paymentStatus.PENDING) {
+                      <div class="payment-state__actions">
+                        <ion-button fill="clear" size="small" (click)="copyPaymentLink(payment)">Copiar enlace</ion-button>
+                        <ion-button fill="clear" size="small" color="success" (click)="sendPaymentLink(payment)">WhatsApp</ion-button>
+                        <ion-button fill="clear" size="small" color="danger" (click)="cancelPayment(payment)">Cancelar cobro</ion-button>
+                      </div>
+                    }
+                  </div>
+                } @else {
+                  <ion-button fill="outline" size="small" class="create-payment-button" (click)="openAppointmentPayment(appt)">
+                    <ion-icon slot="start" name="cash-outline" aria-hidden="true" />Crear cobro
+                  </ion-button>
+                }
+              </section>
             </div>
 
-            @if (paymentFor(paymentSourceType.APPOINTMENT, appt.id); as payment) {
-              <div class="payment-state" [class.payment-state--paid]="payment.status === paymentStatus.PAID">
-                <div>
-                  <ion-icon name="cash-outline" aria-hidden="true" />
-                  <strong>{{ paymentStatusLabel(payment.status) }}</strong>
-                  <span>{{ payment.amount | formatPrice }}</span>
-                </div>
-                @if (payment.status === paymentStatus.PENDING) {
-                  <div class="payment-state__actions">
-                    <ion-button fill="clear" size="small" (click)="copyPaymentLink(payment)">Copiar enlace</ion-button>
-                    <ion-button fill="clear" size="small" color="success" (click)="sendPaymentLink(payment)">WhatsApp</ion-button>
-                    <ion-button fill="clear" size="small" color="danger" (click)="cancelPayment(payment)">Cancelar cobro</ion-button>
-                  </div>
-                }
-              </div>
-            } @else {
-              <ion-button fill="outline" size="small" class="create-payment-button" (click)="openAppointmentPayment(appt)">
-                <ion-icon slot="start" name="cash-outline" aria-hidden="true" />Crear cobro
-              </ion-button>
-            }
-
-            <div class="appt-actions">
+            <div class="appt-actions" aria-label="Acciones de la cita">
               <ion-button
                 fill="clear"
                 size="small"
@@ -658,6 +678,17 @@
 
   <!-- ── Attachments Tab ── -->
   @if (activeSegment() === 'attachments') {
+    <div class="tab-context-action">
+      <ion-button
+        expand="block"
+        fill="outline"
+        class="contextual-create-btn"
+        (click)="openCreateAttachmentModal()">
+        <ion-icon slot="start" name="add-outline" aria-hidden="true"></ion-icon>
+        Agregar archivo
+      </ion-button>
+    </div>
+
     <ion-list lines="inset" class="attachments-list">
       @for (file of attachments(); track file.id) {
         <ion-item>
@@ -748,20 +779,14 @@
       </ion-card>
 
       @for (offer of currentClientProducts(); track offer.id) {
-        <ion-card class="tab-card">
+        <ion-card class="tab-card product-offer-card">
           <ion-card-content class="tab-card__content">
             <div class="product-offer-header">
-              <div>
-                <p class="product-offer-product">
-                  <ion-icon name="pricetag-outline"></ion-icon>
-                  {{ offer.resolvedProductName }}
-                  <ion-chip class="product-type-chip">{{ offer.resolvedProductType === productType.SERVICE ? 'Servicio' : 'Producto' }}</ion-chip>
-                </p>
-                <p class="product-offer-price">
-                  <ion-icon name="cash-outline"></ion-icon>
-                  {{ offer.resolvedProductPrice | formatPrice }}
-                </p>
-              </div>
+              <p class="product-offer-product">
+                <ion-icon name="pricetag-outline" aria-hidden="true"></ion-icon>
+                {{ offer.resolvedProductName }}
+                <ion-chip class="product-type-chip">{{ offer.resolvedProductType === productType.SERVICE ? 'Servicio' : 'Producto' }}</ion-chip>
+              </p>
               <ion-chip [color]="offer.status | offerStatusColor" class="appt-status-chip">
                 {{ offer.status | offerStatusLabel }}
               </ion-chip>
@@ -769,33 +794,46 @@
 
             <p class="appt-desc">{{ offer.notes || 'Sin notas de seguimiento.' }}</p>
 
-            @if (paymentFor(paymentSourceType.CLIENT_PRODUCT, offer.id); as payment) {
-              <div class="payment-state" [class.payment-state--paid]="payment.status === paymentStatus.PAID">
-                <div>
-                  <ion-icon name="cash-outline" aria-hidden="true" />
-                  <strong>{{ paymentStatusLabel(payment.status) }}</strong>
-                  <span>{{ payment.amount | formatPrice }}</span>
-                </div>
-                @if (payment.status === paymentStatus.PENDING) {
-                  <div class="payment-state__actions">
-                    <ion-button fill="clear" size="small" (click)="copyPaymentLink(payment)">Copiar enlace</ion-button>
-                    <ion-button fill="clear" size="small" color="success" (click)="sendPaymentLink(payment)">WhatsApp</ion-button>
-                    <ion-button fill="clear" size="small" color="danger" (click)="cancelPayment(payment)">Cancelar cobro</ion-button>
+            <div class="appointment-card__details">
+              <section class="appointment-card__section" aria-label="Precio">
+                <span class="appointment-card__section-label">Precio</span>
+                <p class="product-offer-price">
+                  <ion-icon name="cash-outline" aria-hidden="true"></ion-icon>
+                  {{ offer.resolvedProductPrice | formatPrice }}
+                </p>
+              </section>
+
+              <section class="appointment-card__section appointment-card__billing" aria-label="Cobro">
+                <span class="appointment-card__section-label">Cobro</span>
+                @if (paymentFor(paymentSourceType.CLIENT_PRODUCT, offer.id); as payment) {
+                  <div class="payment-state" [class.payment-state--paid]="payment.status === paymentStatus.PAID">
+                    <div>
+                      <ion-icon name="cash-outline" aria-hidden="true" />
+                      <strong>{{ paymentStatusLabel(payment.status) }}</strong>
+                      <span>{{ payment.amount | formatPrice }}</span>
+                    </div>
+                    @if (payment.status === paymentStatus.PENDING) {
+                      <div class="payment-state__actions">
+                        <ion-button fill="clear" size="small" (click)="copyPaymentLink(payment)">Copiar enlace</ion-button>
+                        <ion-button fill="clear" size="small" color="success" (click)="sendPaymentLink(payment)">WhatsApp</ion-button>
+                        <ion-button fill="clear" size="small" color="danger" (click)="cancelPayment(payment)">Cancelar cobro</ion-button>
+                      </div>
+                    }
                   </div>
+                } @else {
+                  <ion-button fill="outline" size="small" class="create-payment-button" (click)="openProductPayment(offer)">
+                    <ion-icon slot="start" name="cash-outline" aria-hidden="true" />Crear cobro
+                  </ion-button>
                 }
-              </div>
-            } @else {
-              <ion-button fill="outline" size="small" class="create-payment-button" (click)="openProductPayment(offer)">
-                <ion-icon slot="start" name="cash-outline" aria-hidden="true" />Crear cobro
-              </ion-button>
-            }
+              </section>
+            </div>
 
             <div class="product-offer-meta">
               <span>Ofrecido {{ offer.offeredAt | formatDate }}</span>
               <span>Actualizado {{ offer.updatedAt | formatDate }}</span>
             </div>
 
-            <div class="product-offer-actions">
+            <div class="appt-actions" aria-label="Acciones del producto">
               <ion-button
                 fill="outline"
                 size="small"
@@ -857,16 +895,18 @@
 
       <div class="stage-summary">
         <ion-icon name="sparkles-outline" class="stage-summary__icon"></ion-icon>
-        <span class="stage-summary__text">
-          {{ currentStageTemplates().length }}
-          {{ currentStageTemplates().length === 1 ? 'plantilla' : 'plantillas' }} para la etapa
+        <div class="stage-summary__text">
+          <span class="appointment-card__section-label">Plantillas para la etapa</span>
           <strong>{{ client().stage | stageLabel }}</strong>
-        </span>
+          <span>{{ currentStageTemplates().length }} {{ currentStageTemplates().length === 1 ? 'disponible' : 'disponibles' }}</span>
+        </div>
         @if (currentStageTemplates().length > 0) {
           <ion-button fill="clear" size="small" color="primary"
-            (click)="openEditTemplateAlert(null)">
-            <ion-icon slot="start" name="add-outline" aria-hidden="true"></ion-icon>
-            Nueva plantilla
+            routerLink="/message-templates"
+            [queryParams]="{ stage: client().stage }"
+            aria-label="Administrar plantillas de mensajes">
+            <ion-icon slot="start" name="create-outline" aria-hidden="true"></ion-icon>
+            Administrar plantillas
           </ion-button>
         }
       </div>
@@ -876,6 +916,7 @@
           <ion-card class="template-card">
             <ion-card-header class="template-card__header">
               <ion-card-title class="template-card__title">
+                <span class="appointment-card__section-label">Plantilla de mensaje</span>
                 <ion-chip [color]="tpl.stage | stageColor" class="template-stage-chip">
                   {{ tpl.stage | stageLabel }}
                 </ion-chip>
@@ -897,7 +938,7 @@
             </ion-card-header>
             <ion-card-content class="template-card__body">
               <p class="template-message">{{ personalizeTemplateMessage(tpl) }}</p>
-              <div class="template-footer">
+              <div class="template-footer appt-actions">
                 <ion-note class="template-date">Actualizado {{ tpl.updatedAt | formatDate }}</ion-note>
                 <ion-button
                   fill="solid"
@@ -918,11 +959,13 @@
         <div class="empty-state">
           <ion-icon name="chatbubbles-outline" aria-hidden="true"></ion-icon>
           <p class="empty-state__text">No hay plantillas para {{ client().stage | stageLabel }}</p>
+          <p class="template-message template-message--muted">Crea una plantilla para enviar mensajes consistentes a este cliente.</p>
           <ion-button fill="outline" color="primary" size="small" class="empty-state__cta"
-            (click)="openEditTemplateAlert(null)"
-            (keydown.enter)="openEditTemplateAlert(null)">
-            <ion-icon slot="start" name="add-outline" aria-hidden="true"></ion-icon>
-            Crear plantilla
+            routerLink="/message-templates"
+            [queryParams]="{ stage: client().stage }"
+            aria-label="Administrar plantillas de mensajes">
+            <ion-icon slot="start" name="create-outline" aria-hidden="true" style="font-size: 1rem"></ion-icon>
+            Administrar plantillas
           </ion-button>
         </div>
       }
@@ -932,9 +975,12 @@
         @for (tpl of otherStageTemplates(); track tpl.id) {
           <ion-card class="template-card template-card--other">
             <ion-card-header class="template-card__header">
-              <ion-chip [color]="tpl.stage | stageColor" class="template-stage-chip">
-                {{ tpl.stage | stageLabel }}
-              </ion-chip>
+              <div class="template-card__title">
+                <span class="appointment-card__section-label">Plantilla de otra etapa</span>
+                <ion-chip [color]="tpl.stage | stageColor" class="template-stage-chip">
+                  {{ tpl.stage | stageLabel }}
+                </ion-chip>
+              </div>
               <div class="template-header-actions">
                 <ion-button fill="clear" size="small" color="primary"
                   aria-label="Editar plantilla"
@@ -952,7 +998,7 @@
             </ion-card-header>
             <ion-card-content class="template-card__body">
               <p class="template-message template-message--muted">{{ tpl.messageBody }}</p>
-              <div class="template-footer">
+              <div class="template-footer appt-actions">
                 <ion-note class="template-date">Actualizado {{ tpl.updatedAt | formatDate }}</ion-note>
               </div>
             </ion-card-content>
@@ -963,19 +1009,6 @@
   }
 
   </main>
-
-  <!-- FAB (hidden on messages tab) -->
-  @if (canShowPrimaryFab()) {
-    <ion-fab class="client-detail-fab" slot="fixed" vertical="bottom" horizontal="end">
-      <ion-fab-button
-        color="primary"
-        (click)="openPrimaryActionModal()"
-        (keydown.enter)="openPrimaryActionModal()"
-        [attr.aria-label]="primaryFabLabel()">
-        <ion-icon name="add-outline" aria-hidden="true"></ion-icon>
-      </ion-fab-button>
-    </ion-fab>
-  }
 
   @if (paymentModalTarget(); as target) {
     <app-payment-form-modal

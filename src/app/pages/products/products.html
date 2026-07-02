@@ -68,6 +68,17 @@
     </ion-select>
   </div>
 
+  <div class="products-context-action">
+    <ion-button
+      expand="block"
+      fill="outline"
+      class="contextual-create-btn"
+      (click)="openCreateProductModal()">
+      <ion-icon slot="start" name="add-outline" aria-hidden="true"></ion-icon>
+      Agregar producto
+    </ion-button>
+  </div>
+
   <div class="average-banner">
     <ion-icon name="cash-outline" aria-hidden="true"></ion-icon>
     <span>Precio promedio: <strong>{{ formattedAveragePrice() }}</strong></span>
@@ -124,14 +135,6 @@
     <ion-infinite-scroll-content loadingText="Cargando productos…"></ion-infinite-scroll-content>
   </ion-infinite-scroll>
 
-  <ion-fab class="products-fab" slot="fixed" vertical="bottom" horizontal="end">
-    <ion-fab-button
-      color="primary"
-      (click)="openCreateProductModal()"
-      aria-label="Agregar producto">
-      <ion-icon name="add-outline" aria-hidden="true"></ion-icon>
-    </ion-fab-button>
-  </ion-fab>
   </main>
 </ion-content>
 
@@ -193,10 +196,16 @@
                   formControlName="price"
                   type="text"
                   inputmode="decimal"
+                  name="price"
+                  autocomplete="off"
                   label="Precio"
+                  helperText="Soles peruanos (PEN)"
                   labelPlacement="floating"
                   fill="outline"
-                  shape="round">
+                  shape="round"
+                  (ionInput)="onPriceInput($event)"
+                  (ionBlur)="formatPriceInput()">
+                  <span slot="start" class="currency-prefix" aria-hidden="true">S/</span>
                 </ion-input>
 
                 <ion-textarea
