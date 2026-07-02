@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, ElementRef, inject, signal } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import {
   AbstractControl,
@@ -29,15 +29,16 @@ import {
 } from '@ionic/angular/standalone';
 import { AuthService } from '../../../core/services/auth.service';
 
+const PERU_PHONE_PREFIX = '+51';
+const PERU_PHONE_PATTERN = /^9\d{8}$/;
+
 export const passwordsMatchValidator: ValidatorFn = (
   control: AbstractControl,
 ): ValidationErrors | null => {
   const password = control.get('password')?.value;
   const confirmPassword = control.get('confirmPassword')?.value;
 
-  return confirmPassword && password !== confirmPassword
-    ? { passwordMismatch: true }
-    : null;
+  return confirmPassword && password !== confirmPassword ? { passwordMismatch: true } : null;
 };
 
 @Component({
@@ -60,7 +61,9 @@ export class LoginPage {
   private readonly fb = inject(FormBuilder);
   private readonly router = inject(Router);
   private readonly authService = inject(AuthService);
+  private readonly elementRef = inject(ElementRef<HTMLElement>);
 
+  readonly phonePrefix = PERU_PHONE_PREFIX;
   readonly isLoginMode = signal(true);
   readonly isLoading = signal(false);
   readonly showPassword = signal(false);
@@ -95,8 +98,7 @@ export class LoginPage {
     this.isLoginMode.set(login);
     this.errorMessage.set(null);
     this.successMessage.set(null);
-    const { companyName, firstName, lastName, phone, confirmPassword } =
-      this.form.controls;
+    const { companyName, firstName, lastName, phone, confirmPassword } = this.form.controls;
     if (login) {
       companyName.clearValidators();
       firstName.clearValidators();
@@ -107,10 +109,7 @@ export class LoginPage {
       companyName.setValidators([Validators.required, Validators.maxLength(100)]);
       firstName.setValidators([Validators.required, Validators.maxLength(60)]);
       lastName.setValidators([Validators.required, Validators.maxLength(60)]);
-      phone.setValidators([
-        Validators.required,
-        Validators.pattern(/^\+?[0-9\s()-]{7,20}$/),
-      ]);
+      phone.setValidators([Validators.required, Validators.pattern(PERU_PHONE_PATTERN)]);
       confirmPassword.setValidators([Validators.required]);
     }
     companyName.updateValueAndValidity();
@@ -126,9 +125,19 @@ export class LoginPage {
     this.showPassword.update((visible) => !visible);
   }
 
+  // Peru mobile numbers are always 9 digits (e.g. 987654321); strip anything else as the user types.
+  sanitizePhoneInput(event: CustomEvent): void {
+    const rawValue = (event.detail as { value?: string | null }).value ?? '';
+    const digitsOnly = rawValue.replace(/\D/g, '').slice(0, 9);
+    if (digitsOnly !== rawValue) {
+      this.form.controls.phone.setValue(digitsOnly);
+    }
+  }
+
   submit() {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
+      this.focusFirstInvalidField();
       return;
     }
     this.isLoading.set(true);
@@ -140,7 +149,14 @@ export class LoginPage {
 
     const request$ = isLogin
       ? this.authService.login(email, password)
-      : this.authService.register(companyName, firstName, lastName, phone, email, password);
+      : this.authService.register(
+          companyName,
+          firstName,
+          lastName,
+          `${this.phonePrefix}${phone}`,
+          email,
+          password,
+        );
 
     request$.subscribe({
       next: () => {
@@ -160,6 +176,16 @@ export class LoginPage {
         this.isLoading.set(false);
         this.errorMessage.set(this.resolveAuthErrorMessage(err));
       },
+    });
+  }
+
+  private focusFirstInvalidField(): void {
+    queueMicrotask(() => {
+      const nativeElement = this.elementRef.nativeElement as HTMLElement;
+      const invalidInput = nativeElement.querySelector('ion-input.ng-invalid') as
+        | (HTMLElement & { setFocus?: () => Promise<void> })
+        | null;
+      void invalidInput?.setFocus?.();
     });
   }
 

@@ -1,6 +1,6 @@
 <!-- Background image sits outside ion-content so absolute positioning works correctly -->
 <div aria-hidden="true" class="login-bg">
-  <img src="/images/leaves.png" alt="" class="login-bg__img" />
+  <img src="/images/leaves.png" alt="" width="1536" height="1024" fetchpriority="high" class="login-bg__img" />
   <div class="login-bg__overlay"></div>
 </div>
 
@@ -8,136 +8,170 @@
 
   <div class="login-wrapper">
 
-      <!-- Header/Logo Area -->
-      <div class="login-header">
-        <div class="login-logo">
-          <ion-icon name="calendar-outline" class="login-logo__icon"></ion-icon>
-        </div>
-        <h1 class="login-title">Agenda Pro</h1>
-        <p class="login-subtitle">Organiza tu agenda sin esfuerzo.</p>
+    <!-- Header/Logo Area -->
+    <div class="login-header">
+      <div class="login-logo">
+        <ion-icon name="calendar-outline" aria-hidden="true" class="login-logo__icon"></ion-icon>
       </div>
+      <h1 class="login-title">Agenda Pro</h1>
+      <p class="login-subtitle">Organiza tu agenda sin esfuerzo.</p>
+    </div>
 
-      <!-- Main Card -->
-      <ion-card class="login-card">
-        <ion-card-content class="login-card__content">
+    <!-- Main Card -->
+    <ion-card class="login-card">
+      <ion-card-content class="login-card__content">
 
-          <!-- Mode Toggle -->
-          <div class="mode-toggle">
-            <button type="button" class="mode-toggle__btn"
-              [class.mode-toggle__btn--active]="isLoginMode()"
-              (click)="toggleMode(true)">Iniciar sesión</button>
-            <button type="button" class="mode-toggle__btn"
-              [class.mode-toggle__btn--active]="!isLoginMode()"
-              (click)="toggleMode(false)">Registrarse</button>
+        <!-- Mode Toggle -->
+        <div class="mode-toggle">
+          <button type="button" class="mode-toggle__btn" [class.mode-toggle__btn--active]="isLoginMode()"
+            (click)="toggleMode(true)">Iniciar sesión</button>
+          <button type="button" class="mode-toggle__btn" [class.mode-toggle__btn--active]="!isLoginMode()"
+            (click)="toggleMode(false)">Registrarse</button>
+        </div>
+
+        <form [formGroup]="form" (ngSubmit)="submit()" class="login-form">
+          @if (!isLoginMode()) {
+          <div class="form-row">
+            <div class="form-field form-field--grow">
+              <ion-input formControlName="companyName" name="organization" autocomplete="organization"
+                label="Nombre de Empresa" labelPlacement="floating" fill="outline" shape="round"
+                class="custom-input"></ion-input>
+              @if (form.controls.companyName.touched && form.controls.companyName.hasError('required')) {
+              <p class="field-validation-msg">El nombre de la empresa es obligatorio.</p>
+              } @else if (form.controls.companyName.touched && form.controls.companyName.hasError('maxlength')) {
+              <p class="field-validation-msg">El nombre de la empresa es demasiado largo.</p>
+              }
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-field form-field--grow">
+              <ion-input formControlName="firstName" name="given-name" autocomplete="given-name" label="Nombre"
+                labelPlacement="floating" fill="outline" shape="round" class="custom-input"></ion-input>
+              @if (form.controls.firstName.touched && form.controls.firstName.hasError('required')) {
+              <p class="field-validation-msg">El nombre es obligatorio.</p>
+              } @else if (form.controls.firstName.touched && form.controls.firstName.hasError('maxlength')) {
+              <p class="field-validation-msg">El nombre es demasiado largo.</p>
+              }
+            </div>
+            <div class="form-field form-field--grow">
+              <ion-input formControlName="lastName" name="family-name" autocomplete="family-name" label="Apellido"
+                labelPlacement="floating" fill="outline" shape="round" class="custom-input"></ion-input>
+              @if (form.controls.lastName.touched && form.controls.lastName.hasError('required')) {
+              <p class="field-validation-msg">El apellido es obligatorio.</p>
+              } @else if (form.controls.lastName.touched && form.controls.lastName.hasError('maxlength')) {
+              <p class="field-validation-msg">El apellido es demasiado largo.</p>
+              }
+            </div>
+          </div>
+          <div class="form-field">
+            <ion-input formControlName="phone" type="tel" inputmode="numeric" name="tel" autocomplete="tel-national"
+              maxlength="9" placeholder="987654321" label="Número de celular (Perú +51)" labelPlacement="floating"
+              fill="outline" shape="round" class="custom-input phone-input" (ionInput)="sanitizePhoneInput($event)">
+              <div slot="start" class="phone-prefix">{{ phonePrefix }}</div>
+            </ion-input>
+            @if (form.controls.phone.touched && form.controls.phone.hasError('required')) {
+            <p class="field-validation-msg">El número de celular es obligatorio.</p>
+            } @else if (form.controls.phone.touched && form.controls.phone.hasError('pattern')) {
+            <p class="field-validation-msg">Ingresa los 9 dígitos de tu celular (ej.: 987654321).</p>
+            }
+          </div>
+          }
+
+          <div class="form-field">
+            <ion-input formControlName="email" type="email" inputmode="email" name="email" autocomplete="email"
+              spellcheck="false" label="Correo electrónico" labelPlacement="floating" fill="outline" shape="round"
+              class="custom-input">
+              <ion-icon slot="start" name="mail-outline" aria-hidden="true" class="input-icon"></ion-icon>
+            </ion-input>
+            @if (form.controls.email.touched && form.controls.email.hasError('required')) {
+            <p class="field-validation-msg">El correo electrónico es obligatorio.</p>
+            } @else if (form.controls.email.touched && form.controls.email.hasError('email')) {
+            <p class="field-validation-msg">Ingresa un correo electrónico válido.</p>
+            }
           </div>
 
-          <form [formGroup]="form" (ngSubmit)="submit()" class="login-form">
-            @if (!isLoginMode()) {
-            <div class="form-row">
-              <ion-input formControlName="companyName" label="Nombre de Empresa" labelPlacement="floating" fill="outline"
-                shape="round" class="custom-input"></ion-input>
-            </div>
-            <div class="form-row">
-              <ion-input formControlName="firstName" label="Nombre" labelPlacement="floating" fill="outline"
-                shape="round" class="custom-input"></ion-input>
-              <ion-input formControlName="lastName" label="Apellido" labelPlacement="floating" fill="outline"
-                shape="round" class="custom-input"></ion-input>
-            </div>
-            <div class="form-field">
-              <ion-input formControlName="phone" type="tel" inputmode="tel" autocomplete="tel"
-                label="Número de celular" labelPlacement="floating" fill="outline"
-                shape="round" class="custom-input"></ion-input>
-              @if (form.controls.phone.touched && form.controls.phone.hasError('required')) {
-                <p class="field-validation-msg">El número de celular es obligatorio.</p>
-              } @else if (form.controls.phone.touched && form.controls.phone.hasError('pattern')) {
-                <p class="field-validation-msg">Ingresa un número de celular válido.</p>
-              }
-            </div>
+          <div class="form-field">
+            <ion-input formControlName="password" [type]="showPassword() ? 'text' : 'password'" name="password"
+              [autocomplete]="isLoginMode() ? 'current-password' : 'new-password'" spellcheck="false" label="Contraseña"
+              labelPlacement="floating" fill="outline" shape="round" class="custom-input">
+              <ion-icon slot="start" name="lock-closed-outline" aria-hidden="true" class="input-icon"></ion-icon>
+              <ion-button slot="end" type="button" fill="clear" class="toggle-pw-btn"
+                [attr.aria-label]="showPassword() ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+                [attr.aria-pressed]="showPassword()" (click)="togglePasswordVisibility()">
+                <ion-icon [name]="showPassword() ? 'eye-off-outline' : 'eye-outline'" aria-hidden="true"></ion-icon>
+              </ion-button>
+            </ion-input>
+            @if (form.controls.password.touched && form.controls.password.hasError('required')) {
+            <p class="field-validation-msg">La contraseña es obligatoria.</p>
+            } @else if (form.controls.password.touched && form.controls.password.hasError('minlength')) {
+            <p class="field-validation-msg">La contraseña debe tener al menos 8 caracteres.</p>
             }
 
-            <div class="form-field">
-              <ion-input formControlName="email" type="email" label="Correo electrónico" labelPlacement="floating"
-                fill="outline" shape="round" class="custom-input">
-                <ion-icon slot="start" name="mail-outline" class="input-icon"></ion-icon>
-              </ion-input>
+            @if (isLoginMode()) {
+            <div class="forgot-password">
+              <button type="button" class="forgot-password__link" disabled title="Próximamente disponible">¿Olvidaste tu
+                contraseña?</button>
             </div>
-
-            <div class="form-field">
-              <ion-input formControlName="password" [type]="showPassword() ? 'text' : 'password'" label="Contraseña"
-                labelPlacement="floating" fill="outline" shape="round" class="custom-input">
-                <ion-icon slot="start" name="lock-closed-outline" class="input-icon"></ion-icon>
-                <ion-button slot="end" type="button" fill="clear" class="toggle-pw-btn"
-                  [attr.aria-label]="showPassword() ? 'Ocultar contraseña' : 'Mostrar contraseña'"
-                  [attr.aria-pressed]="showPassword()"
-                  (click)="togglePasswordVisibility()">
-                  <ion-icon [name]="showPassword() ? 'eye-off-outline' : 'eye-outline'" aria-hidden="true"></ion-icon>
-                </ion-button>
-              </ion-input>
-
-              @if (isLoginMode()) {
-              <div class="forgot-password">
-                <a href="#" class="forgot-password__link">¿Olvidaste tu contraseña?</a>
-              </div>
-              }
-            </div>
-
-            @if (!isLoginMode()) {
-              <div class="form-field">
-                <ion-input formControlName="confirmPassword" [type]="showPassword() ? 'text' : 'password'"
-                  label="Confirmar contraseña" labelPlacement="floating" fill="outline" shape="round"
-                  class="custom-input">
-                  <ion-icon slot="start" name="lock-closed-outline" class="input-icon"></ion-icon>
-                </ion-input>
-
-                @if (form.controls.confirmPassword.touched && form.controls.confirmPassword.hasError('required')) {
-                  <p class="field-validation-msg">Confirma tu contraseña.</p>
-                } @else if (form.controls.confirmPassword.touched && form.hasError('passwordMismatch')) {
-                  <p class="field-validation-msg">Las contraseñas no coinciden.</p>
-                }
-              </div>
             }
-
-            <ion-button expand="block" type="submit" [disabled]="isLoading() || form.invalid"
-              class="login-submit-btn" shape="round"
-              color="secondary">
-              @if (isLoading()) {
-              <ion-spinner name="crescent" slot="start"></ion-spinner>
-              }
-              {{ isLoginMode() ? 'Iniciar sesión' : 'Crear cuenta' }}
-            </ion-button>
-
-            @if (errorMessage()) {
-              <p class="form-error-msg" role="alert">{{ errorMessage() }}</p>
-            }
-
-            @if (successMessage()) {
-              <p class="form-success-msg" role="status" aria-live="polite">{{ successMessage() }}</p>
-            }
-          </form>
-
-          <!-- Divider -->
-          <div class="auth-divider">
-            <div class="auth-divider__line"></div>
-            <span class="auth-divider__text">o continúa con</span>
-            <div class="auth-divider__line"></div>
           </div>
 
-          <ion-button expand="block" fill="outline" color="dark" type="button" shape="round"
-            class="google-btn">
-            <ion-icon slot="start" name="logo-google" class="google-btn__icon"></ion-icon>
-            Google
+          @if (!isLoginMode()) {
+          <div class="form-field">
+            <ion-input formControlName="confirmPassword" [type]="showPassword() ? 'text' : 'password'"
+              name="new-password-confirm" autocomplete="new-password" spellcheck="false" label="Confirmar contraseña"
+              labelPlacement="floating" fill="outline" shape="round" class="custom-input">
+              <ion-icon slot="start" name="lock-closed-outline" aria-hidden="true" class="input-icon"></ion-icon>
+            </ion-input>
+
+            @if (form.controls.confirmPassword.touched && form.controls.confirmPassword.hasError('required')) {
+            <p class="field-validation-msg">Confirma tu contraseña.</p>
+            } @else if (form.controls.confirmPassword.touched && form.hasError('passwordMismatch')) {
+            <p class="field-validation-msg">Las contraseñas no coinciden.</p>
+            }
+          </div>
+          }
+
+          <ion-button expand="block" type="submit" [disabled]="isLoading() || form.invalid" class="login-submit-btn"
+            shape="round" color="secondary">
+            @if (isLoading()) {
+            <ion-spinner name="crescent" slot="start"></ion-spinner>
+            }
+            {{ isLoginMode() ? 'Iniciar sesión' : 'Crear cuenta' }}
           </ion-button>
 
-        </ion-card-content>
-      </ion-card>
+          @if (errorMessage()) {
+          <p class="form-error-msg" role="alert">{{ errorMessage() }}</p>
+          }
 
-      <!-- Footer -->
-      <div class="login-footer">
-        <p class="login-footer__text">
-          Al continuar, aceptas los <a href="#" class="link">Términos de
-            servicio</a> y la <a href="#" class="link">Política de privacidad</a> de Agenda Pro.
-        </p>
-      </div>
+          @if (successMessage()) {
+          <p class="form-success-msg" role="status" aria-live="polite">{{ successMessage() }}</p>
+          }
+        </form>
+
+        <!-- Divider -->
+        <div class="auth-divider">
+          <div class="auth-divider__line"></div>
+          <span class="auth-divider__text">o continúa con</span>
+          <div class="auth-divider__line"></div>
+        </div>
+
+        <ion-button expand="block" fill="outline" color="dark" type="button" shape="round" class="google-btn">
+          <ion-icon slot="start" name="logo-google" aria-hidden="true" class="google-btn__icon"></ion-icon>
+          Google
+        </ion-button>
+
+      </ion-card-content>
+    </ion-card>
+
+    <!-- Footer -->
+    <div class="login-footer">
+      <p class="login-footer__text">
+        Al continuar, aceptas los <button type="button" class="link link--btn" disabled
+          title="Próximamente disponible">Términos de servicio</button> y la
+        <button type="button" class="link link--btn" disabled title="Próximamente disponible">Política de
+          privacidad</button> de Agenda Pro.
+      </p>
+    </div>
 
   </div>
 

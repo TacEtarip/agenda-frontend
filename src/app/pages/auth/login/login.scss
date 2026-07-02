@@ -64,7 +64,12 @@
   align-items: center;
   justify-content: center;
   border-radius: 2.75rem;
-  background: linear-gradient(to top right, var(--color-mint), var(--color-green), var(--color-indigo));
+  background: linear-gradient(
+    to top right,
+    var(--color-mint),
+    var(--color-green),
+    var(--color-indigo)
+  );
   box-shadow: 0 25px 50px -12px rgb(var(--color-green-rgb) / 45%);
   transition: transform 0.3s ease;
 
@@ -135,13 +140,21 @@
     background: transparent;
     color: var(--color-text-muted);
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition:
+      background-color 0.3s ease,
+      color 0.3s ease,
+      box-shadow 0.3s ease;
     position: relative;
     z-index: 10;
-    outline: none;
+    touch-action: manipulation;
 
     &:hover {
       color: var(--color-green-shade);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--color-green);
+      outline-offset: 2px;
     }
 
     &--active {
@@ -160,9 +173,8 @@
 .form-row {
   display: flex;
   gap: 1rem;
-  margin-bottom: 1.25rem;
 
-  .custom-input {
+  .form-field--grow {
     flex: 1;
   }
 }
@@ -199,6 +211,14 @@
   font-size: 1.25rem;
 }
 
+.phone-prefix {
+  padding-left: 0.75rem;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-green);
+  white-space: nowrap;
+}
+
 .toggle-pw-btn {
   --padding-start: 0.25rem;
   --padding-end: 0.5rem;
@@ -228,11 +248,27 @@
     font-size: 0.8rem;
     font-weight: 700;
     color: var(--color-green);
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
     text-decoration: none;
     transition: color 0.2s ease;
+    touch-action: manipulation;
 
-    &:hover {
+    &:hover:not(:disabled) {
       color: var(--color-green-shade);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--color-green);
+      outline-offset: 2px;
+    }
+
+    &:disabled {
+      color: var(--color-text-muted);
+      cursor: not-allowed;
+      opacity: 0.7;
     }
   }
 }
@@ -309,7 +345,8 @@ ion-button {
 .google-btn {
   height: 3.5rem;
   font-weight: 700;
-  transition: all 0.2s ease;
+  transition: background-color 0.2s ease;
+  touch-action: manipulation;
   --color: var(--color-green);
   --border-color: var(--color-green-tint);
 
@@ -350,6 +387,26 @@ ion-button {
   }
 }
 
+.link--btn {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
+  touch-action: manipulation;
+
+  &:focus-visible {
+    outline: 2px solid var(--color-sky);
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    color: rgb(226 232 240 / 70%);
+    cursor: not-allowed;
+    text-decoration: none;
+  }
+}
+
 // Fade-in animation
 @keyframes fade-in-up {
   from {
@@ -360,5 +417,19 @@ ion-button {
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .login-header {
+    animation: none;
+  }
+
+  .login-logo {
+    transition: none;
+
+    &:hover {
+      transform: none;
+    }
   }
 }
