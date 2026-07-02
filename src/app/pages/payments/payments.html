@@ -1,19 +1,37 @@
 <ion-header>
   <ion-toolbar>
     <ion-buttons slot="start"><ion-back-button defaultHref="/dashboard" text="Atrás" /></ion-buttons>
-    <ion-title><span class="page-eyebrow">FINANZAS</span><h1>Pagos</h1></ion-title>
+    <ion-title>
+      <div class="toolbar-title">
+        <span class="toolbar-title__greeting">Finanzas</span>
+        <h1 class="toolbar-title__name">Pagos</h1>
+      </div>
+    </ion-title>
   </ion-toolbar>
 </ion-header>
 
 <ion-content class="payments-content">
   <main class="payments-main">
     <section class="stats-grid" aria-label="Resumen de pagos">
-      <ion-card><ion-card-content><ion-icon name="time-outline" aria-hidden="true" /><div><p class="stat-label">Vista actual</p><p class="stat-value">{{ total() }}</p></div></ion-card-content></ion-card>
-      <ion-card><ion-card-content><ion-icon name="cash-outline" aria-hidden="true" /><div><p class="stat-label">Estado</p><p class="stat-value stat-value--text">{{ viewSegment() === paymentStatus.PENDING ? 'Pendientes' : 'Pagados' }}</p></div></ion-card-content></ion-card>
+      <ion-card class="stat-card">
+        <ion-card-content class="stat-card__content">
+          <div class="stat-icon stat-icon--indigo"><ion-icon name="time-outline" aria-hidden="true" /></div>
+          <p class="stat-value">{{ total() }}</p>
+          <p class="stat-label">Vista actual</p>
+        </ion-card-content>
+      </ion-card>
+      <ion-card class="stat-card">
+        <ion-card-content class="stat-card__content">
+          <div class="stat-icon stat-icon--amber"><ion-icon name="cash-outline" aria-hidden="true" /></div>
+          <p class="stat-value stat-value--text">{{ viewSegment() === paymentStatus.PENDING ? 'Pendientes' : 'Pagados' }}</p>
+          <p class="stat-label">Estado</p>
+        </ion-card-content>
+      </ion-card>
     </section>
 
     <section class="page-intro" aria-labelledby="payments-heading">
-      <div><span class="section-kicker">COBROS</span><h2 id="payments-heading">Historial de pagos</h2><p>Consulta cobros de citas, productos y servicios sin mezclar su estado con la agenda.</p></div>
+      <div class="page-intro__icon"><ion-icon name="cash-outline" aria-hidden="true" /></div>
+      <div><span class="section-kicker">Cobros</span><h2 id="payments-heading">Historial de pagos</h2><p>Consulta cobros de citas, productos y servicios sin mezclar su estado con la agenda.</p></div>
     </section>
 
     <section class="payments-panel" aria-label="Listado de pagos">
@@ -34,10 +52,50 @@
           <ion-select-option [value]="sourceType.APPOINTMENT">Citas</ion-select-option>
           <ion-select-option [value]="sourceType.CLIENT_PRODUCT">Productos y servicios</ion-select-option>
         </ion-select>
-        <ion-input type="date" label="Desde" labelPlacement="stacked" [value]="fromFilter()" (ionChange)="setFilter('from', $event)" />
-        <ion-input type="date" label="Hasta" labelPlacement="stacked" [value]="toFilter()" (ionChange)="setFilter('to', $event)" />
+        <div class="date-filter">
+          <p class="date-filter__label">Desde</p>
+          <div class="date-filter__control">
+            <ion-datetime-button datetime="payments-from-picker" />
+            <p class="date-filter__value" aria-hidden="true">{{ fromFilterLabel() }}</p>
+          </div>
+        </div>
+        <div class="date-filter">
+          <p class="date-filter__label">Hasta</p>
+          <div class="date-filter__control">
+            <ion-datetime-button datetime="payments-to-picker" />
+            <p class="date-filter__value" aria-hidden="true">{{ toFilterLabel() }}</p>
+          </div>
+        </div>
         <ion-button fill="clear" size="small" (click)="clearFilters()">Limpiar</ion-button>
       </div>
+
+      <ion-modal [keepContentsMounted]="true" class="app-modal app-modal--picker">
+        <ng-template>
+          <ion-datetime
+            id="payments-from-picker"
+            presentation="date"
+            locale="es-ES"
+            [preferWheel]="false"
+            [value]="fromFilter() || undefined"
+            [max]="toFilter() || undefined"
+            (ionChange)="setDateFilter('from', $event)">
+          </ion-datetime>
+        </ng-template>
+      </ion-modal>
+
+      <ion-modal [keepContentsMounted]="true" class="app-modal app-modal--picker">
+        <ng-template>
+          <ion-datetime
+            id="payments-to-picker"
+            presentation="date"
+            locale="es-ES"
+            [preferWheel]="false"
+            [value]="toFilter() || undefined"
+            [min]="fromFilter() || undefined"
+            (ionChange)="setDateFilter('to', $event)">
+          </ion-datetime>
+        </ng-template>
+      </ion-modal>
 
       @if (loading()) {
         <div class="payments-feedback" role="status">Cargando pagos…</div>

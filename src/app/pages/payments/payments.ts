@@ -7,9 +7,11 @@ import {
   IonCard,
   IonCardContent,
   IonChip,
+  IonDatetime,
+  IonDatetimeButton,
   IonIcon,
-  IonInput,
   IonLabel,
+  IonModal,
   IonSegment,
   IonSegmentButton,
   IonSelect,
@@ -50,9 +52,11 @@ type PaymentSegment = PaymentStatus.PENDING | PaymentStatus.PAID;
     IonCard,
     IonCardContent,
     IonChip,
+    IonDatetime,
+    IonDatetimeButton,
     IonIcon,
-    IonInput,
     IonLabel,
+    IonModal,
     IonSegment,
     IonSegmentButton,
     IonSelect,
@@ -86,6 +90,8 @@ export class PaymentsPage {
   readonly totalPages = computed(() => Math.max(1, Math.ceil(this.total() / this.pageSize)));
   readonly paymentStatus = PaymentStatus;
   readonly sourceType = PaymentSourceType;
+  readonly fromFilterLabel = computed(() => this.formatFilterDate(this.fromFilter()));
+  readonly toFilterLabel = computed(() => this.formatFilterDate(this.toFilter()));
 
   constructor() {
     addIcons({
@@ -138,10 +144,19 @@ export class PaymentsPage {
     this.load();
   }
 
-  setFilter(filter: 'client' | 'source' | 'from' | 'to', event: Event): void {
+  setFilter(filter: 'client' | 'source', event: Event): void {
     const value = String((event as CustomEvent<{ value?: string | null }>).detail.value ?? '');
     if (filter === 'client') this.clientFilter.set(value);
     if (filter === 'source') this.sourceFilter.set(value as PaymentSourceType | '');
+    this.page.set(1);
+    this.syncQuery();
+    this.load();
+  }
+
+  setDateFilter(filter: 'from' | 'to', event: Event): void {
+    const raw = (event as CustomEvent<{ value?: string | string[] | null }>).detail.value;
+    const parsed = Array.isArray(raw) ? raw[0] : raw;
+    const value = typeof parsed === 'string' ? parsed.slice(0, 10) : '';
     if (filter === 'from') this.fromFilter.set(value);
     if (filter === 'to') this.toFilter.set(value);
     this.page.set(1);
@@ -202,6 +217,13 @@ export class PaymentsPage {
       amount: payment.amount,
       description: payment.description,
     }).subscribe({ next: () => this.load() });
+  }
+
+  private formatFilterDate(value: string): string {
+    if (!value) return 'Cualquiera';
+    const date = new Date(`${value}T00:00:00`);
+    if (Number.isNaN(date.getTime())) return 'Cualquiera';
+    return date.toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' });
   }
 
   private load(): void {

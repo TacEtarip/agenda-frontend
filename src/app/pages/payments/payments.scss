@@ -18,7 +18,7 @@ ion-back-button { --color: var(--color-text-inverse); }
 .payments-content { --background: linear-gradient(180deg, var(--color-frost-light) 0%, var(--color-surface-alt) 42%, var(--color-surface) 100%); }
 .payments-main { width: min(100%, 72rem); margin: 0 auto; padding-bottom: max(2rem, env(safe-area-inset-bottom)); }
 
-.stats-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.75rem; padding: 1rem; }
+.stats-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.75rem; padding: 1rem; }
 .stat-card { margin: 0; border: 1px solid var(--color-border); border-radius: 1rem; background: linear-gradient(180deg, var(--color-surface) 0%, var(--color-surface-alt) 100%); box-shadow: 0 20px 26px -26px rgb(var(--color-indigo-rgb) / 55%); }
 .stat-card__content { padding: 0.75rem; text-align: center; }
 .stat-icon { width: 2.3rem; height: 2.3rem; margin: 0 auto 0.5rem; border-radius: 9999px; display: grid; place-items: center; font-size: 1rem; }
@@ -32,6 +32,7 @@ ion-back-button { --color: var(--color-text-inverse); }
 .page-intro__icon { width: 2.4rem; height: 2.4rem; flex: 0 0 auto; display: grid; place-items: center; border-radius: 0.75rem; color: var(--color-indigo-shade); background: var(--color-indigo-light); }
 .page-intro h2 { margin: 0; font-size: 0.92rem; color: var(--color-text); text-wrap: balance; }
 .page-intro p { margin: 0.2rem 0 0; font-size: 0.78rem; line-height: 1.5; color: var(--color-text-muted); text-wrap: pretty; }
+.section-kicker { display: block; margin: 0 0 0.15rem; font-size: 0.7rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: var(--color-indigo-shade); }
 
 .payments-panel { margin: 0.9rem 1rem 0; padding: 0.8rem; border: 1px solid var(--color-border); border-radius: 1.15rem; background: rgb(255 255 255 / 70%); box-shadow: 0 20px 28px -26px rgb(var(--color-indigo-rgb) / 50%); }
 ion-segment { --background: var(--color-surface-alt); padding: 0.2rem; border-radius: 0.85rem; }
@@ -73,6 +74,31 @@ ion-segment { --background: var(--color-surface-alt); padding: 0.2rem; border-ra
   gap: .75rem;
   align-items: end;
   margin: 1rem 0;
+}
+
+.date-filter {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+.date-filter__label { margin: 0; font-size: 0.75rem; color: var(--color-text-muted); }
+.date-filter__control { position: relative; }
+.date-filter__control ion-datetime-button {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  opacity: 0;
+}
+.date-filter__control ion-datetime-button::part(native) { width: 100%; height: 100%; }
+.date-filter__value {
+  margin: 0;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.6rem;
+  background: var(--color-surface);
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--color-text);
 }
 
 .payments-pagination { display: flex; justify-content: center; align-items: center; gap: .5rem; }
