@@ -7,147 +7,96 @@
       </div>
     </ion-title>
     <ion-buttons slot="end">
-      <ion-button (click)="logout()" aria-label="Cerrar sesión" title="Cerrar sesión">
-        <ion-icon slot="icon-only" name="log-out-outline" aria-hidden="true"></ion-icon>
-      </ion-button>
+      <app-user-menu />
     </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
-<a class="skip-link" href="#dashboard-main">Saltar al contenido principal</a>
-
 <ion-content class="dashboard-content">
   <main id="dashboard-main" class="dashboard-main" tabindex="-1">
-
-  <!-- Stats Row -->
-  <section class="stats-grid" aria-label="Resumen del negocio">
-    @for (stat of stats(); track stat.label) {
-      <ion-card class="stat-card">
-        <ion-card-content class="stat-card__content">
-          <div class="stat-icon {{ stat.color }}">
-            <ion-icon [name]="stat.icon" aria-hidden="true"></ion-icon>
-          </div>
-          <p class="stat-value">{{ stat.value }}</p>
-          <p class="stat-label">{{ stat.label }}</p>
-        </ion-card-content>
-      </ion-card>
-    }
-  </section>
-
-  @if (pendingPaymentCount() > 0) {
-    <a class="priority-action" routerLink="/payments">
-      <ion-icon name="cash-outline" aria-hidden="true"></ion-icon>
-      <span><strong>{{ pendingPaymentCount() }} pagos pendientes</strong> requieren seguimiento.</span>
-      <span class="priority-action__cta">Revisar pagos</span>
-    </a>
-  }
+  <div class="visually-hidden" aria-live="polite" aria-atomic="true">{{ addClientStatusMessage() }}</div>
 
   @if (loadState() === 'error') {
     <div class="load-feedback load-feedback--error" role="alert">{{ loadError() }}</div>
   }
 
-  <div class="section-header">
-    <div class="section-header__row">
-      <h2 class="section-title">Gestión comercial</h2>
-    </div>
-  </div>
-
-  <div class="quick-links-grid">
-    <a class="quick-link-card" routerLink="/products">
-      <div class="quick-link-card__icon quick-link-card__icon--sky">
-        <ion-icon name="pricetag-outline" aria-hidden="true"></ion-icon>
-      </div>
-      <div class="quick-link-card__body">
-        <p class="quick-link-card__title">Productos</p>
-        <p class="quick-link-card__text">Gestiona catálogo y precios.</p>
-      </div>
-      <ion-icon name="chevron-forward-outline" class="quick-link-card__arrow" aria-hidden="true"></ion-icon>
-    </a>
-
-    <a class="quick-link-card" routerLink="/settings">
-      <div class="quick-link-card__icon quick-link-card__icon--indigo">
-        <ion-icon name="settings-outline" aria-hidden="true"></ion-icon>
-      </div>
-      <div class="quick-link-card__body">
-        <p class="quick-link-card__title">Ajustes</p>
-        <p class="quick-link-card__text">Edita tu perfil e integraciones.</p>
-      </div>
-      <ion-icon name="chevron-forward-outline" class="quick-link-card__arrow" aria-hidden="true"></ion-icon>
-    </a>
-
-    <a class="quick-link-card" routerLink="/message-templates">
-      <div class="quick-link-card__icon quick-link-card__icon--green">
-        <ion-icon name="chatbubbles-outline" aria-hidden="true"></ion-icon>
-      </div>
-      <div class="quick-link-card__body">
-        <p class="quick-link-card__title">Plantillas</p>
-        <p class="quick-link-card__text">Gestiona mensajes por etapa.</p>
-      </div>
-      <ion-icon name="chevron-forward-outline" class="quick-link-card__arrow" aria-hidden="true"></ion-icon>
-    </a>
-
-    <a class="quick-link-card" routerLink="/payments">
-      <div class="quick-link-card__icon quick-link-card__icon--amber">
-        <ion-icon name="cash-outline" aria-hidden="true"></ion-icon>
-      </div>
-      <div class="quick-link-card__body">
-        <p class="quick-link-card__title">Pagos</p>
-        <p class="quick-link-card__text">Control de ingresos y enlaces.</p>
-      </div>
-      <ion-icon name="chevron-forward-outline" class="quick-link-card__arrow" aria-hidden="true"></ion-icon>
-    </a>
-  </div>
-
-  <!-- Today's Appointments -->
-  <div class="section-header">
-    <div class="section-header__row">
-      <h2 class="section-title">Citas de hoy</h2>
-      @if (upcomingAppointments().length > 0) {
-        <button
-          type="button"
-          class="see-all-btn"
-          (click)="toggleAppointmentsView()"
-          [attr.aria-expanded]="showAllAppointments()">
-          {{ showAllAppointments() ? 'Ver menos' : 'Ver todas' }}
-        </button>
-      }
-    </div>
-  </div>
-
-  <div
-    [class.appointments-scroll]="!showAllAppointments()"
-    [class.appointments-list]="showAllAppointments()">
-    @for (appt of upcomingAppointments(); track appt.id) {
-      <ion-card class="appt-card" [class.appt-card--expanded]="showAllAppointments()">
-        <ion-card-content class="appt-card__content">
-          <div class="appt-card__header">
-            <div class="appt-avatar">
-              {{ appt.initials }}
-            </div>
-            <div class="appt-info">
-              <p class="appt-client-name">{{ appt.clientName }}</p>
-              <p class="appt-service">{{ appt.title }}</p>
-            </div>
-          </div>
-          <div class="appt-card__footer">
-            <ion-icon name="time-outline" class="appt-time-icon" aria-hidden="true"></ion-icon>
-            <span class="appt-time-text">{{ appt.time }}</span>
-            <ion-chip [color]="appt.status === 'scheduled' ? 'primary' : 'success'" class="appt-status-chip">{{ appt.status | appointmentStatusLabel }}</ion-chip>
-          </div>
-        </ion-card-content>
-      </ion-card>
-    } @empty {
-      <div class="appointments-empty" role="status">
-        <div class="appointments-empty__icon" aria-hidden="true">
-          <ion-icon name="calendar-outline"></ion-icon>
-        </div>
+  <section class="dashboard-overview" aria-label="Resumen de hoy">
+    <section class="agenda-hero" aria-labelledby="agenda-title">
+      <div class="agenda-hero__header">
         <div>
-          <p class="appointments-empty__title">Tu agenda está libre hoy</p>
-          <p class="appointments-empty__text">Las próximas citas aparecerán aquí para que tengas el día bajo control.</p>
+          <span class="agenda-kicker">Agenda de hoy</span>
+          <h2 id="agenda-title">Tu día, de un vistazo</h2>
         </div>
+        <span class="agenda-count app-data">{{ upcomingAppointments().length }} citas</span>
       </div>
-    }
-  </div>
+
+      <div class="agenda-timeline">
+        @for (appt of upcomingAppointments(); track appt.id; let isFirst = $first) {
+          <article class="agenda-item" [class.agenda-item--next]="isFirst">
+            <time class="agenda-item__time" [attr.datetime]="appt.time">{{ appt.time }}</time>
+            <span class="agenda-item__marker" aria-hidden="true"></span>
+            <div class="agenda-item__body">
+              <div class="agenda-item__heading">
+                <div class="appt-avatar" aria-hidden="true">{{ appt.initials }}</div>
+                <div class="appt-info">
+                  <h3 class="appt-client-name">{{ appt.clientName }}</h3>
+                  <p class="appt-service">{{ appt.title }}</p>
+                </div>
+              </div>
+              <div class="agenda-item__status">
+                @if (isFirst) { <span class="next-label">Próxima</span> }
+                <ion-chip color="primary" class="appt-status-chip">{{ appt.status | appointmentStatusLabel }}</ion-chip>
+              </div>
+            </div>
+          </article>
+        } @empty {
+          <div class="appointments-empty" role="status">
+            <div class="appointments-empty__icon" aria-hidden="true">
+              <ion-icon name="calendar-outline" aria-hidden="true"></ion-icon>
+            </div>
+            <div>
+              <p class="appointments-empty__title">Tu agenda está libre hoy</p>
+              <p class="appointments-empty__text">Aprovecha el espacio para contactar clientes o preparar tu próxima cita.</p>
+            </div>
+          </div>
+        }
+      </div>
+    </section>
+
+    <aside class="dashboard-summary" aria-label="Actividad del negocio">
+      <section class="stats-grid" aria-label="Resumen del negocio">
+        @for (stat of stats(); track stat.label) {
+          <div class="stat-card">
+            <div class="stat-icon {{ stat.color }}"><ion-icon [name]="stat.icon" aria-hidden="true"></ion-icon></div>
+            <div>
+              <p class="stat-value">{{ stat.value }}</p>
+              <p class="stat-label">{{ stat.label }}</p>
+            </div>
+          </div>
+        }
+      </section>
+
+      @if (pendingPaymentCount() > 0) {
+        <a class="priority-action" routerLink="/payments">
+          <ion-icon name="cash-outline" aria-hidden="true"></ion-icon>
+          <span><strong>{{ pendingPaymentCount() }} pagos pendientes</strong><small>Requieren seguimiento.</small></span>
+          <span class="priority-action__cta">Revisar</span>
+        </a>
+      }
+
+      <section aria-labelledby="quick-actions-title">
+        <div class="section-header section-header--compact">
+          <h2 id="quick-actions-title" class="section-title">Acciones frecuentes</h2>
+        </div>
+        <div class="quick-links-grid">
+          <a class="quick-link-card" routerLink="/products"><ion-icon name="pricetag-outline" aria-hidden="true"></ion-icon><span>Productos</span><ion-icon name="chevron-forward-outline" aria-hidden="true"></ion-icon></a>
+          <a class="quick-link-card" routerLink="/message-templates"><ion-icon name="chatbubbles-outline" aria-hidden="true"></ion-icon><span>Plantillas</span><ion-icon name="chevron-forward-outline" aria-hidden="true"></ion-icon></a>
+          <a class="quick-link-card" routerLink="/payments"><ion-icon name="cash-outline" aria-hidden="true"></ion-icon><span>Pagos</span><ion-icon name="chevron-forward-outline" aria-hidden="true"></ion-icon></a>
+          <a class="quick-link-card" routerLink="/settings"><ion-icon name="settings-outline" aria-hidden="true"></ion-icon><span>Ajustes</span><ion-icon name="chevron-forward-outline" aria-hidden="true"></ion-icon></a>
+        </div>
+      </section>
+    </aside>
+  </section>
 
   <!-- Clients -->
   <div class="section-header">
@@ -213,9 +162,17 @@
       </ion-item>
     }
     @empty {
-      <ion-item>
-        <ion-label class="empty-label">No se encontraron clientes</ion-label>
-      </ion-item>
+      @if (searchQuery() || stageFilter() !== 'ALL') {
+        <div class="clients-empty" role="status">
+          <p>No hay clientes que coincidan con los filtros.</p>
+          <ion-button fill="clear" size="small" (click)="clearClientFilters()">Limpiar filtros</ion-button>
+        </div>
+      } @else if (loadState() !== 'loading') {
+        <div class="clients-empty" role="status">
+          <p>Todavía no tienes clientes.</p>
+          <ion-button fill="clear" size="small" (click)="openAddClientModal()">Agregar cliente</ion-button>
+        </div>
+      }
     }
     @if (loadState() === 'loading') {
       <div class="load-feedback" role="status">Cargando clientes…</div>
@@ -267,27 +224,43 @@
 
             <form class="app-modal-body add-client-form" [formGroup]="addClientForm" (ngSubmit)="createClient()">
               <div class="add-client-form__grid">
+                <div class="form-field">
                 <ion-input
+                  id="add-client-first-name"
                   formControlName="firstName"
                   name="firstName"
                   autocomplete="given-name"
                   label="Nombre"
                   labelPlacement="floating"
                   fill="outline"
-                  shape="round">
+                  shape="round"
+                  [attr.aria-describedby]="addClientForm.controls.firstName.touched && addClientForm.controls.firstName.invalid ? 'add-client-first-name-error' : null">
                 </ion-input>
+                @if (addClientForm.controls.firstName.touched && addClientForm.controls.firstName.invalid) {
+                  <p id="add-client-first-name-error" class="field-error">Ingresa el nombre del cliente.</p>
+                }
+                </div>
 
+                <div class="form-field">
                 <ion-input
+                  id="add-client-last-name"
                   formControlName="lastName"
                   name="lastName"
                   autocomplete="family-name"
                   label="Apellido"
                   labelPlacement="floating"
                   fill="outline"
-                  shape="round">
+                  shape="round"
+                  [attr.aria-describedby]="addClientForm.controls.lastName.touched && addClientForm.controls.lastName.invalid ? 'add-client-last-name-error' : null">
                 </ion-input>
+                @if (addClientForm.controls.lastName.touched && addClientForm.controls.lastName.invalid) {
+                  <p id="add-client-last-name-error" class="field-error">Ingresa el apellido del cliente.</p>
+                }
+                </div>
 
+                <div class="form-field">
                 <ion-input
+                  id="add-client-email"
                   formControlName="email"
                   name="email"
                   autocomplete="email"
@@ -297,10 +270,17 @@
                   label="Correo electrónico"
                   labelPlacement="floating"
                   fill="outline"
-                  shape="round">
+                  shape="round"
+                  [attr.aria-describedby]="addClientForm.controls.email.touched && addClientForm.controls.email.invalid ? 'add-client-email-error' : null">
                 </ion-input>
+                @if (addClientForm.controls.email.touched && addClientForm.controls.email.invalid) {
+                  <p id="add-client-email-error" class="field-error">Ingresa un correo electrónico válido.</p>
+                }
+                </div>
 
+                <div class="form-field">
                 <ion-input
+                  id="add-client-phone"
                   formControlName="phone"
                   name="phone"
                   autocomplete="tel"
@@ -309,8 +289,13 @@
                   label="Número de teléfono"
                   labelPlacement="floating"
                   fill="outline"
-                  shape="round">
+                  shape="round"
+                  [attr.aria-describedby]="addClientForm.controls.phone.touched && addClientForm.controls.phone.invalid ? 'add-client-phone-error' : null">
                 </ion-input>
+                @if (addClientForm.controls.phone.touched && addClientForm.controls.phone.invalid) {
+                  <p id="add-client-phone-error" class="field-error">Ingresa el teléfono del cliente.</p>
+                }
+                </div>
 
                 <div
                   class="add-client-stage"
@@ -335,26 +320,9 @@
                 </div>
               </div>
 
-              @if (
-                (addClientForm.controls.firstName.touched && addClientForm.controls.firstName.invalid) ||
-                (addClientForm.controls.lastName.touched && addClientForm.controls.lastName.invalid)
-              ) {
-                <p class="form-feedback form-feedback--error" role="alert">
-                  Nombre y apellido son obligatorios.
-                </p>
-              }
-
-              @if (addClientForm.controls.email.touched && addClientForm.controls.email.invalid) {
-                <p class="form-feedback form-feedback--error" role="alert">
-                  Ingresa un correo electrónico válido.
-                </p>
-              }
-
-              @if (addClientForm.controls.phone.touched && addClientForm.controls.phone.invalid) {
-                <p class="form-feedback form-feedback--error" role="alert">
-                  El teléfono es obligatorio.
-                </p>
-              }
+              <div class="form-status" aria-live="polite" aria-atomic="true">
+                {{ addClientStatusMessage() }}
+              </div>
 
               <div class="app-modal-actions">
                 <ion-button

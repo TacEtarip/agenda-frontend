@@ -6,7 +6,7 @@ import {
 } from './core/guards/auth.guard';
 
 export const routes: Routes = [
-  { path: '', canActivate: [sessionRedirectGuard], children: [] },
+  { path: '', pathMatch: 'full', canActivate: [sessionRedirectGuard], children: [] },
   {
     path: 'login',
     canActivate: [guestGuard],
@@ -14,44 +14,52 @@ export const routes: Routes = [
       import('./pages/auth/login/login').then((m) => m.LoginPage),
   },
   {
-    path: 'dashboard',
+    path: '',
     canActivate: [authGuard],
     loadComponent: () =>
-      import('./pages/dashboard/dashboard').then((m) => m.DashboardPage),
-  },
-  {
-    path: 'products',
-    canActivate: [authGuard],
-    loadComponent: () =>
-      import('./pages/products/products').then((m) => m.ProductsPage),
-  },
-  {
-    path: 'message-templates',
-    canActivate: [authGuard],
-    loadComponent: () =>
-      import('./pages/message-templates/message-templates').then(
-        (m) => m.MessageTemplatesPage,
-      ),
-  },
-  {
-    path: 'payments',
-    canActivate: [authGuard],
-    loadComponent: () =>
-      import('./pages/payments/payments').then((m) => m.PaymentsPage),
-  },
-  {
-    path: 'settings',
-    canActivate: [authGuard],
-    loadComponent: () =>
-      import('./pages/settings/settings').then((m) => m.SettingsPage),
-  },
-  {
-    path: 'clients/:id',
-    canActivate: [authGuard],
-    loadComponent: () =>
-      import('./pages/client-detail/client-detail').then(
-        (m) => m.ClientDetailPage,
-      ),
+      import('./shared/components/app-shell/app-shell').then((m) => m.AppShell),
+    children: [
+      {
+        path: 'dashboard',
+        title: 'Inicio | TacEtarip',
+        loadComponent: () =>
+          import('./pages/dashboard/dashboard').then((m) => m.DashboardPage),
+      },
+      {
+        path: 'products',
+        title: 'Productos | TacEtarip',
+        loadComponent: () =>
+          import('./pages/products/products').then((m) => m.ProductsPage),
+      },
+      {
+        path: 'message-templates',
+        title: 'Mensajes | TacEtarip',
+        loadComponent: () =>
+          import('./pages/message-templates/message-templates').then(
+            (m) => m.MessageTemplatesPage,
+          ),
+      },
+      {
+        path: 'payments',
+        title: 'Pagos | TacEtarip',
+        loadComponent: () =>
+          import('./pages/payments/payments').then((m) => m.PaymentsPage),
+      },
+      {
+        path: 'settings',
+        title: 'Ajustes | TacEtarip',
+        loadComponent: () =>
+          import('./pages/settings/settings').then((m) => m.SettingsPage),
+      },
+      {
+        path: 'clients/:id',
+        title: 'Cliente | TacEtarip',
+        loadComponent: () =>
+          import('./pages/client-detail/client-detail').then(
+            (m) => m.ClientDetailPage,
+          ),
+      },
+    ],
   },
   { path: '**', canActivate: [sessionRedirectGuard], children: [] },
 ];

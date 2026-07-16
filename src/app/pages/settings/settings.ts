@@ -51,6 +51,7 @@ import {
   VALID_INTEGRATION_PROVIDERS,
 } from './constants/settings.constants';
 import { UserApiService } from '../../core/services/user-api.service';
+import { UserMenuComponent } from '../../shared/components/user-menu/user-menu';
 
 @Component({
   selector: 'app-settings',
@@ -65,6 +66,7 @@ import { UserApiService } from '../../core/services/user-api.service';
     IonRadio,
     IonToggle,
     IonSpinner,
+    UserMenuComponent,
   ],
   templateUrl: './settings.html',
   styleUrl: './settings.scss',

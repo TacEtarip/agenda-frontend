@@ -7,6 +7,7 @@
         <h1 class="toolbar-title__name">Pagos</h1>
       </div>
     </ion-title>
+    <ion-buttons slot="end"><app-user-menu /></ion-buttons>
   </ion-toolbar>
 </ion-header>
 
@@ -66,7 +67,7 @@
             <p class="date-filter__value" aria-hidden="true">{{ toFilterLabel() }}</p>
           </div>
         </div>
-        <ion-button fill="clear" size="small" (click)="clearFilters()">Limpiar</ion-button>
+        <ion-button class="payment-filters__clear" fill="outline" size="small" (click)="clearFilters()">Limpiar</ion-button>
       </div>
 
       <ion-modal [keepContentsMounted]="true" class="app-modal app-modal--picker">
@@ -124,7 +125,7 @@
                   <ion-button fill="outline" size="small" (click)="copyLink(payment)" [disabled]="!payment.checkoutUrl"><ion-icon slot="start" name="copy-outline" aria-hidden="true" />Copiar</ion-button>
                   <ion-button fill="outline" size="small" color="success" (click)="sendLink(payment)" [disabled]="!payment.checkoutUrl"><ion-icon slot="start" name="logo-whatsapp" aria-hidden="true" />WhatsApp</ion-button>
                   <ion-button fill="clear" size="small" (click)="regenerate(payment)"><ion-icon slot="start" name="refresh-outline" aria-hidden="true" />Regenerar</ion-button>
-                  <ion-button fill="clear" size="small" color="danger" (click)="cancel(payment)"><ion-icon slot="start" name="trash-outline" aria-hidden="true" />Cancelar</ion-button>
+                  <ion-button fill="clear" size="small" color="danger" (click)="cancel(payment)" [disabled]="cancellingPaymentId() !== null"><ion-icon slot="start" name="trash-outline" aria-hidden="true" />{{ cancellingPaymentId() === payment.id ? 'Cancelando…' : 'Cancelar' }}</ion-button>
                 </div>
               }
             </ion-card-content>

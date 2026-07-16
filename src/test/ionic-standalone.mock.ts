@@ -20,7 +20,11 @@ export class IonRouterOutlet {}
 export {
   IonApp as IonButton,
   IonApp as IonButtons,
+  IonApp as IonCard,
+  IonApp as IonCardContent,
   IonApp as IonContent,
+  IonApp as IonDatetime,
+  IonApp as IonDatetimeButton,
   IonApp as IonHeader,
   IonApp as IonIcon,
   IonApp as IonInput,

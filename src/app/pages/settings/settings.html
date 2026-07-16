@@ -9,6 +9,7 @@
         <h1 class="toolbar-title__name">Ajustes del usuario</h1>
       </div>
     </ion-title>
+    <ion-buttons slot="end"><app-user-menu /></ion-buttons>
   </ion-toolbar>
 </ion-header>
 
@@ -36,6 +37,8 @@
           <div class="profile-grid">
             <ion-input
               formControlName="firstName"
+              name="given-name"
+              autocomplete="given-name"
               label="Nombre"
               labelPlacement="floating"
               fill="outline"
@@ -44,6 +47,8 @@
 
             <ion-input
               formControlName="lastName"
+              name="family-name"
+              autocomplete="family-name"
               label="Apellido"
               labelPlacement="floating"
               fill="outline"
@@ -52,6 +57,10 @@
 
             <ion-input
               formControlName="email"
+              name="email"
+              autocomplete="email"
+              inputmode="email"
+              [spellcheck]="false"
               type="email"
               label="Correo electrónico"
               labelPlacement="floating"
@@ -61,6 +70,9 @@
 
             <ion-input
               formControlName="phone"
+              name="tel"
+              autocomplete="tel"
+              inputmode="tel"
               type="tel"
               label="Teléfono"
               labelPlacement="floating"
@@ -103,7 +115,7 @@
           [value]="currentIntegration()"
           (ionChange)="setIntegration($event)">
           <ion-item lines="none" class="integration-item">
-            <ion-icon slot="start" name="information-circle-outline"></ion-icon>
+            <ion-icon slot="start" name="information-circle-outline" aria-hidden="true"></ion-icon>
             <ion-label>
               <h3>Sin integración</h3>
               <p>Gestiona tu agenda solo dentro de la app.</p>
@@ -112,7 +124,7 @@
           </ion-item>
 
           <ion-item lines="none" class="integration-item">
-            <ion-icon slot="start" name="logo-google"></ion-icon>
+            <ion-icon slot="start" name="logo-google" aria-hidden="true"></ion-icon>
             <ion-label>
               <h3>Google</h3>
               <p>Conecta Google Calendar y contactos.</p>
@@ -121,7 +133,7 @@
           </ion-item>
 
           <ion-item lines="none" class="integration-item">
-            <ion-icon slot="start" name="logo-microsoft"></ion-icon>
+            <ion-icon slot="start" name="logo-microsoft" aria-hidden="true"></ion-icon>
             <ion-label>
               <h3>Microsoft</h3>
               <p>Conecta Outlook Calendar y contactos.</p>
@@ -131,7 +143,7 @@
         </ion-radio-group>
 
         <div class="integration-summary">
-          <ion-icon name="checkmark-circle-outline"></ion-icon>
+          <ion-icon name="checkmark-circle-outline" aria-hidden="true"></ion-icon>
           <p>
             <strong>{{ integrationTitle() }}</strong>
             {{ integrationDescription() }}
@@ -143,30 +155,33 @@
             <h3>Configuración de sincronización</h3>
             <ion-list lines="none">
               <ion-item>
-                <ion-icon slot="start" name="calendar-clear-outline"></ion-icon>
+                <ion-icon slot="start" name="calendar-clear-outline" aria-hidden="true"></ion-icon>
                 <ion-label>Sincronizar calendario</ion-label>
                 <ion-toggle
                   slot="end"
+                  aria-label="Sincronizar calendario"
                   [checked]="integrationSettings().syncCalendar"
                   (ionChange)="updateIntegrationSetting(IntegrationPreference.SYNC_CALENDAR, $event)">
                 </ion-toggle>
               </ion-item>
 
               <ion-item>
-                <ion-icon slot="start" name="sync-outline"></ion-icon>
+                <ion-icon slot="start" name="sync-outline" aria-hidden="true"></ion-icon>
                 <ion-label>Sincronizar contactos</ion-label>
                 <ion-toggle
                   slot="end"
+                  aria-label="Sincronizar contactos"
                   [checked]="integrationSettings().syncContacts"
                   (ionChange)="updateIntegrationSetting(IntegrationPreference.SYNC_CONTACTS, $event)">
                 </ion-toggle>
               </ion-item>
 
               <ion-item>
-                <ion-icon slot="start" name="notifications-outline"></ion-icon>
+                <ion-icon slot="start" name="notifications-outline" aria-hidden="true"></ion-icon>
                 <ion-label>Resumen diario por correo</ion-label>
                 <ion-toggle
                   slot="end"
+                  aria-label="Enviar resumen diario por correo"
                   [checked]="integrationSettings().sendDailyDigest"
                   (ionChange)="updateIntegrationSetting(IntegrationPreference.SEND_DAILY_DIGEST, $event)">
                 </ion-toggle>
@@ -176,7 +191,7 @@
         }
 
         <div class="actions-row">
-          <ion-button (click)="saveIntegration()" (keydown.enter)="saveIntegration()">Guardar integración</ion-button>
+          <ion-button (click)="saveIntegration()">Guardar integración</ion-button>
         </div>
 
         @if (integrationSavedMessage()) {
@@ -204,7 +219,7 @@
         <div class="whatsapp-status-container">
           <div class="whatsapp-status-row">
             <p>Estado actual: <strong>{{ whatsappStatus() }}</strong></p>
-            <ion-button fill="outline" size="small" (click)="checkWhatsappStatus()" [disabled]="isPollingQr()" aria-label="Actualizar estado de WhatsApp">
+            <ion-button class="icon-touch-target" fill="outline" size="small" (click)="checkWhatsappStatus()" [disabled]="isPollingQr()" aria-label="Actualizar estado de WhatsApp">
               <ion-icon name="refresh-outline" slot="icon-only" aria-hidden="true"></ion-icon>
             </ion-button>
           </div>
@@ -249,10 +264,11 @@
         <div class="integration-config integration-config--spaced">
           <ion-list lines="none">
             <ion-item>
-              <ion-icon slot="start" name="cash-outline"></ion-icon>
+              <ion-icon slot="start" name="cash-outline" aria-hidden="true"></ion-icon>
               <ion-label>Habilitar cobro por Link de Pago</ion-label>
               <ion-toggle
                 slot="end"
+                aria-label="Habilitar cobro por enlace de pago"
                 [checked]="enablePayments()"
                 (ionChange)="updatePaymentSetting($event)">
               </ion-toggle>

@@ -2,11 +2,13 @@ import { Component, input, output, signal, inject } from '@angular/core';
 import {
   IonButton,
   IonButtons,
-  IonContent,
+  IonCard,
+  IonCardContent,
+  IonDatetime,
+  IonDatetimeButton,
   IonHeader,
   IonIcon,
   IonInput,
-  IonItem,
   IonLabel,
   IonModal,
   IonNote,
@@ -33,11 +35,13 @@ type PaymentFormMode = 'LINK' | 'MANUAL';
   imports: [
     IonButton,
     IonButtons,
-    IonContent,
+    IonCard,
+    IonCardContent,
+    IonDatetime,
+    IonDatetimeButton,
     IonHeader,
     IonIcon,
     IonInput,
-    IonItem,
     IonLabel,
     IonModal,
     IonNote,
@@ -110,6 +114,30 @@ export class PaymentFormModal {
   setText(target: 'amount' | 'description' | 'paidAt' | 'reference', event: Event): void {
     const value = String((event as CustomEvent<{ value?: string | number | null }>).detail.value ?? '');
     this[target].set(value);
+  }
+
+  setAmount(event: Event): void {
+    const input = event.target as HTMLIonInputElement;
+    const rawValue = String((event as CustomEvent<{ value?: string | number | null }>).detail.value ?? '');
+    const normalized = rawValue.replace(',', '.').replace(/[^\d.]/g, '');
+    const [integer = '', ...decimalParts] = normalized.split('.');
+    const sanitized = decimalParts.length
+      ? `${integer}.${decimalParts.join('').slice(0, 2)}`
+      : integer;
+
+    input.value = sanitized;
+    this.amount.set(sanitized);
+    this.error.set(null);
+  }
+
+  formatAmount(): void {
+    const value = Number(this.amount());
+    if (Number.isFinite(value) && value > 0) this.amount.set(value.toFixed(2));
+  }
+
+  setPaidAt(event: Event): void {
+    const value = String((event as CustomEvent<{ value?: string | string[] | null }>).detail.value ?? '');
+    if (value) this.paidAt.set(value.slice(0, 10));
   }
 
   setMethod(event: Event): void {

@@ -28,6 +28,7 @@ import { TemplatePreviewResult, TemplateVariableMetadata } from '../../interface
 import { catchError, debounceTime, distinctUntilChanged, of, switchMap, tap } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { validateTemplateMessage } from './template-validation';
+import { UserMenuComponent } from '../../shared/components/user-menu/user-menu';
 
 @Component({
   selector: 'app-message-templates',
@@ -38,6 +39,7 @@ import { validateTemplateMessage } from './template-validation';
     IonBackButton,
     IonTextarea,
     FormatDatePipe,
+    UserMenuComponent,
   ],
   templateUrl: './message-templates.html',
   styleUrl: './message-templates.scss',

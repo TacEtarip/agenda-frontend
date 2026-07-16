@@ -1,0 +1,46 @@
+<a class="app-skip-link" href="#route-content">Saltar al contenido principal</a>
+
+<div class="app-shell">
+  <aside class="app-shell__sidebar" aria-label="Navegación principal">
+    <a class="app-shell__brand" routerLink="/dashboard" aria-label="TacEtarip, ir al inicio">
+      <span class="app-shell__brand-mark" aria-hidden="true">T</span>
+      <span class="app-shell__brand-copy">
+        <strong>TacEtarip</strong>
+        <small>Tu agenda al día</small>
+      </span>
+    </a>
+
+    <nav class="app-shell__nav">
+      @for (item of navigationItems; track item.route) {
+        <a
+          class="app-shell__nav-link"
+          [routerLink]="item.route"
+          routerLinkActive="app-shell__nav-link--active"
+          [routerLinkActiveOptions]="{ exact: true }"
+          [attr.aria-label]="item.label"
+          [title]="item.label">
+          <ion-icon [name]="item.icon" aria-hidden="true" />
+          <span>{{ item.label }}</span>
+        </a>
+      }
+    </nav>
+  </aside>
+
+  <section id="route-content" class="app-shell__viewport" tabindex="-1">
+    <ion-router-outlet />
+  </section>
+
+  <nav class="app-shell__bottom-nav" aria-label="Navegación principal">
+    @for (item of navigationItems; track item.route) {
+      <a
+        class="app-shell__bottom-link"
+        [routerLink]="item.route"
+        routerLinkActive="app-shell__bottom-link--active"
+        [routerLinkActiveOptions]="{ exact: true }"
+        [attr.aria-label]="item.label">
+        <ion-icon [name]="item.icon" aria-hidden="true" />
+        <span>{{ item.shortLabel }}</span>
+      </a>
+    }
+  </nav>
+</div>

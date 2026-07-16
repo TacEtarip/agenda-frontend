@@ -102,6 +102,7 @@ ion-modal.app-modal.app-modal--picker .ion-page {
 .app-modal-content {
   max-height: calc(92vh - 4.25rem);
   overflow: auto;
+  overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
   background:
     radial-gradient(circle at top right, rgb(var(--color-sky-rgb) / 18%), transparent 34%),
@@ -226,3 +227,175 @@ ion-content.login-content::part(scroll) {
 .payment-state > div:first-child, .payment-state__actions { display: flex; align-items: center; gap: .45rem; flex-wrap: wrap; }
 .create-payment-button { margin-top: .75rem; }
 .product-type-chip { height: 1.4rem; margin-left: .4rem; font-size: .68rem; vertical-align: middle; }
+
+app-client-detail :is(.appointment-actions__primary, .appointment-actions__secondary) {
+  display: contents;
+}
+
+@media (max-width: 430px) {
+  app-client-detail .appt-actions[aria-label='Acciones del producto'] {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: .5rem;
+    width: 100%;
+  }
+
+  app-client-detail .product-actions__statuses {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: .35rem;
+    width: 100%;
+  }
+
+  app-client-detail .product-actions__management {
+    display: grid;
+    grid-template-columns: repeat(2, 2.75rem);
+    justify-content: end;
+    gap: .35rem;
+    width: 100%;
+  }
+
+  app-client-detail :is(.product-actions__statuses, .product-actions__management) ion-button {
+    min-width: 0;
+    min-height: 2.75rem;
+    margin: 0;
+    touch-action: manipulation;
+  }
+
+  app-client-detail .product-actions__statuses ion-button {
+    width: 100%;
+  }
+
+  app-client-detail .product-actions__management ion-button {
+    width: 2.75rem;
+    height: 2.75rem;
+  }
+
+  app-client-detail :is(.product-actions__statuses, .product-actions__management) ion-button:focus-visible {
+    outline: 3px solid rgba(var(--ion-color-primary-rgb), .35);
+    outline-offset: 2px;
+  }
+
+  app-client-detail .appointment-actions {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 2.75rem;
+    gap: .35rem;
+    width: 100%;
+  }
+
+  app-client-detail .appointment-actions__primary {
+    display: grid;
+    grid-column: 1;
+    grid-row: 1;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: .35rem;
+    min-width: 0;
+  }
+
+  app-client-detail .appointment-actions__secondary {
+    display: grid;
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  app-client-detail :is(.appointment-actions__primary, .appointment-actions__secondary) ion-button {
+    min-width: 0;
+    min-height: 2.75rem;
+    margin: 0;
+    touch-action: manipulation;
+  }
+
+  app-client-detail .appointment-actions__primary ion-button {
+    width: 100%;
+  }
+
+  app-client-detail .appointment-actions__secondary ion-button {
+    width: 2.75rem;
+    height: 2.75rem;
+  }
+
+  app-client-detail :is(.appointment-actions__primary, .appointment-actions__secondary) ion-button:focus-visible {
+    outline: 3px solid rgba(var(--ion-color-primary-rgb), .35);
+    outline-offset: 2px;
+  }
+}
+@import '@fontsource/manrope/400.css';
+@import '@fontsource/manrope/500.css';
+@import '@fontsource/manrope/600.css';
+@import '@fontsource/manrope/700.css';
+@import '@fontsource/manrope/800.css';
+@import '@fontsource/ibm-plex-mono/500.css';
+@import '@fontsource/ibm-plex-mono/600.css';
+
+html,
+body,
+ion-app,
+button,
+input,
+select,
+textarea {
+  font-family: var(--app-font-ui);
+}
+
+html {
+  background: var(--app-color-canvas);
+  color: var(--app-color-ink);
+  -webkit-tap-highlight-color: rgb(4 120 87 / 12%);
+}
+
+body { background: var(--app-color-canvas); }
+
+:where(button, ion-button, ion-toggle, ion-segment-button, [role='button']) {
+  min-height: 2.75rem;
+  touch-action: manipulation;
+}
+
+ion-toggle {
+  width: 2.75rem;
+  min-width: 2.75rem;
+  box-sizing: border-box;
+}
+
+:where(button, a, input, select, textarea, ion-button, ion-input, ion-select, ion-toggle):focus-visible {
+  outline: 3px solid var(--app-color-focus);
+  outline-offset: 2px;
+}
+
+.app-skip-link {
+  position: fixed;
+  display: flex;
+  box-sizing: border-box;
+  min-height: 2.75rem;
+  align-items: center;
+  top: 0.5rem;
+  left: 0.5rem;
+  z-index: 1000;
+  padding: 0.7rem 0.95rem;
+  border-radius: var(--app-radius-sm);
+  background: var(--app-color-ink);
+  color: #fff;
+  font-weight: 700;
+  text-decoration: none;
+  transform: translateY(-160%);
+  transition: transform 160ms ease;
+}
+
+.app-skip-link:focus-visible { transform: translateY(0); }
+
+.app-data,
+.stat-value,
+.appt-time-text,
+.payment-reference {
+  font-family: var(--app-font-data);
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 767px) {
+  app-app-shell ion-content {
+    --padding-bottom: calc(var(--app-bottom-nav-height) + env(safe-area-inset-bottom));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-skip-link { transition: none; }
+}

@@ -1,6 +1,7 @@
 import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { AlertController } from '@ionic/angular';
 import { ClientStage } from '../../enums/client-stage.enum';
 import { ClientProductStatus } from '../../enums/client-product-status.enum';
 import { IAttachment } from '../../interfaces/attachment.interface';
@@ -47,7 +48,6 @@ import {
   cashOutline,
 } from 'ionicons/icons';
 import {
-  AlertController,
   IonBackButton,
   IonCardHeader,
   IonCardTitle,
@@ -73,6 +73,8 @@ import { ProductType } from '../../enums/product-type.enum';
 import { IPayment } from '../../interfaces/payment.interface';
 import { PaymentFormModal } from '../../shared/components/payment-form-modal/payment-form-modal';
 import { IPaymentModalTarget } from './interfaces/payment-modal-target.interface';
+import { buildPaymentCancellationAlert } from '../../shared/payment-cancellation.utils';
+import { UserMenuComponent } from '../../shared/components/user-menu/user-menu';
 
 @Component({
   selector: 'app-client-detail',
@@ -102,6 +104,7 @@ import { IPaymentModalTarget } from './interfaces/payment-modal-target.interface
     StageLabelPipe,
     StageColorPipe,
     PaymentFormModal,
+    UserMenuComponent,
   ],
   templateUrl: './client-detail.html',
   styleUrl: './client-detail.scss',
@@ -122,10 +125,13 @@ export class ClientDetailPage {
   readonly allStages = CLIENT_STAGE_OPTIONS;
 
   readonly activeSegment = signal<ClientDetailSegment>(ClientDetailSegment.NOTES);
+  readonly cancellingPaymentId = signal<string | null>(null);
   readonly clientProductStatus = ClientProductStatus;
   readonly products = this.salesCatalogStore.products;
   readonly draftProductId = signal('');
   readonly draftProductStatus = signal<ClientProductStatus>(ClientProductStatus.OFFERED);
+  readonly draftProductCustomPrice = signal('');
+  readonly draftProductQuantity = signal('1');
   readonly draftProductNotes = signal('');
   readonly productLinkError = signal<string | null>(null);
   readonly isNoteModalOpen = signal(false);
@@ -196,18 +202,34 @@ export class ClientDetailPage {
       .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
       .map((offer) => {
         const product = productMap.get(offer.productId);
+        const resolvedProductType = product?.type ?? ProductType.PRODUCT;
+        const resolvedProductPrice = offer.customPrice ?? product?.price;
+        const resolvedProductQuantity =
+          resolvedProductType === ProductType.PRODUCT ? offer.quantity ?? 1 : undefined;
         return {
           ...offer,
           resolvedProductName: product?.name ?? 'Producto desconocido',
-          resolvedProductPrice: product?.price,
-          resolvedProductType: product?.type ?? ProductType.PRODUCT,
+          resolvedProductPrice,
+          resolvedProductQuantity,
+          resolvedProductTotalPrice:
+            resolvedProductPrice !== undefined && resolvedProductQuantity !== undefined
+              ? resolvedProductPrice * resolvedProductQuantity
+              : resolvedProductPrice,
+          catalogProductPrice: product?.price,
+          resolvedProductType,
         };
       });
   });
 
+  readonly selectedDraftProduct = computed(() =>
+    this.products().find((product) => product.id === this.draftProductId()),
+  );
+
   readonly availableProducts = computed(() => {
     const linkedProductIds = new Set(
-      this.currentClientProducts().map((offer) => offer.productId),
+      this.currentClientProducts()
+        .filter((offer) => offer.status !== ClientProductStatus.SOLD)
+        .map((offer) => offer.productId),
     );
     return this.products().filter((product) => !linkedProductIds.has(product.id));
   });
@@ -802,7 +824,11 @@ export class ClientDetailPage {
   }
 
   onDraftProductChange(event: Event) {
-    this.draftProductId.set(this.getEventValue<string>(event) ?? '');
+    const productId = this.getEventValue<string>(event) ?? '';
+    this.draftProductId.set(productId);
+    const product = this.products().find((item) => item.id === productId);
+    this.draftProductCustomPrice.set(product?.price?.toFixed(2) ?? '');
+    this.draftProductQuantity.set(product?.type === ProductType.PRODUCT ? '1' : '');
     this.productLinkError.set(null);
   }
 
@@ -812,7 +838,6 @@ export class ClientDetailPage {
     if (
       nextStatus === ClientProductStatus.OFFERED ||
       nextStatus === ClientProductStatus.INTERESTED ||
-      nextStatus === ClientProductStatus.SOLD ||
       nextStatus === ClientProductStatus.REJECTED
     ) {
       this.draftProductStatus.set(nextStatus);
@@ -823,6 +848,31 @@ export class ClientDetailPage {
     this.draftProductNotes.set(event.detail.value ?? '');
   }
 
+  onDraftProductCustomPriceChange(event: Event) {
+    const input = event.target as HTMLIonInputElement;
+    const sanitized = this.sanitizePriceInput(
+      String((event as CustomEvent<{ value?: string | number | null }>).detail.value ?? ''),
+    );
+    input.value = sanitized;
+    this.draftProductCustomPrice.set(sanitized);
+    this.productLinkError.set(null);
+  }
+
+  onDraftProductQuantityChange(event: Event) {
+    const input = event.target as HTMLIonInputElement;
+    const sanitized = String((event as CustomEvent<{ value?: string | number | null }>).detail.value ?? '')
+      .replace(/\D/g, '')
+      .replace(/^0+/, '');
+    input.value = sanitized;
+    this.draftProductQuantity.set(sanitized);
+    this.productLinkError.set(null);
+  }
+
+  formatDraftProductCustomPrice() {
+    const value = this.parseOptionalPrice(this.draftProductCustomPrice());
+    if (value !== undefined) this.draftProductCustomPrice.set(value.toFixed(2));
+  }
+
   addProductToClient() {
     const productId = this.draftProductId();
     if (!productId) {
@@ -830,10 +880,34 @@ export class ClientDetailPage {
       return;
     }
 
-    if (this.currentClientProducts().some((offer) => offer.productId === productId)) {
+    if (
+      this.currentClientProducts().some(
+        (offer) =>
+          offer.productId === productId &&
+          offer.status !== ClientProductStatus.SOLD,
+      )
+    ) {
       this.productLinkError.set('Este producto ya está vinculado al cliente.');
       this.draftProductId.set('');
       return;
+    }
+
+    const customPrice = this.parseOptionalPrice(this.draftProductCustomPrice());
+    if (this.draftProductCustomPrice().trim() && customPrice === undefined) {
+      this.productLinkError.set('Ingresa un precio válido.');
+      return;
+    }
+
+    const selectedProduct = this.selectedDraftProduct();
+    const isProduct = selectedProduct?.type === ProductType.PRODUCT;
+    let quantity: number | undefined;
+    if (isProduct) {
+      const parsedQuantity = Number(this.draftProductQuantity());
+      if (!Number.isInteger(parsedQuantity) || parsedQuantity < 1) {
+        this.productLinkError.set('Ingresa una cantidad válida.');
+        return;
+      }
+      quantity = parsedQuantity;
     }
 
     this.productLinkError.set(null);
@@ -841,15 +915,27 @@ export class ClientDetailPage {
       clientId: this.client().id,
       productId,
       status: this.draftProductStatus(),
+      customPrice,
+      quantity,
       notes: this.draftProductNotes().trim() || undefined,
     });
 
     this.draftProductId.set('');
     this.draftProductStatus.set(ClientProductStatus.OFFERED);
+    this.draftProductCustomPrice.set('');
+    this.draftProductQuantity.set('1');
     this.draftProductNotes.set('');
   }
 
-  quickSetProductStatus(offer: IClientProduct, status: ClientProductStatus) {
+  quickSetProductStatus(offer: IClientProduct, status: ClientProductStatus, force = false) {
+    if (!force && status === ClientProductStatus.SOLD) {
+      this.actionError.set('El estado vendido solo se asigna cuando el cobro está pagado.');
+      return;
+    }
+    if (!force && this.isClientProductPaid(offer.id)) {
+      this.actionError.set('Este producto ya tiene un pago realizado y no se puede modificar.');
+      return;
+    }
     if (offer.status === status) return;
     this.salesCatalogStore.updateClientProduct(offer.id, {
       status,
@@ -858,6 +944,11 @@ export class ClientDetailPage {
   }
 
   async openEditProductNotesAlert(offer: IClientProduct) {
+    if (this.isClientProductPaid(offer.id)) {
+      this.actionError.set('Este producto ya tiene un pago realizado y no se puede modificar.');
+      return;
+    }
+
     const alert = await this.alertCtrl.create({
       header: 'Actualizar notas',
       inputs: [
@@ -885,7 +976,89 @@ export class ClientDetailPage {
     await alert.present();
   }
 
+  async openEditProductPriceAlert(offer: IEnrichedClientProduct) {
+    if (this.isClientProductPaid(offer.id)) {
+      this.actionError.set('Este producto ya tiene un pago realizado y no se puede modificar.');
+      return;
+    }
+
+    const inputs: any[] = [
+      {
+        name: 'customPrice',
+        type: 'number',
+        value: offer.resolvedProductPrice?.toFixed(2) ?? '',
+        placeholder: 'Precio para este cliente',
+        min: 0,
+        attributes: {
+          inputmode: 'decimal',
+          step: '0.01',
+        },
+      },
+    ];
+    if (offer.resolvedProductType === ProductType.PRODUCT) {
+      inputs.push({
+        name: 'quantity',
+        type: 'number',
+        value: String(offer.resolvedProductQuantity ?? 1),
+        placeholder: 'Cantidad',
+        min: 1,
+        attributes: {
+          inputmode: 'numeric',
+          step: '1',
+        },
+      });
+    }
+
+    const alert = await this.alertCtrl.create({
+      header: offer.resolvedProductType === ProductType.PRODUCT
+        ? 'Cambiar precio y cantidad'
+        : 'Cambiar precio',
+      inputs,
+      buttons: [
+        { text: 'Cancelar', role: 'cancel' },
+        {
+          text: 'Usar precio de catálogo',
+          handler: () => {
+            this.salesCatalogStore.updateClientProduct(offer.id, {
+              customPrice: null,
+              quantity: offer.resolvedProductType === ProductType.PRODUCT ? offer.resolvedProductQuantity : null,
+              updatedAt: new Date().toISOString(),
+            });
+          },
+        },
+        {
+          text: 'Guardar',
+          handler: (data: { customPrice?: string | number; quantity?: string | number }) => {
+            const customPrice = this.parseOptionalPrice(data.customPrice);
+            if (customPrice === undefined) return false;
+            let quantity: number | undefined;
+            if (offer.resolvedProductType === ProductType.PRODUCT) {
+              const parsedQuantity = Number(data.quantity);
+              if (!Number.isInteger(parsedQuantity) || parsedQuantity < 1) {
+                return false;
+              }
+              quantity = parsedQuantity;
+            }
+            this.salesCatalogStore.updateClientProduct(offer.id, {
+              customPrice,
+              quantity,
+              updatedAt: new Date().toISOString(),
+            });
+            return true;
+          },
+        },
+      ],
+    });
+
+    await alert.present();
+  }
+
   async deleteProductOffer(offer: IClientProduct) {
+    if (this.isClientProductPaid(offer.id)) {
+      this.actionError.set('Este producto ya tiene un pago realizado y no se puede eliminar.');
+      return;
+    }
+
     const alert = await this.alertCtrl.create({
       header: 'Eliminar registro',
       message: '¿Eliminar este vínculo cliente-producto?',
@@ -1012,7 +1185,7 @@ export class ClientDetailPage {
       sourceType: PaymentSourceType.CLIENT_PRODUCT,
       sourceId: offer.id,
       concept: offer.resolvedProductName,
-      amount: offer.resolvedProductPrice,
+      amount: offer.resolvedProductTotalPrice,
     });
   }
 
@@ -1029,11 +1202,20 @@ export class ClientDetailPage {
     );
   }
 
+  isClientProductPaid(sourceId: string): boolean {
+    return this.payments().some(
+      (payment) =>
+        payment.sourceType === PaymentSourceType.CLIENT_PRODUCT &&
+        payment.sourceId === sourceId &&
+        payment.status === PaymentStatus.PAID,
+    );
+  }
+
   onPaymentCompleted(payment: IPayment): void {
     if (payment.status === PaymentStatus.PAID && payment.sourceType === PaymentSourceType.CLIENT_PRODUCT) {
       const offer = this.currentClientProducts().find((item) => item.id === payment.sourceId);
       if (offer && offer.status !== ClientProductStatus.SOLD) {
-        this.quickSetProductStatus(offer, ClientProductStatus.SOLD);
+        this.quickSetProductStatus(offer, ClientProductStatus.SOLD, true);
       }
     }
   }
@@ -1049,9 +1231,25 @@ export class ClientDetailPage {
     window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, '_blank', 'noopener');
   }
 
-  cancelPayment(payment: IPayment): void {
+  async cancelPayment(payment: IPayment): Promise<void> {
+    if (this.cancellingPaymentId()) return;
+    const client = this.client();
+    const clientName = `${client.firstName} ${client.lastName}`.trim();
+    const alert = await this.alertCtrl.create(
+      buildPaymentCancellationAlert(clientName, payment.amount, () => this.performPaymentCancellation(payment)),
+    );
+    await alert.present();
+  }
+
+  private performPaymentCancellation(payment: IPayment): void {
+    this.actionError.set(null);
+    this.cancellingPaymentId.set(payment.id);
     this.paymentStore.cancel(payment.id).subscribe({
-      error: () => this.actionError.set('No se pudo cancelar el cobro.'),
+      next: () => this.cancellingPaymentId.set(null),
+      error: () => {
+        this.cancellingPaymentId.set(null);
+        this.actionError.set('No se pudo cancelar el cobro. Intenta nuevamente.');
+      },
     });
   }
 
@@ -1068,5 +1266,21 @@ export class ClientDetailPage {
   private getEventValue<T>(event: Event): T | null {
     const value = (event as CustomEvent<{ value?: T }>).detail?.value;
     return value ?? null;
+  }
+
+  private sanitizePriceInput(rawValue: string): string {
+    const normalized = rawValue.replace(',', '.').replace(/[^\d.]/g, '');
+    const [integer = '', ...decimalParts] = normalized.split('.');
+    return decimalParts.length
+      ? `${integer}.${decimalParts.join('').slice(0, 2)}`
+      : integer;
+  }
+
+  private parseOptionalPrice(rawValue: string | number | undefined): number | undefined {
+    const normalized = String(rawValue ?? '').replace(',', '.').trim();
+    if (!normalized) return undefined;
+    const value = Number(normalized);
+    if (!Number.isFinite(value) || value < 0) return undefined;
+    return Math.round(value * 100) / 100;
   }
 }

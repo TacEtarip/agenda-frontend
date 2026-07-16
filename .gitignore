@@ -44,5 +44,6 @@ __screenshots__/
 Thumbs.db
 
 /.codex-run
+/.angular-serve.*.log
 client.err.log
 client.out.log

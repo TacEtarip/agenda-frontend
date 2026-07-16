@@ -12,6 +12,30 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 :root {
+  // Agenda viva semantic system. Existing colour tokens remain available as
+  // compatibility aliases for page-level styles.
+  --app-color-primary: #047857;
+  --app-color-primary-strong: #065f46;
+  --app-color-primary-soft: #e7f6f0;
+  --app-color-accent: #0ea5e9;
+  --app-color-warning: #d97706;
+  --app-color-ink: #102a2e;
+  --app-color-muted: #5f7277;
+  --app-color-canvas: #f4f8f6;
+  --app-color-surface: #ffffff;
+  --app-color-border: #dce8e3;
+  --app-color-focus: #38bdf8;
+
+  --app-font-ui: 'Manrope', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --app-font-data: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Consolas, monospace;
+  --app-radius-sm: 0.65rem;
+  --app-radius-md: 0.9rem;
+  --app-radius-lg: 1.15rem;
+  --app-shadow-card: 0 12px 32px -28px rgb(16 42 46 / 45%);
+  --app-shadow-navigation: 0 16px 36px -28px rgb(16 42 46 / 48%);
+  --app-bottom-nav-height: 4.25rem;
+  --app-rail-width: 4.5rem;
+  --app-sidebar-width: 13.5rem;
   // ── Green (primary) ──────────────────────────────────────────────────────
   --color-green:          #059669;
   --color-green-shade:    #047857;

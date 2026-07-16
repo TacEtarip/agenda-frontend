@@ -10,12 +10,7 @@
       </div>
     </ion-title>
     <ion-buttons slot="end">
-      <ion-button
-        aria-label="Editar cliente"
-        (click)="openEditClientModal()"
-        (keydown.enter)="openEditClientModal()">
-        <ion-icon slot="icon-only" name="create-outline" aria-hidden="true"></ion-icon>
-      </ion-button>
+      <app-user-menu />
     </ion-buttons>
   </ion-toolbar>
 </ion-header>
@@ -64,6 +59,16 @@
       <!-- Quick Actions -->
       <div class="quick-actions">
         <ion-button
+          fill="outline"
+          color="primary"
+          size="small"
+          class="quick-actions__btn"
+          aria-label="Editar datos del cliente"
+          (click)="openEditClientModal()">
+          <ion-icon slot="start" name="create-outline" aria-hidden="true"></ion-icon>
+          Editar cliente
+        </ion-button>
+        <ion-button
           fill="outline" color="success" size="small" class="quick-actions__btn"
           [href]="callWhatsAppUrl()"
           target="_blank"
@@ -99,9 +104,8 @@
             <ion-buttons slot="end">
               <ion-button
                 aria-label="Cerrar edición de cliente"
-                (click)="closeEditClientModal()"
-                (keydown.enter)="closeEditClientModal()">
-                <ion-icon slot="icon-only" name="close-outline"></ion-icon>
+                (click)="closeEditClientModal()">
+                <ion-icon slot="icon-only" name="close-outline" aria-hidden="true"></ion-icon>
               </ion-button>
             </ion-buttons>
           </ion-toolbar>
@@ -113,7 +117,7 @@
               <ion-card-content class="app-modal-card__content">
                 <div class="app-modal-header">
                   <div class="app-modal-icon">
-                    <ion-icon name="create-outline"></ion-icon>
+                    <ion-icon name="create-outline" aria-hidden="true"></ion-icon>
                   </div>
                   <div class="app-modal-copy">
                     <p class="app-modal-eyebrow">Contacto</p>
@@ -162,14 +166,12 @@
                     <ion-button
                       fill="outline"
                       color="medium"
-                      (click)="closeEditClientModal()"
-                      (keydown.enter)="closeEditClientModal()">
+                      (click)="closeEditClientModal()">
                       Cancelar
                     </ion-button>
                     <ion-button
                       [disabled]="isSavingClient()"
-                      (click)="saveClientFromModal()"
-                      (keydown.enter)="saveClientFromModal()">
+                      (click)="saveClientFromModal()">
                       {{ isSavingClient() ? 'Guardando…' : 'Guardar cambios' }}
                     </ion-button>
                   </div>
@@ -247,7 +249,6 @@
                   size="small"
                   color="primary"
                   (click)="openEditNoteModal(note)"
-                  (keydown.enter)="openEditNoteModal(note)"
                   aria-label="Editar nota">
                   <ion-icon slot="icon-only" name="create-outline" aria-hidden="true"></ion-icon>
                 </ion-button>
@@ -256,7 +257,6 @@
                   size="small"
                   color="danger"
                   (click)="deleteNote(note)"
-                  (keydown.enter)="deleteNote(note)"
                   aria-label="Eliminar nota">
                   <ion-icon slot="icon-only" name="trash-outline" aria-hidden="true"></ion-icon>
                 </ion-button>
@@ -267,7 +267,7 @@
       }
       @empty {
         <div class="empty-state">
-          <ion-icon name="document-outline"></ion-icon>
+          <ion-icon name="document-outline" aria-hidden="true"></ion-icon>
           <p class="empty-state__text">Aún no hay notas</p>
         </div>
       }
@@ -321,7 +321,7 @@
                       <div class="payment-state__actions">
                         <ion-button fill="clear" size="small" (click)="copyPaymentLink(payment)">Copiar enlace</ion-button>
                         <ion-button fill="clear" size="small" color="success" (click)="sendPaymentLink(payment)">WhatsApp</ion-button>
-                        <ion-button fill="clear" size="small" color="danger" (click)="cancelPayment(payment)">Cancelar cobro</ion-button>
+                        <ion-button fill="clear" size="small" color="danger" (click)="cancelPayment(payment)" [disabled]="cancellingPaymentId() !== null">{{ cancellingPaymentId() === payment.id ? 'Cancelando…' : 'Cancelar cobro' }}</ion-button>
                       </div>
                     }
                   </div>
@@ -333,23 +333,24 @@
               </section>
             </div>
 
-            <div class="appt-actions" aria-label="Acciones de la cita">
+            <div class="appt-actions appointment-actions" aria-label="Acciones de la cita">
+              <div class="appointment-actions__secondary">
               <ion-button
                 fill="clear"
                 size="small"
                 color="primary"
                 [attr.aria-label]="appt.status === 'completed' ? 'Editar descripción de cita completada' : 'Editar cita'"
-                (click)="openEditAppointmentModal(appt)"
-                (keydown.enter)="openEditAppointmentModal(appt)">
-                <ion-icon slot="icon-only" name="create-outline"></ion-icon>
+                (click)="openEditAppointmentModal(appt)">
+                <ion-icon slot="icon-only" name="create-outline" aria-hidden="true"></ion-icon>
               </ion-button>
+              </div>
+              <div class="appointment-actions__primary">
               <ion-button
                 fill="outline"
                 size="small"
                 color="success"
                 [disabled]="appt.status === 'completed' || appt.status === 'cancelled'"
-                (click)="updateAppointmentStatus(appt, 'completed')"
-                (keydown.enter)="updateAppointmentStatus(appt, 'completed')">
+                (click)="updateAppointmentStatus(appt, 'completed')">
                 Completar
               </ion-button>
               @if (appt.status === 'cancelled') {
@@ -357,8 +358,7 @@
                   fill="outline"
                   size="small"
                   color="primary"
-                  (click)="updateAppointmentStatus(appt, 'scheduled')"
-                  (keydown.enter)="updateAppointmentStatus(appt, 'scheduled')">
+                  (click)="updateAppointmentStatus(appt, 'scheduled')">
                   Reprogramar
                 </ion-button>
               } @else {
@@ -367,18 +367,18 @@
                   size="small"
                   color="danger"
                   [disabled]="appt.status === 'completed'"
-                  (click)="updateAppointmentStatus(appt, 'cancelled')"
-                  (keydown.enter)="updateAppointmentStatus(appt, 'cancelled')">
+                  (click)="updateAppointmentStatus(appt, 'cancelled')">
                   Cancelar
                 </ion-button>
               }
+              </div>
             </div>
           </ion-card-content>
         </ion-card>
       }
       @empty {
         <div class="empty-state">
-          <ion-icon name="time-outline"></ion-icon>
+          <ion-icon name="time-outline" aria-hidden="true"></ion-icon>
           <p class="empty-state__text">Aún no hay citas</p>
         </div>
       }
@@ -395,8 +395,8 @@
         <ion-toolbar>
           <ion-title>{{ editingAppointmentId() ? 'Editar cita' : 'Programar cita' }}</ion-title>
           <ion-buttons slot="end">
-            <ion-button (click)="closeAppointmentModal()" (keydown.enter)="closeAppointmentModal()" aria-label="Cerrar modal">
-              <ion-icon slot="icon-only" name="close-outline"></ion-icon>
+            <ion-button (click)="closeAppointmentModal()" aria-label="Cerrar modal">
+              <ion-icon slot="icon-only" name="close-outline" aria-hidden="true"></ion-icon>
             </ion-button>
           </ion-buttons>
         </ion-toolbar>
@@ -408,7 +408,7 @@
             <ion-card-content class="app-modal-card__content">
               <div class="app-modal-header">
                 <div class="app-modal-icon">
-                  <ion-icon name="time-outline"></ion-icon>
+                  <ion-icon name="time-outline" aria-hidden="true"></ion-icon>
                 </div>
 
                 <div class="app-modal-copy">
@@ -513,13 +513,11 @@
                   <ion-button
                     fill="outline"
                     color="medium"
-                    (click)="closeAppointmentModal()"
-                    (keydown.enter)="closeAppointmentModal()">
+                    (click)="closeAppointmentModal()">
                     Cancelar
                   </ion-button>
                   <ion-button
-                    (click)="saveAppointmentFromModal()"
-                    (keydown.enter)="saveAppointmentFromModal()">
+                    (click)="saveAppointmentFromModal()">
                     Guardar
                   </ion-button>
                 </div>
@@ -539,8 +537,8 @@
         <ion-toolbar>
           <ion-title>{{ editingNoteId() ? 'Editar nota' : 'Agregar nota' }}</ion-title>
           <ion-buttons slot="end">
-            <ion-button (click)="closeNoteModal()" (keydown.enter)="closeNoteModal()" aria-label="Cerrar modal">
-              <ion-icon slot="icon-only" name="close-outline"></ion-icon>
+            <ion-button (click)="closeNoteModal()" aria-label="Cerrar modal">
+              <ion-icon slot="icon-only" name="close-outline" aria-hidden="true"></ion-icon>
             </ion-button>
           </ion-buttons>
         </ion-toolbar>
@@ -552,7 +550,7 @@
             <ion-card-content class="app-modal-card__content">
               <div class="app-modal-header">
                 <div class="app-modal-icon">
-                  <ion-icon name="document-outline"></ion-icon>
+                  <ion-icon name="document-outline" aria-hidden="true"></ion-icon>
                 </div>
 
                 <div class="app-modal-copy">
@@ -579,11 +577,11 @@
                 }
 
                 <div class="app-modal-actions">
-                  <ion-button fill="outline" color="medium" (click)="closeNoteModal()" (keydown.enter)="closeNoteModal()">
+                  <ion-button fill="outline" color="medium" (click)="closeNoteModal()">
                     Cancelar
                   </ion-button>
-                  <ion-button (click)="saveNoteFromModal()" (keydown.enter)="saveNoteFromModal()">
-                    <ion-icon slot="start" name="add-outline"></ion-icon>
+                  <ion-button (click)="saveNoteFromModal()">
+                    <ion-icon slot="start" name="add-outline" aria-hidden="true"></ion-icon>
                     Guardar nota
                   </ion-button>
                 </div>
@@ -606,8 +604,8 @@
         <ion-toolbar>
           <ion-title>Agregar archivo</ion-title>
           <ion-buttons slot="end">
-            <ion-button (click)="closeAttachmentModal()" (keydown.enter)="closeAttachmentModal()" aria-label="Cerrar modal">
-              <ion-icon slot="icon-only" name="close-outline"></ion-icon>
+            <ion-button (click)="closeAttachmentModal()" aria-label="Cerrar modal">
+              <ion-icon slot="icon-only" name="close-outline" aria-hidden="true"></ion-icon>
             </ion-button>
           </ion-buttons>
         </ion-toolbar>
@@ -619,7 +617,7 @@
             <ion-card-content class="app-modal-card__content">
               <div class="app-modal-header">
                 <div class="app-modal-icon">
-                  <ion-icon name="cloud-download-outline"></ion-icon>
+                  <ion-icon name="cloud-download-outline" aria-hidden="true"></ion-icon>
                 </div>
 
                 <div class="app-modal-copy">
@@ -636,14 +634,14 @@
                     class="attachment-modal__input"
                     accept=".pdf,.doc,.docx,image/*"
                     (change)="onAttachmentFileSelected($event)" />
-                  <ion-icon name="add-outline"></ion-icon>
+                  <ion-icon name="add-outline" aria-hidden="true"></ion-icon>
                   <span>Seleccionar archivo</span>
                 </label>
 
                 @if (attachmentDraft().fileName) {
                   <div class="attachment-modal__summary">
                     <div class="attachment-modal__summary-icon">
-                      <ion-icon [name]="attachmentDraft().icon"></ion-icon>
+                      <ion-icon [name]="attachmentDraft().icon" aria-hidden="true"></ion-icon>
                     </div>
                     <div>
                       <p class="attachment-modal__summary-name">{{ attachmentDraft().fileName }}</p>
@@ -659,11 +657,11 @@
                 }
 
                 <div class="app-modal-actions">
-                  <ion-button fill="outline" color="medium" (click)="closeAttachmentModal()" (keydown.enter)="closeAttachmentModal()">
+                  <ion-button fill="outline" color="medium" (click)="closeAttachmentModal()">
                     Cancelar
                   </ion-button>
-                  <ion-button (click)="saveAttachmentFromModal()" (keydown.enter)="saveAttachmentFromModal()">
-                    <ion-icon slot="start" name="add-outline"></ion-icon>
+                  <ion-button (click)="saveAttachmentFromModal()">
+                    <ion-icon slot="start" name="add-outline" aria-hidden="true"></ion-icon>
                     Guardar archivo
                   </ion-button>
                 </div>
@@ -693,7 +691,7 @@
       @for (file of attachments(); track file.id) {
         <ion-item>
           <div slot="start" class="file-icon">
-            <ion-icon [name]="file.icon" class="file-icon__inner"></ion-icon>
+            <ion-icon [name]="file.icon" class="file-icon__inner" aria-hidden="true"></ion-icon>
           </div>
           <ion-label>
             <h3 class="file-name">{{ file.fileName }}</h3>
@@ -744,9 +742,34 @@
               aria-label="Seleccionar estado inicial del producto">
               <ion-select-option [value]="clientProductStatus.OFFERED">Ofrecido</ion-select-option>
               <ion-select-option [value]="clientProductStatus.INTERESTED">Interesado</ion-select-option>
-              <ion-select-option [value]="clientProductStatus.SOLD">Vendido</ion-select-option>
               <ion-select-option [value]="clientProductStatus.REJECTED">Rechazado</ion-select-option>
             </ion-select>
+
+            <ion-input
+              class="product-linker-select"
+              label="Precio de venta"
+              labelPlacement="floating"
+              fill="outline"
+              type="text"
+              inputmode="decimal"
+              [value]="draftProductCustomPrice()"
+              (ionInput)="onDraftProductCustomPriceChange($event)"
+              (ionBlur)="formatDraftProductCustomPrice()">
+              <span slot="start" aria-hidden="true">S/</span>
+            </ion-input>
+
+            @if (selectedDraftProduct()?.type === productType.PRODUCT) {
+              <ion-input
+                class="product-linker-select"
+                label="Cantidad"
+                labelPlacement="floating"
+                fill="outline"
+                type="text"
+                inputmode="numeric"
+                [value]="draftProductQuantity()"
+                (ionInput)="onDraftProductQuantityChange($event)">
+              </ion-input>
+            }
           </div>
 
           @if (availableProducts().length === 0) {
@@ -770,9 +793,8 @@
             expand="block"
             class="product-linker-button"
             [disabled]="!draftProductId()"
-            (click)="addProductToClient()"
-            (keydown.enter)="addProductToClient()">
-            <ion-icon slot="start" name="add-outline"></ion-icon>
+            (click)="addProductToClient()">
+            <ion-icon slot="start" name="add-outline" aria-hidden="true"></ion-icon>
             Agregar producto
           </ion-button>
         </ion-card-content>
@@ -800,7 +822,25 @@
                 <p class="product-offer-price">
                   <ion-icon name="cash-outline" aria-hidden="true"></ion-icon>
                   {{ offer.resolvedProductPrice | formatPrice }}
+                  @if (offer.resolvedProductQuantity; as quantity) {
+                    <span>× {{ quantity }}</span>
+                  }
+                  <ion-button
+                    fill="clear"
+                    size="small"
+                    color="primary"
+                    [disabled]="isClientProductPaid(offer.id)"
+                    (click)="openEditProductPriceAlert(offer)"
+                    aria-label="Cambiar precio de venta">
+                    <ion-icon slot="icon-only" name="create-outline" aria-hidden="true"></ion-icon>
+                  </ion-button>
                 </p>
+                @if (offer.resolvedProductQuantity && offer.resolvedProductQuantity > 1) {
+                  <span class="appointment-card__section-label">Total: {{ offer.resolvedProductTotalPrice | formatPrice }}</span>
+                }
+                @if (offer.customPrice != null && offer.catalogProductPrice !== offer.customPrice) {
+                  <span class="appointment-card__section-label">Catálogo: {{ offer.catalogProductPrice | formatPrice }}</span>
+                }
               </section>
 
               <section class="appointment-card__section appointment-card__billing" aria-label="Cobro">
@@ -816,7 +856,7 @@
                       <div class="payment-state__actions">
                         <ion-button fill="clear" size="small" (click)="copyPaymentLink(payment)">Copiar enlace</ion-button>
                         <ion-button fill="clear" size="small" color="success" (click)="sendPaymentLink(payment)">WhatsApp</ion-button>
-                        <ion-button fill="clear" size="small" color="danger" (click)="cancelPayment(payment)">Cancelar cobro</ion-button>
+                        <ion-button fill="clear" size="small" color="danger" (click)="cancelPayment(payment)" [disabled]="cancellingPaymentId() !== null">{{ cancellingPaymentId() === payment.id ? 'Cancelando…' : 'Cancelar cobro' }}</ion-button>
                       </div>
                     }
                   </div>
@@ -834,55 +874,51 @@
             </div>
 
             <div class="appt-actions" aria-label="Acciones del producto">
+              <div class="product-actions__statuses ion-display-flex ion-flex-wrap ion-align-items-center" aria-label="Estado del producto">
               <ion-button
                 fill="outline"
                 size="small"
                 color="warning"
-                (click)="quickSetProductStatus(offer, clientProductStatus.INTERESTED)"
-                (keydown.enter)="quickSetProductStatus(offer, clientProductStatus.INTERESTED)">
+                [disabled]="isClientProductPaid(offer.id)"
+                (click)="quickSetProductStatus(offer, clientProductStatus.INTERESTED)">
                 Interesado
               </ion-button>
               <ion-button
                 fill="outline"
                 size="small"
-                color="success"
-                (click)="quickSetProductStatus(offer, clientProductStatus.SOLD)"
-                (keydown.enter)="quickSetProductStatus(offer, clientProductStatus.SOLD)">
-                Vendido
-              </ion-button>
-              <ion-button
-                fill="outline"
-                size="small"
                 color="danger"
-                (click)="quickSetProductStatus(offer, clientProductStatus.REJECTED)"
-                (keydown.enter)="quickSetProductStatus(offer, clientProductStatus.REJECTED)">
+                [disabled]="isClientProductPaid(offer.id)"
+                (click)="quickSetProductStatus(offer, clientProductStatus.REJECTED)">
                 Rechazado
               </ion-button>
+              </div>
+              <div class="product-actions__management ion-display-flex ion-flex-wrap ion-align-items-center" aria-label="Administrar producto">
               <ion-button
                 fill="clear"
                 size="small"
                 color="primary"
+                [disabled]="isClientProductPaid(offer.id)"
                 (click)="openEditProductNotesAlert(offer)"
-                (keydown.enter)="openEditProductNotesAlert(offer)"
-                aria-label="Editar notas del producto">
+                [attr.aria-label]="offer.notes ? 'Editar nota de seguimiento' : 'Agregar nota de seguimiento'">
                 <ion-icon slot="icon-only" name="create-outline" aria-hidden="true"></ion-icon>
               </ion-button>
               <ion-button
                 fill="clear"
                 size="small"
                 color="danger"
+                [disabled]="isClientProductPaid(offer.id)"
                 (click)="deleteProductOffer(offer)"
-                (keydown.enter)="deleteProductOffer(offer)"
                 aria-label="Eliminar producto del cliente">
                 <ion-icon slot="icon-only" name="trash-outline" aria-hidden="true"></ion-icon>
               </ion-button>
+              </div>
             </div>
           </ion-card-content>
         </ion-card>
       }
       @empty {
         <div class="empty-state">
-          <ion-icon name="pricetag-outline"></ion-icon>
+          <ion-icon name="pricetag-outline" aria-hidden="true"></ion-icon>
           <p class="empty-state__text">Aún no hay productos asociados</p>
         </div>
       }
@@ -894,7 +930,7 @@
     <div class="tab-content">
 
       <div class="stage-summary">
-        <ion-icon name="sparkles-outline" class="stage-summary__icon"></ion-icon>
+        <ion-icon name="sparkles-outline" class="stage-summary__icon" aria-hidden="true"></ion-icon>
         <div class="stage-summary__text">
           <span class="appointment-card__section-label">Plantillas para la etapa</span>
           <strong>{{ client().stage | stageLabel }}</strong>
@@ -924,14 +960,12 @@
               <div class="template-header-actions">
                 <ion-button fill="clear" size="small" color="primary"
                   aria-label="Editar plantilla"
-                  (click)="openEditTemplateAlert(tpl)"
-                  (keydown.enter)="openEditTemplateAlert(tpl)">
+                  (click)="openEditTemplateAlert(tpl)">
                   <ion-icon slot="icon-only" name="create-outline" aria-hidden="true"></ion-icon>
                 </ion-button>
                 <ion-button fill="clear" size="small" color="danger"
                   aria-label="Eliminar plantilla"
-                  (click)="deleteTemplate(tpl)"
-                  (keydown.enter)="deleteTemplate(tpl)">
+                  (click)="deleteTemplate(tpl)">
                   <ion-icon slot="icon-only" name="trash-outline" aria-hidden="true"></ion-icon>
                 </ion-button>
               </div>
@@ -984,14 +1018,12 @@
               <div class="template-header-actions">
                 <ion-button fill="clear" size="small" color="primary"
                   aria-label="Editar plantilla"
-                  (click)="openEditTemplateAlert(tpl)"
-                  (keydown.enter)="openEditTemplateAlert(tpl)">
+                  (click)="openEditTemplateAlert(tpl)">
                   <ion-icon slot="icon-only" name="create-outline" aria-hidden="true"></ion-icon>
                 </ion-button>
                 <ion-button fill="clear" size="small" color="danger"
                   aria-label="Eliminar plantilla"
-                  (click)="deleteTemplate(tpl)"
-                  (keydown.enter)="deleteTemplate(tpl)">
+                  (click)="deleteTemplate(tpl)">
                   <ion-icon slot="icon-only" name="trash-outline" aria-hidden="true"></ion-icon>
                 </ion-button>
               </div>

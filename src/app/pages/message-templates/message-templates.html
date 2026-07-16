@@ -9,6 +9,7 @@
         <h1 class="toolbar-title__name">Plantillas por etapa</h1>
       </div>
     </ion-title>
+    <ion-buttons slot="end"><app-user-menu /></ion-buttons>
   </ion-toolbar>
 </ion-header>
 
@@ -70,7 +71,7 @@
             </div>
 
             <ion-button fill="outline" size="small" color="primary" (click)="openCreateTemplateModal(section.value)">
-              <ion-icon slot="start" name="add-outline"></ion-icon>
+              <ion-icon slot="start" name="add-outline" aria-hidden="true"></ion-icon>
               Nueva
             </ion-button>
           </div>
@@ -95,7 +96,7 @@
             </div>
           } @else {
             <div class="template-empty-state">
-              <ion-icon name="time-outline"></ion-icon>
+              <ion-icon name="time-outline" aria-hidden="true"></ion-icon>
               <div>
                 <p class="template-empty-state__title">Todavía no hay plantillas en esta etapa</p>
                 <p class="template-empty-state__text">
@@ -121,7 +122,7 @@
         <ion-title>{{ isEditing() ? 'Editar plantilla' : 'Nueva plantilla' }}</ion-title>
         <ion-buttons slot="end">
           <ion-button (click)="closeComposerModal()" aria-label="Cerrar modal">
-            <ion-icon slot="icon-only" name="close-outline"></ion-icon>
+            <ion-icon slot="icon-only" name="close-outline" aria-hidden="true"></ion-icon>
           </ion-button>
         </ion-buttons>
       </ion-toolbar>
@@ -133,7 +134,7 @@
           <ion-card-content class="app-modal-card__content">
             <div class="app-modal-header">
               <div class="app-modal-icon">
-                <ion-icon [name]="isEditing() ? 'create-outline' : 'add-outline'"></ion-icon>
+                <ion-icon [name]="isEditing() ? 'create-outline' : 'add-outline'" aria-hidden="true"></ion-icon>
               </div>
 
               <div class="app-modal-copy">
@@ -159,7 +160,7 @@
                 <div class="composer-variables-actions">
                   @for (variable of variables(); track variable.key) {
                     <ion-button type="button" size="small" fill="outline" (click)="insertVariable(variable.key)">
-                      <ion-icon slot="start" name="add-outline"></ion-icon>
+                      <ion-icon slot="start" name="add-outline" aria-hidden="true"></ion-icon>
                       {{ variable.label }}
                     </ion-button>
                   }
@@ -231,7 +232,7 @@
                   Cancelar
                 </ion-button>
                 <ion-button type="submit" [disabled]="composerForm.invalid || !validation().valid">
-                  <ion-icon slot="start" [name]="isEditing() ? 'create-outline' : 'add-outline'"></ion-icon>
+                  <ion-icon slot="start" [name]="isEditing() ? 'create-outline' : 'add-outline'" aria-hidden="true"></ion-icon>
                   {{ isEditing() ? 'Guardar cambios' : 'Guardar plantilla' }}
                 </ion-button>
               </div>

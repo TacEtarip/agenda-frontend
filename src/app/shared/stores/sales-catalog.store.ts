@@ -128,7 +128,12 @@ export class SalesCatalogStore {
   updateClientProduct(offerId: string, updates: Partial<IClientProduct>): void {
     this.clientProductsErrorState.set(null);
     this.clientProductApi
-      .update(offerId, { status: updates.status, notes: updates.notes })
+      .update(offerId, {
+        status: updates.status,
+        notes: updates.notes,
+        customPrice: updates.customPrice,
+        quantity: updates.quantity,
+      })
       .subscribe({
         next: (updated) => {
           this.clientProductsState.update((offers) =>

@@ -29,6 +29,7 @@ import { SalesCatalogStore } from '../../shared/stores/sales-catalog.store';
 import { ProductSort } from './enums/product-sort.enum';
 import { VALID_PRODUCT_SORTS } from './constants/product-sort.constants';
 import { ProductType } from '../../enums/product-type.enum';
+import { UserMenuComponent } from '../../shared/components/user-menu/user-menu';
 
 @Component({
   selector: 'app-products',
@@ -45,6 +46,7 @@ import { ProductType } from '../../enums/product-type.enum';
     IonTextarea,
     FormatDatePipe,
     FormatPricePipe,
+    UserMenuComponent,
   ],
   templateUrl: './products.html',
   styleUrl: './products.scss',

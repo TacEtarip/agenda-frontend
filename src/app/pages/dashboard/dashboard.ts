@@ -16,7 +16,6 @@ import {
   timeOutline,
   addOutline,
   settingsOutline,
-  logOutOutline,
   chevronForwardOutline,
   closeOutline,
   callOutline,
@@ -40,6 +39,7 @@ import { IAppointmentApi } from '../../core/interfaces/appointment-api.interface
 import { PaymentApiService } from '../../core/services/payment-api.service';
 import { PaymentStatus } from '../../enums/payment-status.enum';
 import { UiState } from '../../shared/types/ui-state.type';
+import { UserMenuComponent } from '../../shared/components/user-menu/user-menu';
 
 @Component({
   selector: 'app-dashboard',
@@ -58,6 +58,7 @@ import { UiState } from '../../shared/types/ui-state.type';
     StageLabelPipe,
     StageColorPipe,
     AppointmentStatusLabelPipe,
+    UserMenuComponent,
   ],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.scss',
@@ -84,9 +85,9 @@ export class DashboardPage {
   });
   readonly searchQuery = signal('');
   readonly stageFilter = signal<ClientStage | 'ALL'>('ALL');
-  readonly showAllAppointments = signal(false);
   readonly isAddClientModalOpen = signal(false);
   readonly isCreatingClient = signal(false);
+  readonly addClientStatusMessage = signal('');
   readonly clientDisplayLimit = signal(20);
   readonly stageOptions = signal(CLIENT_STAGE_OPTIONS);
   readonly loadState = signal<UiState>('idle');
@@ -114,6 +115,7 @@ export class DashboardPage {
 
     return this.appointmentsToday()
       .filter((appointment) => appointment.status === 'scheduled')
+      .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime())
       .map((appointment) => {
         const client = clientsById.get(appointment.clientId);
         const clientName = client
@@ -167,7 +169,6 @@ export class DashboardPage {
       timeOutline,
       addOutline,
       settingsOutline,
-      logOutOutline,
       chevronForwardOutline,
       closeOutline,
       callOutline,
@@ -181,10 +182,6 @@ export class DashboardPage {
     if (stage === 'ALL' || CLIENT_STAGE_OPTIONS.some((option) => option.value === stage)) {
       this.stageFilter.set((stage ?? 'ALL') as ClientStage | 'ALL');
     }
-  }
-
-  logout(): void {
-    this.authService.logout();
   }
 
   ionViewWillEnter(): void {
@@ -264,18 +261,22 @@ export class DashboardPage {
     this.syncFiltersToUrl();
   }
 
+  clearClientFilters(): void {
+    this.searchQuery.set('');
+    this.stageFilter.set('ALL');
+    this.clientDisplayLimit.set(20);
+    this.syncFiltersToUrl();
+  }
+
   loadMoreClients(event: Event): void {
     this.clientDisplayLimit.update((n) => n + 20);
     const target = event.target as { complete?: () => void } | null;
     target?.complete?.();
   }
 
-  toggleAppointmentsView() {
-    this.showAllAppointments.update((current) => !current);
-  }
-
   openAddClientModal() {
     this.resetAddClientForm();
+    this.addClientStatusMessage.set('');
     this.isAddClientModalOpen.set(true);
   }
 
@@ -291,6 +292,8 @@ export class DashboardPage {
 
     if (this.addClientForm.invalid) {
       this.addClientForm.markAllAsTouched();
+      this.addClientStatusMessage.set('Revisa los campos marcados e intenta nuevamente.');
+      this.focusFirstInvalidClientField();
       return;
     }
 
@@ -305,10 +308,13 @@ export class DashboardPage {
       if (!trimmedLastName) this.addClientForm.controls.lastName.setErrors({ required: true });
       if (!trimmedPhone) this.addClientForm.controls.phone.setErrors({ required: true });
       this.addClientForm.markAllAsTouched();
+      this.addClientStatusMessage.set('Revisa los campos marcados e intenta nuevamente.');
+      this.focusFirstInvalidClientField();
       return;
     }
 
     this.isCreatingClient.set(true);
+    this.addClientStatusMessage.set('Creando cliente…');
     this.clientApi
       .create({
         firstName: trimmedFirstName,
@@ -329,10 +335,12 @@ export class DashboardPage {
             ),
           );
           this.isCreatingClient.set(false);
+          this.addClientStatusMessage.set('Cliente agregado correctamente.');
           this.closeAddClientModal();
         },
         error: () => {
           this.isCreatingClient.set(false);
+          this.addClientStatusMessage.set('No se pudo agregar el cliente. Revisa los datos e intenta nuevamente.');
         },
       });
   }
@@ -347,6 +355,22 @@ export class DashboardPage {
     });
     this.addClientForm.markAsPristine();
     this.addClientForm.markAsUntouched();
+  }
+
+  private focusFirstInvalidClientField(): void {
+    const fieldIds = [
+      ['firstName', 'add-client-first-name'],
+      ['lastName', 'add-client-last-name'],
+      ['email', 'add-client-email'],
+      ['phone', 'add-client-phone'],
+    ] as const;
+    const invalidField = fieldIds.find(([controlName]) => this.addClientForm.controls[controlName].invalid);
+    if (!invalidField) return;
+
+    setTimeout(() => {
+      const input = document.getElementById(invalidField[1]) as (HTMLElement & { setFocus?: () => Promise<void> }) | null;
+      void input?.setFocus?.();
+    });
   }
 
   private getEventValue<T>(event: Event): T | null {

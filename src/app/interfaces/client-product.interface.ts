@@ -7,5 +7,7 @@ export interface IClientProduct {
   status: ClientProductStatus;
   offeredAt: string;
   updatedAt: string;
+  customPrice?: number | null;
+  quantity?: number | null;
   notes?: string;
 }

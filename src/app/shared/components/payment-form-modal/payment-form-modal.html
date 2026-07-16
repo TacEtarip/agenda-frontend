@@ -1,4 +1,4 @@
-<ion-modal [isOpen]="opened()" (didPresent)="reset()" (didDismiss)="closed.emit()">
+<ion-modal class="app-modal payment-modal" [isOpen]="opened()" (didPresent)="reset()" (didDismiss)="closed.emit()">
   <ng-template>
     <ion-header>
       <ion-toolbar>
@@ -10,44 +10,63 @@
         </ion-buttons>
       </ion-toolbar>
     </ion-header>
-    <ion-content class="ion-padding">
-      <div class="payment-summary">
-        <ion-icon name="cash-outline" aria-hidden="true" />
-        <div><strong>{{ concept() }}</strong><span>{{ clientName() }}</span></div>
-      </div>
+    <div class="app-modal-content">
+      <section class="app-modal-shell">
+        <ion-card class="app-modal-card">
+          <ion-card-content class="app-modal-card__content">
+            <div class="app-modal-header">
+              <div class="app-modal-icon"><ion-icon name="cash-outline" aria-hidden="true" /></div>
+              <div class="app-modal-copy">
+                <p class="app-modal-eyebrow">Cobros</p>
+                <h2>{{ concept() }}</h2>
+                <p>Registra el pago de {{ clientName() }} o genera un enlace para compartir.</p>
+              </div>
+            </div>
 
+            <div class="app-modal-body payment-modal__body">
       @if (!generatedPayment()) {
         <ion-segment [value]="mode()" (ionChange)="changeMode($event)" aria-label="Tipo de cobro">
           <ion-segment-button value="LINK"><ion-label>Generar enlace</ion-label></ion-segment-button>
           <ion-segment-button value="MANUAL"><ion-label>Registrar pago</ion-label></ion-segment-button>
         </ion-segment>
 
-        <ion-item>
-          <ion-input label="Monto (PEN)" labelPlacement="stacked" inputmode="decimal" [value]="amount()" (ionInput)="setText('amount', $event)" />
-        </ion-item>
-        <ion-item>
-          <ion-textarea label="Descripción" labelPlacement="stacked" autoGrow="true" [value]="description()" (ionInput)="setText('description', $event)" />
-        </ion-item>
+        <ion-input class="payment-modal__field payment-modal__amount" label="Monto" labelPlacement="floating" fill="outline"
+          name="paymentAmount" autocomplete="off" type="text" inputmode="decimal" [value]="amount()"
+          (ionInput)="setAmount($event)" (ionBlur)="formatAmount()">
+          <span slot="start" aria-hidden="true">S/</span>
+        </ion-input>
+        <ion-textarea class="payment-modal__field" label="Descripción" labelPlacement="floating" fill="outline"
+          name="paymentDescription" autocomplete="off" autoGrow="true" [value]="description()"
+          (ionInput)="setText('description', $event)" />
 
         @if (mode() === 'MANUAL') {
-          <ion-item>
-            <ion-select label="Método" labelPlacement="stacked" [value]="method()" (ionChange)="setMethod($event)">
+          <ion-select class="payment-modal__field" label="Método" labelPlacement="floating" fill="outline"
+            name="paymentMethod" [value]="method()" (ionChange)="setMethod($event)">
               @for (option of methods; track option) { <ion-select-option [value]="option">{{ methodLabel(option) }}</ion-select-option> }
-            </ion-select>
-          </ion-item>
-          <ion-item>
-            <ion-input type="date" label="Fecha del pago" labelPlacement="stacked" [value]="paidAt()" (ionInput)="setText('paidAt', $event)" />
-          </ion-item>
-          <ion-item>
-            <ion-input label="Referencia (opcional)" labelPlacement="stacked" [value]="reference()" (ionInput)="setText('reference', $event)" />
-          </ion-item>
+          </ion-select>
+          <div class="payment-modal__date-card">
+            <p class="payment-modal__date-title">Fecha del pago</p>
+            <ion-datetime-button datetime="payment-date-picker" />
+          </div>
+          <ion-modal [keepContentsMounted]="true" class="app-modal app-modal--picker">
+            <ng-template>
+              <ion-datetime id="payment-date-picker" presentation="date" [preferWheel]="false"
+                [value]="paidAt()" (ionChange)="setPaidAt($event)" />
+            </ng-template>
+          </ion-modal>
+          <ion-input class="payment-modal__field" label="Referencia (opcional)" labelPlacement="floating" fill="outline"
+            name="paymentReference" autocomplete="off" [value]="reference()"
+            (ionInput)="setText('reference', $event)" />
         }
 
         @if (error()) { <ion-note color="danger" role="alert">{{ error() }}</ion-note> }
-        <ion-button expand="block" class="submit-payment" (click)="submit()" [disabled]="submitting()">
-          <ion-icon slot="start" [name]="mode() === 'LINK' ? 'link-outline' : 'cash-outline'" aria-hidden="true" />
-          {{ submitting() ? 'Procesando…' : mode() === 'LINK' ? 'Generar enlace' : 'Registrar como pagado' }}
-        </ion-button>
+        <div class="app-modal-actions">
+          <ion-button fill="outline" color="medium" (click)="closed.emit()">Cancelar</ion-button>
+          <ion-button class="submit-payment" (click)="submit()" [disabled]="submitting()">
+            <ion-icon slot="start" [name]="mode() === 'LINK' ? 'link-outline' : 'cash-outline'" aria-hidden="true" />
+            {{ submitting() ? 'Procesando…' : mode() === 'LINK' ? 'Generar enlace' : 'Registrar pago' }}
+          </ion-button>
+        </div>
       } @else {
         <div class="payment-result" role="status">
           <ion-icon name="link-outline" aria-hidden="true" />
@@ -62,6 +81,10 @@
           </ion-button>
         </div>
       }
-    </ion-content>
+            </div>
+          </ion-card-content>
+        </ion-card>
+      </section>
+    </div>
   </ng-template>
 </ion-modal>

@@ -1,6 +1,7 @@
 import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
+import { AlertController } from '@ionic/angular';
 import {
   IonBackButton,
   IonButton,
@@ -39,6 +40,8 @@ import { COMMON_ION_PAGE_IMPORTS } from '../../shared/ionic-imports';
 import { FormatDatePipe } from '../../shared/pipes/format-date.pipe';
 import { FormatPricePipe } from '../../shared/pipes/format-price.pipe';
 import { PaymentStore } from '../../shared/stores/payment.store';
+import { UserMenuComponent } from '../../shared/components/user-menu/user-menu';
+import { buildPaymentCancellationAlert } from '../../shared/payment-cancellation.utils';
 
 type PaymentSegment = PaymentStatus.PENDING | PaymentStatus.PAID;
 
@@ -63,6 +66,7 @@ type PaymentSegment = PaymentStatus.PENDING | PaymentStatus.PAID;
     IonSelectOption,
     FormatDatePipe,
     FormatPricePipe,
+    UserMenuComponent,
   ],
   templateUrl: './payments.html',
   styleUrl: './payments.scss',
@@ -73,6 +77,7 @@ export class PaymentsPage {
   private readonly destroyRef = inject(DestroyRef);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly alertCtrl = inject(AlertController);
 
   readonly viewSegment = signal<PaymentSegment>(PaymentStatus.PENDING);
   readonly page = signal(1);
@@ -86,6 +91,7 @@ export class PaymentsPage {
   readonly total = this.paymentsStore.total;
   readonly loading = this.paymentsStore.loading;
   readonly loadError = this.paymentsStore.error;
+  readonly cancellingPaymentId = signal<string | null>(null);
   readonly pendingCount = computed(() => this.viewSegment() === PaymentStatus.PENDING ? this.total() : 0);
   readonly totalPages = computed(() => Math.max(1, Math.ceil(this.total() / this.pageSize)));
   readonly paymentStatus = PaymentStatus;
@@ -206,8 +212,25 @@ export class PaymentsPage {
     window.open(`https://wa.me/${client.phone.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`, '_blank', 'noopener');
   }
 
-  cancel(payment: IPayment): void {
-    this.paymentsStore.cancel(payment.id).subscribe({ next: () => this.load() });
+  async cancel(payment: IPayment): Promise<void> {
+    if (this.cancellingPaymentId()) return;
+    const client = this.clients().get(payment.clientId);
+    const clientName = client ? `${client.firstName} ${client.lastName}`.trim() : 'este cliente';
+    const alert = await this.alertCtrl.create(
+      buildPaymentCancellationAlert(clientName, payment.amount, () => this.performPaymentCancellation(payment)),
+    );
+    await alert.present();
+  }
+
+  private performPaymentCancellation(payment: IPayment): void {
+    this.cancellingPaymentId.set(payment.id);
+    this.paymentsStore.cancel(payment.id).subscribe({
+      next: () => {
+        this.cancellingPaymentId.set(null);
+        this.load();
+      },
+      error: () => this.cancellingPaymentId.set(null),
+    });
   }
 
   regenerate(payment: IPayment): void {

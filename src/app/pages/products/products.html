@@ -9,6 +9,7 @@
         <h1 class="toolbar-title__name">Productos</h1>
       </div>
     </ion-title>
+    <ion-buttons slot="end"><app-user-menu /></ion-buttons>
   </ion-toolbar>
 </ion-header>
 
@@ -147,8 +148,8 @@
       <ion-toolbar>
         <ion-title>Nuevo producto</ion-title>
         <ion-buttons slot="end">
-          <ion-button (click)="closeCreateProductModal()" (keydown.enter)="closeCreateProductModal()" aria-label="Cerrar modal">
-            <ion-icon slot="icon-only" name="close-outline"></ion-icon>
+          <ion-button (click)="closeCreateProductModal()" aria-label="Cerrar modal">
+            <ion-icon slot="icon-only" name="close-outline" aria-hidden="true"></ion-icon>
           </ion-button>
         </ion-buttons>
       </ion-toolbar>
@@ -160,7 +161,7 @@
           <ion-card-content class="app-modal-card__content">
             <div class="app-modal-header">
               <div class="app-modal-icon">
-                <ion-icon name="add-outline"></ion-icon>
+                <ion-icon name="add-outline" aria-hidden="true"></ion-icon>
               </div>
 
               <div class="app-modal-copy">
@@ -243,7 +244,7 @@
 
               <div class="app-modal-actions composer-form__actions">
                 <ion-button type="submit">
-                  <ion-icon slot="start" name="add-outline"></ion-icon>
+                  <ion-icon slot="start" name="add-outline" aria-hidden="true"></ion-icon>
                   Guardar producto
                 </ion-button>
 
@@ -251,7 +252,6 @@
                   fill="clear"
                   type="button"
                   (click)="resetCreateProductForm()"
-                  (keydown.enter)="resetCreateProductForm()"
                   [disabled]="!createProductForm.dirty">
                   Limpiar
                 </ion-button>
