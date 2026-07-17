@@ -42,40 +42,141 @@ ion-toolbar ion-button {
 }
 
 .settings-content {
-  --background: linear-gradient(180deg, var(--color-frost-light) 0%, var(--color-surface-alt) 42%, var(--color-surface) 100%);
+  --background: linear-gradient(
+    180deg,
+    var(--color-frost-light) 0%,
+    var(--color-surface-alt) 42%,
+    var(--color-surface) 100%
+  );
 }
 
-.settings-main { width: min(100%, 72rem); margin: 0 auto; padding: 1rem 1rem max(2rem, env(safe-area-inset-bottom)); display: grid; grid-template-columns: 11rem minmax(0, 1fr); gap: 1rem; }
+.settings-main {
+  width: min(100%, 72rem);
+  margin: 0 auto;
+  padding: 1rem 1rem max(2rem, env(safe-area-inset-bottom));
+  display: grid;
+  grid-template-columns: 11rem minmax(0, 1fr);
+  gap: 1rem;
+}
 .settings-sections {
   min-width: 0;
   display: grid;
   gap: 1rem;
 }
-.settings-nav { position: sticky; top: 1rem; align-self: start; display: grid; gap: 0.25rem; padding: 0.5rem; border: 1px solid var(--color-border); border-radius: 1rem; background: var(--color-surface); }
-.settings-nav button { min-height: 2.75rem; padding: 0.65rem 0.75rem; border: 0; border-radius: 0.7rem; color: var(--color-text-muted); background: transparent; font: inherit; font-size: 0.82rem; font-weight: 700; text-align: left; cursor: pointer; touch-action: manipulation; }
-.settings-nav button:hover, .settings-nav button:focus-visible { color: var(--color-green-shade); background: var(--color-green-light); }
-.settings-section { scroll-margin-top: 1rem; }
-.section-heading__brand-icon { font-size: 1.5rem; margin-right: 0.75rem; }
-.whatsapp-status-container, .integration-config--spaced { margin-top: 1rem; }
-.whatsapp-status-row { display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem; }
-.whatsapp-status-row p { margin: 0; }
-.icon-touch-target { width: 2.75rem; min-width: 2.75rem; height: 2.75rem; margin: 0; }
-.whatsapp-status-row strong { text-transform: capitalize; }
-.qr-container { display: flex; flex-direction: column; align-items: center; background: var(--color-surface); padding: 1.5rem; border-radius: 0.75rem; }
-.qr-container img { width: min(100%, 17.5rem); height: auto; aspect-ratio: 1; }
-.qr-instructions { max-width: 28rem; margin: 1rem 0 0; text-align: center; color: var(--color-text-muted); font-size: 0.85rem; line-height: 1.5; }
-.actions-row--start { justify-content: flex-start; }
-.connected-status { display: flex; align-items: center; gap: 0.5rem; margin: 0; color: var(--color-green-shade); }
-.toolbar-title__name { margin: 0; }
-
-@media (max-width: 760px) {
-  .settings-main { grid-template-columns: 1fr; }
-  .settings-nav { position: static; display: flex; overflow-x: auto; scroll-padding-inline: 0.5rem; scrollbar-width: thin; }
-  .settings-nav button { flex: 0 0 auto; }
+.settings-nav {
+  position: sticky;
+  top: 1rem;
+  align-self: start;
+  display: grid;
+  gap: 0.25rem;
+  padding: 0.5rem;
+  border: 1px solid var(--color-border);
+  border-radius: 1rem;
+  background: var(--color-surface);
+}
+.settings-nav button {
+  min-height: 2.75rem;
+  padding: 0.65rem 0.75rem;
+  border: 0;
+  border-radius: 0.7rem;
+  color: var(--color-text-muted);
+  background: transparent;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.settings-nav button:hover,
+.settings-nav button:focus-visible {
+  color: var(--color-green-shade);
+  background: var(--color-green-light);
+}
+.settings-section {
+  scroll-margin-top: 1rem;
+}
+.section-heading__brand-icon {
+  font-size: 1.5rem;
+  margin-right: 0.75rem;
+}
+.whatsapp-status-container,
+.integration-config--spaced {
+  margin-top: 1rem;
+}
+.whatsapp-status-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+.whatsapp-status-row p {
+  margin: 0;
+}
+.icon-touch-target {
+  width: 2.75rem;
+  min-width: 2.75rem;
+  height: 2.75rem;
+  margin: 0;
+}
+.whatsapp-status-row strong {
+  text-transform: capitalize;
+}
+.qr-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: var(--color-surface);
+  padding: 1.5rem;
+  border-radius: 0.75rem;
+}
+.qr-container img {
+  width: min(100%, 17.5rem);
+  height: auto;
+  aspect-ratio: 1;
+}
+.qr-instructions {
+  max-width: 28rem;
+  margin: 1rem 0 0;
+  text-align: center;
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+.actions-row--start {
+  justify-content: flex-start;
+}
+.connected-status {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  color: var(--color-green-shade);
+}
+.toolbar-title__name {
+  margin: 0;
 }
 
 @media (max-width: 760px) {
-  .settings-nav { mask-image: linear-gradient(to right, #000 0, #000 calc(100% - 1.5rem), transparent 100%); }
+  .settings-main {
+    grid-template-columns: 1fr;
+  }
+  .settings-nav {
+    position: static;
+    display: flex;
+    overflow-x: auto;
+    scroll-padding-inline: 0.5rem;
+    scrollbar-width: thin;
+  }
+  .settings-nav button {
+    flex: 0 0 auto;
+  }
+}
+
+@media (max-width: 760px) {
+  .settings-nav {
+    mask-image: linear-gradient(to right, #000 0, #000 calc(100% - 1.5rem), transparent 100%);
+  }
 }
 
 .settings-section {
@@ -195,6 +296,51 @@ ion-toolbar ion-button {
   }
 }
 
+.google-connection {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  margin-top: 0.85rem;
+  padding: 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.9rem;
+  background: var(--color-surface);
+
+  > ion-icon {
+    flex: 0 0 auto;
+    color: var(--color-indigo);
+    font-size: 1.2rem;
+  }
+
+  > div {
+    min-width: 0;
+    flex: 1;
+  }
+
+  strong {
+    color: var(--color-text);
+    font-size: 0.82rem;
+  }
+
+  p {
+    margin: 0.18rem 0 0;
+    overflow-wrap: anywhere;
+    color: var(--color-text-muted);
+    font-size: 0.74rem;
+    line-height: 1.4;
+  }
+
+  ion-spinner {
+    width: 1.2rem;
+    height: 1.2rem;
+  }
+
+  ion-button {
+    flex: 0 0 auto;
+    margin: 0;
+  }
+}
+
 .integration-config {
   margin-top: 0.85rem;
   border: 1px solid var(--color-border);
@@ -263,5 +409,14 @@ ion-toolbar ion-button {
 @media (max-width: 640px) {
   .profile-grid {
     grid-template-columns: 1fr;
+  }
+
+  .google-connection {
+    align-items: flex-start;
+    flex-wrap: wrap;
+
+    ion-button {
+      width: 100%;
+    }
   }
 }

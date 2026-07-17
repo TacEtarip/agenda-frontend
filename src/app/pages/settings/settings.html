@@ -15,269 +15,394 @@
 
 <ion-content class="settings-content">
   <main class="settings-main">
-  <nav class="settings-nav" aria-label="Secciones de ajustes">
-    <button type="button" aria-controls="profile-settings" (click)="scrollToSection('profile-settings')">Perfil</button>
-    <button type="button" aria-controls="calendar-settings" (click)="scrollToSection('calendar-settings')">Calendarios</button>
-    <button type="button" aria-controls="whatsapp-settings" (click)="scrollToSection('whatsapp-settings')">WhatsApp</button>
-    <button type="button" aria-controls="payment-settings" (click)="scrollToSection('payment-settings')">Pagos</button>
-  </nav>
-  <div class="settings-sections">
-  <section class="settings-section" id="profile-settings">
-    <ion-card class="settings-card">
-      <ion-card-content class="settings-card__content">
-        <div class="section-heading">
-          <ion-icon name="person-circle-outline" aria-hidden="true"></ion-icon>
-          <div>
-            <h2>Información personal</h2>
-            <p>Edita tus datos básicos de perfil.</p>
-          </div>
-        </div>
-
-        <form class="profile-form" [formGroup]="profileForm" (ngSubmit)="saveProfile()">
-          <div class="profile-grid">
-            <ion-input
-              formControlName="firstName"
-              name="given-name"
-              autocomplete="given-name"
-              label="Nombre"
-              labelPlacement="floating"
-              fill="outline"
-              shape="round">
-            </ion-input>
-
-            <ion-input
-              formControlName="lastName"
-              name="family-name"
-              autocomplete="family-name"
-              label="Apellido"
-              labelPlacement="floating"
-              fill="outline"
-              shape="round">
-            </ion-input>
-
-            <ion-input
-              formControlName="email"
-              name="email"
-              autocomplete="email"
-              inputmode="email"
-              [spellcheck]="false"
-              type="email"
-              label="Correo electrónico"
-              labelPlacement="floating"
-              fill="outline"
-              shape="round">
-            </ion-input>
-
-            <ion-input
-              formControlName="phone"
-              name="tel"
-              autocomplete="tel"
-              inputmode="tel"
-              type="tel"
-              label="Teléfono"
-              labelPlacement="floating"
-              fill="outline"
-              shape="round">
-            </ion-input>
-          </div>
-
-          <div class="actions-row">
-            <ion-button type="submit" [disabled]="profileForm.invalid || !profileForm.dirty">
-              Guardar perfil
-            </ion-button>
-          </div>
-        </form>
-
-        @if (profileSavedMessage()) {
-          <p class="status-message" aria-live="polite">
-            <ion-icon name="checkmark-circle-outline" aria-hidden="true"></ion-icon>
-            <span>{{ profileSavedMessage() }}</span>
-          </p>
-        }
-      </ion-card-content>
-    </ion-card>
-  </section>
-
-  <section class="settings-section" id="calendar-settings">
-    <ion-card class="settings-card">
-      <ion-card-content class="settings-card__content">
-        <div class="section-heading">
-          <ion-icon name="settings-outline" aria-hidden="true"></ion-icon>
-          <div>
-            <h2>Integraciones</h2>
-            <p>Selecciona cómo quieres sincronizar tu agenda.</p>
-          </div>
-        </div>
-
-        <ion-radio-group
-          aria-label="Proveedor de calendario"
-          class="integration-group"
-          [value]="currentIntegration()"
-          (ionChange)="setIntegration($event)">
-          <ion-item lines="none" class="integration-item">
-            <ion-icon slot="start" name="information-circle-outline" aria-hidden="true"></ion-icon>
-            <ion-label>
-              <h3>Sin integración</h3>
-              <p>Gestiona tu agenda solo dentro de la app.</p>
-            </ion-label>
-            <ion-radio slot="end" value="none"></ion-radio>
-          </ion-item>
-
-          <ion-item lines="none" class="integration-item">
-            <ion-icon slot="start" name="logo-google" aria-hidden="true"></ion-icon>
-            <ion-label>
-              <h3>Google</h3>
-              <p>Conecta Google Calendar y contactos.</p>
-            </ion-label>
-            <ion-radio slot="end" value="google"></ion-radio>
-          </ion-item>
-
-          <ion-item lines="none" class="integration-item">
-            <ion-icon slot="start" name="logo-microsoft" aria-hidden="true"></ion-icon>
-            <ion-label>
-              <h3>Microsoft</h3>
-              <p>Conecta Outlook Calendar y contactos.</p>
-            </ion-label>
-            <ion-radio slot="end" value="microsoft"></ion-radio>
-          </ion-item>
-        </ion-radio-group>
-
-        <div class="integration-summary">
-          <ion-icon name="checkmark-circle-outline" aria-hidden="true"></ion-icon>
-          <p>
-            <strong>{{ integrationTitle() }}</strong>
-            {{ integrationDescription() }}
-          </p>
-        </div>
-
-        @if (currentIntegration() !== 'none') {
-          <div class="integration-config">
-            <h3>Configuración de sincronización</h3>
-            <ion-list lines="none">
-              <ion-item>
-                <ion-icon slot="start" name="calendar-clear-outline" aria-hidden="true"></ion-icon>
-                <ion-label>Sincronizar calendario</ion-label>
-                <ion-toggle
-                  slot="end"
-                  aria-label="Sincronizar calendario"
-                  [checked]="integrationSettings().syncCalendar"
-                  (ionChange)="updateIntegrationSetting(IntegrationPreference.SYNC_CALENDAR, $event)">
-                </ion-toggle>
-              </ion-item>
-
-              <ion-item>
-                <ion-icon slot="start" name="sync-outline" aria-hidden="true"></ion-icon>
-                <ion-label>Sincronizar contactos</ion-label>
-                <ion-toggle
-                  slot="end"
-                  aria-label="Sincronizar contactos"
-                  [checked]="integrationSettings().syncContacts"
-                  (ionChange)="updateIntegrationSetting(IntegrationPreference.SYNC_CONTACTS, $event)">
-                </ion-toggle>
-              </ion-item>
-
-              <ion-item>
-                <ion-icon slot="start" name="notifications-outline" aria-hidden="true"></ion-icon>
-                <ion-label>Resumen diario por correo</ion-label>
-                <ion-toggle
-                  slot="end"
-                  aria-label="Enviar resumen diario por correo"
-                  [checked]="integrationSettings().sendDailyDigest"
-                  (ionChange)="updateIntegrationSetting(IntegrationPreference.SEND_DAILY_DIGEST, $event)">
-                </ion-toggle>
-              </ion-item>
-            </ion-list>
-          </div>
-        }
-
-        <div class="actions-row">
-          <ion-button (click)="saveIntegration()">Guardar integración</ion-button>
-        </div>
-
-        @if (integrationSavedMessage()) {
-          <p class="status-message" aria-live="polite">
-            <ion-icon name="checkmark-circle-outline" aria-hidden="true"></ion-icon>
-            <span>{{ integrationSavedMessage() }}</span>
-          </p>
-        }
-      </ion-card-content>
-    </ion-card>
-  </section>
-
-  <!-- WhatsApp Integration Section -->
-  <section class="settings-section" id="whatsapp-settings">
-    <ion-card class="settings-card">
-      <ion-card-content class="settings-card__content">
-        <div class="section-heading">
-          <ion-icon class="section-heading__brand-icon ion-color-success" name="logo-whatsapp" aria-hidden="true"></ion-icon>
-          <div>
-            <h2>WhatsApp API</h2>
-            <p>Envía recordatorios a tus clientes automáticamente sin costo.</p>
-          </div>
-        </div>
-
-        <div class="whatsapp-status-container">
-          <div class="whatsapp-status-row">
-            <p>Estado actual: <strong>{{ whatsappStatus() }}</strong></p>
-            <ion-button class="icon-touch-target" fill="outline" size="small" (click)="checkWhatsappStatus()" [disabled]="isPollingQr()" aria-label="Actualizar estado de WhatsApp">
-              <ion-icon name="refresh-outline" slot="icon-only" aria-hidden="true"></ion-icon>
-            </ion-button>
-          </div>
-
-          @if (whatsappStatus() === 'WAITING_QR') {
-            <div class="qr-container" aria-live="polite">
-              @if (isPollingQr() && !whatsappQrImage()) {
-                <ion-spinner name="crescent"></ion-spinner>
-                <p>Generando código QR…</p>
-              } @else if (whatsappQrImage()) {
-                <img [src]="whatsappQrImage()" alt="Código QR para vincular WhatsApp" width="280" height="280" />
-                <p class="qr-instructions">Abre WhatsApp en tu teléfono, entra a Dispositivos vinculados y selecciona Vincular un dispositivo.</p>
-              }
+    <nav class="settings-nav" aria-label="Secciones de ajustes">
+      <button
+        type="button"
+        aria-controls="profile-settings"
+        (click)="scrollToSection('profile-settings')"
+      >
+        Perfil
+      </button>
+      <button
+        type="button"
+        aria-controls="calendar-settings"
+        (click)="scrollToSection('calendar-settings')"
+      >
+        Calendarios
+      </button>
+      <button
+        type="button"
+        aria-controls="whatsapp-settings"
+        (click)="scrollToSection('whatsapp-settings')"
+      >
+        WhatsApp
+      </button>
+      <button
+        type="button"
+        aria-controls="payment-settings"
+        (click)="scrollToSection('payment-settings')"
+      >
+        Pagos
+      </button>
+    </nav>
+    <div class="settings-sections">
+      <section class="settings-section" id="profile-settings">
+        <ion-card class="settings-card">
+          <ion-card-content class="settings-card__content">
+            <div class="section-heading">
+              <ion-icon name="person-circle-outline" aria-hidden="true"></ion-icon>
+              <div>
+                <h2>Información personal</h2>
+                <p>Edita tus datos básicos de perfil.</p>
+              </div>
             </div>
-          }
 
-          @if (whatsappStatus() === 'CONNECTED') {
-            <div class="actions-row actions-row--start">
-              <p class="connected-status" role="status">
+            <form class="profile-form" [formGroup]="profileForm" (ngSubmit)="saveProfile()">
+              <div class="profile-grid">
+                <ion-input
+                  formControlName="firstName"
+                  name="given-name"
+                  autocomplete="given-name"
+                  label="Nombre"
+                  labelPlacement="floating"
+                  fill="outline"
+                  shape="round"
+                >
+                </ion-input>
+
+                <ion-input
+                  formControlName="lastName"
+                  name="family-name"
+                  autocomplete="family-name"
+                  label="Apellido"
+                  labelPlacement="floating"
+                  fill="outline"
+                  shape="round"
+                >
+                </ion-input>
+
+                <ion-input
+                  formControlName="email"
+                  name="email"
+                  autocomplete="email"
+                  inputmode="email"
+                  [spellcheck]="false"
+                  type="email"
+                  label="Correo electrónico"
+                  labelPlacement="floating"
+                  fill="outline"
+                  shape="round"
+                >
+                </ion-input>
+
+                <ion-input
+                  formControlName="phone"
+                  name="tel"
+                  autocomplete="tel"
+                  inputmode="tel"
+                  type="tel"
+                  label="Teléfono"
+                  labelPlacement="floating"
+                  fill="outline"
+                  shape="round"
+                >
+                </ion-input>
+              </div>
+
+              <div class="actions-row">
+                <ion-button type="submit" [disabled]="profileForm.invalid || !profileForm.dirty">
+                  Guardar perfil
+                </ion-button>
+              </div>
+            </form>
+
+            @if (profileSavedMessage()) {
+              <p class="status-message" aria-live="polite">
                 <ion-icon name="checkmark-circle-outline" aria-hidden="true"></ion-icon>
-                Tu WhatsApp está vinculado correctamente.
+                <span>{{ profileSavedMessage() }}</span>
+              </p>
+            }
+          </ion-card-content>
+        </ion-card>
+      </section>
+
+      <section class="settings-section" id="calendar-settings">
+        <ion-card class="settings-card">
+          <ion-card-content class="settings-card__content">
+            <div class="section-heading">
+              <ion-icon name="settings-outline" aria-hidden="true"></ion-icon>
+              <div>
+                <h2>Integraciones</h2>
+                <p>Selecciona cómo quieres sincronizar tu agenda.</p>
+              </div>
+            </div>
+
+            <ion-radio-group
+              aria-label="Proveedor de calendario"
+              class="integration-group"
+              [value]="currentIntegration()"
+              (ionChange)="setIntegration($event)"
+            >
+              <ion-item lines="none" class="integration-item">
+                <ion-icon
+                  slot="start"
+                  name="information-circle-outline"
+                  aria-hidden="true"
+                ></ion-icon>
+                <ion-label>
+                  <h3>Sin integración</h3>
+                  <p>Gestiona tu agenda solo dentro de la app.</p>
+                </ion-label>
+                <ion-radio slot="end" value="none"></ion-radio>
+              </ion-item>
+
+              <ion-item lines="none" class="integration-item">
+                <ion-icon slot="start" name="logo-google" aria-hidden="true"></ion-icon>
+                <ion-label>
+                  <h3>Google</h3>
+                  <p>Conecta Google Calendar para sincronizar citas.</p>
+                </ion-label>
+                <ion-radio slot="end" value="google"></ion-radio>
+              </ion-item>
+
+              <ion-item lines="none" class="integration-item">
+                <ion-icon slot="start" name="logo-microsoft" aria-hidden="true"></ion-icon>
+                <ion-label>
+                  <h3>Microsoft</h3>
+                  <p>Conecta Outlook Calendar y contactos.</p>
+                </ion-label>
+                <ion-radio slot="end" value="microsoft"></ion-radio>
+              </ion-item>
+            </ion-radio-group>
+
+            <div class="integration-summary">
+              <ion-icon name="checkmark-circle-outline" aria-hidden="true"></ion-icon>
+              <p>
+                <strong>{{ integrationTitle() }}</strong>
+                {{ integrationDescription() }}
               </p>
             </div>
-          }
-        </div>
-      </ion-card-content>
-    </ion-card>
-  </section>
 
-  <!-- Payment Integration Section -->
-  <section class="settings-section" id="payment-settings">
-    <ion-card class="settings-card">
-      <ion-card-content class="settings-card__content">
-        <div class="section-heading">
-          <ion-icon class="section-heading__brand-icon ion-color-primary" name="card-outline" aria-hidden="true"></ion-icon>
-          <div>
-            <h2>Integración de Pagos</h2>
-            <p>Genera links de pago para tus servicios B2B2C.</p>
-          </div>
-        </div>
+            @if (currentIntegration() === IntegrationProvider.GOOGLE) {
+              <div class="google-connection" aria-live="polite">
+                @if (isGoogleLoading()) {
+                  <ion-spinner name="crescent"></ion-spinner>
+                  <p>Consultando la conexión con Google…</p>
+                } @else if (googleStatus().connected) {
+                  <ion-icon name="checkmark-circle-outline" aria-hidden="true"></ion-icon>
+                  <div>
+                    <strong>Cuenta Google conectada</strong>
+                    <p>{{ googleStatus().email }}</p>
+                  </div>
+                  <ion-button
+                    fill="outline"
+                    color="danger"
+                    size="small"
+                    (click)="disconnectGoogle()"
+                  >
+                    Desvincular
+                  </ion-button>
+                } @else if (googleStatus().configured) {
+                  <ion-icon name="logo-google" aria-hidden="true"></ion-icon>
+                  <div>
+                    <strong>Google todavía no está vinculado</strong>
+                    <p>Autoriza el acceso a eventos de Calendar para continuar.</p>
+                  </div>
+                  <ion-button size="small" (click)="connectGoogle()"> Conectar Google </ion-button>
+                } @else {
+                  <ion-icon name="information-circle-outline" aria-hidden="true"></ion-icon>
+                  <div>
+                    <strong>Configuración pendiente</strong>
+                    <p>Agrega las credenciales OAuth de Google en el servidor.</p>
+                  </div>
+                  <ion-button fill="outline" size="small" (click)="loadGoogleStatus()">
+                    Reintentar
+                  </ion-button>
+                }
+              </div>
+            }
 
-        <div class="integration-config integration-config--spaced">
-          <ion-list lines="none">
-            <ion-item>
-              <ion-icon slot="start" name="cash-outline" aria-hidden="true"></ion-icon>
-              <ion-label>Habilitar cobro por Link de Pago</ion-label>
-              <ion-toggle
-                slot="end"
-                aria-label="Habilitar cobro por enlace de pago"
-                [checked]="enablePayments()"
-                (ionChange)="updatePaymentSetting($event)">
-              </ion-toggle>
-            </ion-item>
-          </ion-list>
-        </div>
-      </ion-card-content>
-    </ion-card>
-  </section>
-  </div>
+            @if (currentIntegration() !== 'none') {
+              <div class="integration-config">
+                <h3>Configuración de sincronización</h3>
+                <ion-list lines="none">
+                  <ion-item>
+                    <ion-icon
+                      slot="start"
+                      name="calendar-clear-outline"
+                      aria-hidden="true"
+                    ></ion-icon>
+                    <ion-label>Sincronizar calendario</ion-label>
+                    <ion-toggle
+                      slot="end"
+                      aria-label="Sincronizar calendario"
+                      [checked]="integrationSettings().syncCalendar"
+                      (ionChange)="
+                        updateIntegrationSetting(IntegrationPreference.SYNC_CALENDAR, $event)
+                      "
+                    >
+                    </ion-toggle>
+                  </ion-item>
+
+                  @if (currentIntegration() === IntegrationProvider.MICROSOFT) {
+                    <ion-item>
+                      <ion-icon slot="start" name="sync-outline" aria-hidden="true"></ion-icon>
+                      <ion-label>Sincronizar contactos</ion-label>
+                      <ion-toggle
+                        slot="end"
+                        aria-label="Sincronizar contactos"
+                        [checked]="integrationSettings().syncContacts"
+                        (ionChange)="
+                          updateIntegrationSetting(IntegrationPreference.SYNC_CONTACTS, $event)
+                        "
+                      >
+                      </ion-toggle>
+                    </ion-item>
+                  }
+
+                  <ion-item>
+                    <ion-icon
+                      slot="start"
+                      name="notifications-outline"
+                      aria-hidden="true"
+                    ></ion-icon>
+                    <ion-label>Resumen diario por correo</ion-label>
+                    <ion-toggle
+                      slot="end"
+                      aria-label="Enviar resumen diario por correo"
+                      [checked]="integrationSettings().sendDailyDigest"
+                      (ionChange)="
+                        updateIntegrationSetting(IntegrationPreference.SEND_DAILY_DIGEST, $event)
+                      "
+                    >
+                    </ion-toggle>
+                  </ion-item>
+                </ion-list>
+              </div>
+            }
+
+            <div class="actions-row">
+              <ion-button
+                [disabled]="
+                  isGoogleLoading() ||
+                  (currentIntegration() === IntegrationProvider.GOOGLE && !googleStatus().connected)
+                "
+                (click)="saveIntegration()"
+              >
+                Guardar integración
+              </ion-button>
+            </div>
+
+            @if (integrationSavedMessage()) {
+              <p class="status-message" aria-live="polite">
+                <ion-icon name="checkmark-circle-outline" aria-hidden="true"></ion-icon>
+                <span>{{ integrationSavedMessage() }}</span>
+              </p>
+            }
+          </ion-card-content>
+        </ion-card>
+      </section>
+
+      <!-- WhatsApp Integration Section -->
+      <section class="settings-section" id="whatsapp-settings">
+        <ion-card class="settings-card">
+          <ion-card-content class="settings-card__content">
+            <div class="section-heading">
+              <ion-icon
+                class="section-heading__brand-icon ion-color-success"
+                name="logo-whatsapp"
+                aria-hidden="true"
+              ></ion-icon>
+              <div>
+                <h2>WhatsApp API</h2>
+                <p>Envía recordatorios a tus clientes automáticamente sin costo.</p>
+              </div>
+            </div>
+
+            <div class="whatsapp-status-container">
+              <div class="whatsapp-status-row">
+                <p>
+                  Estado actual: <strong>{{ whatsappStatus() }}</strong>
+                </p>
+                <ion-button
+                  class="icon-touch-target"
+                  fill="outline"
+                  size="small"
+                  (click)="checkWhatsappStatus()"
+                  [disabled]="isPollingQr()"
+                  aria-label="Actualizar estado de WhatsApp"
+                >
+                  <ion-icon name="refresh-outline" slot="icon-only" aria-hidden="true"></ion-icon>
+                </ion-button>
+              </div>
+
+              @if (whatsappStatus() === 'WAITING_QR') {
+                <div class="qr-container" aria-live="polite">
+                  @if (isPollingQr() && !whatsappQrImage()) {
+                    <ion-spinner name="crescent"></ion-spinner>
+                    <p>Generando código QR…</p>
+                  } @else if (whatsappQrImage()) {
+                    <img
+                      [src]="whatsappQrImage()"
+                      alt="Código QR para vincular WhatsApp"
+                      width="280"
+                      height="280"
+                    />
+                    <p class="qr-instructions">
+                      Abre WhatsApp en tu teléfono, entra a Dispositivos vinculados y selecciona
+                      Vincular un dispositivo.
+                    </p>
+                  }
+                </div>
+              }
+
+              @if (whatsappStatus() === 'CONNECTED') {
+                <div class="actions-row actions-row--start">
+                  <p class="connected-status" role="status">
+                    <ion-icon name="checkmark-circle-outline" aria-hidden="true"></ion-icon>
+                    Tu WhatsApp está vinculado correctamente.
+                  </p>
+                </div>
+              }
+            </div>
+          </ion-card-content>
+        </ion-card>
+      </section>
+
+      <!-- Payment Integration Section -->
+      <section class="settings-section" id="payment-settings">
+        <ion-card class="settings-card">
+          <ion-card-content class="settings-card__content">
+            <div class="section-heading">
+              <ion-icon
+                class="section-heading__brand-icon ion-color-primary"
+                name="card-outline"
+                aria-hidden="true"
+              ></ion-icon>
+              <div>
+                <h2>Integración de Pagos</h2>
+                <p>Genera links de pago para tus servicios B2B2C.</p>
+              </div>
+            </div>
+
+            <div class="integration-config integration-config--spaced">
+              <ion-list lines="none">
+                <ion-item>
+                  <ion-icon slot="start" name="cash-outline" aria-hidden="true"></ion-icon>
+                  <ion-label>Habilitar cobro por Link de Pago</ion-label>
+                  <ion-toggle
+                    slot="end"
+                    aria-label="Habilitar cobro por enlace de pago"
+                    [checked]="enablePayments()"
+                    (ionChange)="updatePaymentSetting($event)"
+                  >
+                  </ion-toggle>
+                </ion-item>
+              </ion-list>
+            </div>
+          </ion-card-content>
+        </ion-card>
+      </section>
+    </div>
   </main>
 </ion-content>

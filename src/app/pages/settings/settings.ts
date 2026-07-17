@@ -1,14 +1,7 @@
-import {
-  Component,
-  computed,
-  effect,
-  inject,
-  signal,
-  DestroyRef,
-  viewChild,
-} from '@angular/core';
+import { Component, computed, effect, inject, signal, DestroyRef, viewChild } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { ActivatedRoute, Router } from '@angular/router';
 import * as QRCode from 'qrcode';
 import { COMMON_ION_PAGE_IMPORTS } from '../../shared/ionic-imports';
 import { addIcons } from 'ionicons';
@@ -52,6 +45,8 @@ import {
 } from './constants/settings.constants';
 import { UserApiService } from '../../core/services/user-api.service';
 import { UserMenuComponent } from '../../shared/components/user-menu/user-menu';
+import { GoogleIntegrationApiService } from '../../core/services/google-integration-api.service';
+import { IGoogleIntegrationStatus } from '../../core/interfaces/google-integration-status.interface';
 
 @Component({
   selector: 'app-settings',
@@ -73,12 +68,16 @@ import { UserMenuComponent } from '../../shared/components/user-menu/user-menu';
 })
 export class SettingsPage {
   readonly IntegrationPreference = IntegrationPreference;
+  readonly IntegrationProvider = IntegrationProvider;
   private readonly content = viewChild.required(IonContent);
 
   private readonly fb = inject(FormBuilder);
   private readonly authService = inject(AuthService);
   private readonly whatsappApi = inject(WhatsAppApiService);
   private readonly userApi = inject(UserApiService);
+  private readonly googleIntegrationApi = inject(GoogleIntegrationApiService);
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
   private readonly storedSettings = this.loadStoredSettings();
 
@@ -101,6 +100,12 @@ export class SettingsPage {
   readonly profileSavedMessage = signal<string | null>(null);
   readonly isProfileLoading = signal(false);
   readonly integrationSavedMessage = signal<string | null>(null);
+  readonly googleStatus = signal<IGoogleIntegrationStatus>({
+    configured: false,
+    connected: false,
+    scopes: [],
+  });
+  readonly isGoogleLoading = signal(false);
 
   // WhatsApp Signals
   readonly whatsappStatus = signal<MessagingStatus>('INITIALIZING');
@@ -115,7 +120,7 @@ export class SettingsPage {
   readonly integrationDescription = computed(() => {
     const provider = this.currentIntegration();
     if (provider === IntegrationProvider.GOOGLE) {
-      return 'Sincroniza calendario y contactos de Google.';
+      return 'Vincula Google Calendar para sincronizar tus citas.';
     }
 
     if (provider === IntegrationProvider.MICROSOFT) {
@@ -160,6 +165,85 @@ export class SettingsPage {
 
     this.checkWhatsappStatus();
     this.loadProfile();
+    this.handleGoogleCallbackResult();
+    this.loadGoogleStatus();
+  }
+
+  connectGoogle(): void {
+    this.isGoogleLoading.set(true);
+    this.integrationSavedMessage.set(null);
+    this.googleIntegrationApi
+      .createAuthorizationUrl()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: ({ url }) => {
+          try {
+            const authorizationUrl = new URL(url);
+            if (
+              authorizationUrl.protocol !== 'https:' ||
+              authorizationUrl.hostname !== 'accounts.google.com'
+            ) {
+              throw new Error('Unexpected Google authorization URL');
+            }
+            globalThis.location.assign(authorizationUrl.toString());
+          } catch {
+            this.isGoogleLoading.set(false);
+            this.integrationSavedMessage.set('No se pudo iniciar la conexión segura con Google.');
+          }
+        },
+        error: () => {
+          this.isGoogleLoading.set(false);
+          this.integrationSavedMessage.set('Google todavía no está configurado en el servidor.');
+        },
+      });
+  }
+
+  disconnectGoogle(): void {
+    this.isGoogleLoading.set(true);
+    this.googleIntegrationApi
+      .disconnect()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (status) => {
+          this.googleStatus.set(status);
+          this.currentIntegration.set(IntegrationProvider.NONE);
+          this.persistSettings({
+            integrationProvider: IntegrationProvider.NONE,
+            integrationSettings: this.integrationSettings(),
+            enablePayments: this.enablePayments(),
+          });
+          this.integrationSavedMessage.set('La cuenta Google fue desvinculada correctamente.');
+          this.isGoogleLoading.set(false);
+        },
+        error: () => {
+          this.integrationSavedMessage.set('No se pudo desvincular la cuenta Google.');
+          this.isGoogleLoading.set(false);
+        },
+      });
+  }
+
+  loadGoogleStatus(): void {
+    this.isGoogleLoading.set(true);
+    this.googleIntegrationApi
+      .getStatus()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (status) => {
+          this.googleStatus.set(status);
+          if (status.connected) {
+            this.currentIntegration.set(IntegrationProvider.GOOGLE);
+          }
+          this.isGoogleLoading.set(false);
+        },
+        error: () => {
+          this.googleStatus.set({
+            configured: false,
+            connected: false,
+            scopes: [],
+          });
+          this.isGoogleLoading.set(false);
+        },
+      });
   }
 
   private loadProfile(): void {
@@ -167,29 +251,51 @@ export class SettingsPage {
     if (!userId) return;
 
     this.isProfileLoading.set(true);
-    this.userApi.getUser(userId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: (user) => {
-        this.authService.updateCurrentUser(user);
-        this.isProfileLoading.set(false);
-      },
-      error: () => this.isProfileLoading.set(false),
+    this.userApi
+      .getUser(userId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (user) => {
+          this.authService.updateCurrentUser(user);
+          this.isProfileLoading.set(false);
+        },
+        error: () => this.isProfileLoading.set(false),
+      });
+  }
+
+  private handleGoogleCallbackResult(): void {
+    const result = this.route.snapshot.queryParamMap.get('google');
+    if (!result) return;
+    this.integrationSavedMessage.set(
+      result === 'connected'
+        ? 'Google se vinculó correctamente.'
+        : 'Google no pudo vincularse. Inténtalo nuevamente.',
+    );
+    void this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { google: null, reason: null },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
     });
   }
 
   checkWhatsappStatus() {
     this.isPollingQr.set(true);
-    this.whatsappApi.getStatus().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: (res) => {
-        this.whatsappStatus.set(res.status);
-        if (res.status === 'WAITING_QR') {
-          this.fetchWhatsappQr();
-        } else {
-          this.isPollingQr.set(false);
-          this.whatsappQrImage.set(null);
-        }
-      },
-      error: () => this.isPollingQr.set(false)
-    });
+    this.whatsappApi
+      .getStatus()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (res) => {
+          this.whatsappStatus.set(res.status);
+          if (res.status === 'WAITING_QR') {
+            this.fetchWhatsappQr();
+          } else {
+            this.isPollingQr.set(false);
+            this.whatsappQrImage.set(null);
+          }
+        },
+        error: () => this.isPollingQr.set(false),
+      });
   }
 
   async scrollToSection(sectionId: string): Promise<void> {
@@ -215,20 +321,23 @@ export class SettingsPage {
   }
 
   private fetchWhatsappQr() {
-    this.whatsappApi.getQrCode().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: async (res) => {
-        if (res.qr) {
-          try {
-            const qrDataUrl = await QRCode.toDataURL(res.qr, { margin: 2, scale: 6 });
-            this.whatsappQrImage.set(qrDataUrl);
-          } catch (err) {
-            console.error('Error rendering QR code', err);
+    this.whatsappApi
+      .getQrCode()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: async (res) => {
+          if (res.qr) {
+            try {
+              const qrDataUrl = await QRCode.toDataURL(res.qr, { margin: 2, scale: 6 });
+              this.whatsappQrImage.set(qrDataUrl);
+            } catch (err) {
+              console.error('Error rendering QR code', err);
+            }
           }
-        }
-        this.isPollingQr.set(false);
-      },
-      error: () => this.isPollingQr.set(false)
-    });
+          this.isPollingQr.set(false);
+        },
+        error: () => this.isPollingQr.set(false),
+      });
   }
 
   saveProfile() {
@@ -244,18 +353,21 @@ export class SettingsPage {
       email: email.trim(),
       phone: phone.trim(),
     };
-    this.userApi.updateMyProfile(profile).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: (user) => {
-        this.authService.updateCurrentUser(user);
-        this.profileForm.markAsPristine();
-        const savedAt = new Date().toLocaleTimeString('es-ES', {
-          hour: '2-digit',
-          minute: '2-digit',
-        });
-        this.profileSavedMessage.set(`Perfil actualizado a las ${savedAt}.`);
-      },
-      error: () => this.profileSavedMessage.set('No se pudo actualizar el perfil.'),
-    });
+    this.userApi
+      .updateMyProfile(profile)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (user) => {
+          this.authService.updateCurrentUser(user);
+          this.profileForm.markAsPristine();
+          const savedAt = new Date().toLocaleTimeString('es-ES', {
+            hour: '2-digit',
+            minute: '2-digit',
+          });
+          this.profileSavedMessage.set(`Perfil actualizado a las ${savedAt}.`);
+        },
+        error: () => this.profileSavedMessage.set('No se pudo actualizar el perfil.'),
+      });
   }
 
   setIntegration(event: Event) {
@@ -296,28 +408,30 @@ export class SettingsPage {
     this.persistSettings(settingsObj);
 
     // Call Backend
-    this.userApi.updateMySettings({
-      integrationProvider: settingsObj.integrationProvider,
-      syncCalendar: settingsObj.integrationSettings.syncCalendar,
-      syncContacts: settingsObj.integrationSettings.syncContacts,
-      sendDailyDigest: settingsObj.integrationSettings.sendDailyDigest,
-      paymentEnabled: settingsObj.enablePayments,
-    }).subscribe({
-      next: () => {
-        if (provider === IntegrationProvider.NONE) {
-          this.integrationSavedMessage.set(`Integración desactivada a las ${savedAt}.`);
-          return;
-        }
+    this.userApi
+      .updateMySettings({
+        integrationProvider: settingsObj.integrationProvider,
+        syncCalendar: settingsObj.integrationSettings.syncCalendar,
+        syncContacts: settingsObj.integrationSettings.syncContacts,
+        sendDailyDigest: settingsObj.integrationSettings.sendDailyDigest,
+        paymentEnabled: settingsObj.enablePayments,
+      })
+      .subscribe({
+        next: () => {
+          if (provider === IntegrationProvider.NONE) {
+            this.integrationSavedMessage.set(`Integración desactivada a las ${savedAt}.`);
+            return;
+          }
 
-        const providerLabel = provider === IntegrationProvider.GOOGLE ? 'Google' : 'Microsoft';
-        this.integrationSavedMessage.set(
-          `Configuración de ${providerLabel} y pagos guardada a las ${savedAt}.`,
-        );
-      },
-      error: (err) => {
-        console.error('Failed to sync settings with backend', err);
-      }
-    });
+          const providerLabel = provider === IntegrationProvider.GOOGLE ? 'Google' : 'Microsoft';
+          this.integrationSavedMessage.set(
+            `Configuración de ${providerLabel} y pagos guardada a las ${savedAt}.`,
+          );
+        },
+        error: (err) => {
+          console.error('Failed to sync settings with backend', err);
+        },
+      });
   }
 
   private getEventValue<T>(event: Event): T | null {
