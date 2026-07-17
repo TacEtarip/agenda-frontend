@@ -22,8 +22,8 @@ describe('AppShell', () => {
     const desktopLinks = element.querySelectorAll('.app-shell__nav-link');
     const mobileLinks = element.querySelectorAll('.app-shell__bottom-link');
 
-    expect(desktopLinks).toHaveLength(5);
-    expect(mobileLinks).toHaveLength(5);
+    expect(desktopLinks).toHaveLength(6);
+    expect(mobileLinks).toHaveLength(6);
     expect(element.querySelector('.app-shell__nav-link--active')?.textContent).toContain('Inicio');
     expect(element.querySelector('.app-skip-link')?.getAttribute('href')).toBe('#route-content');
   });

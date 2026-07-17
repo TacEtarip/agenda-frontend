@@ -3,7 +3,12 @@
 
 // Login page: gradient background on the host ion-page
 app-login.ion-page {
-  background: linear-gradient(135deg, var(--color-frost-light) 0%, var(--color-mint-light) 45%, var(--color-green-light) 100%);
+  background: linear-gradient(
+    135deg,
+    var(--color-frost-light) 0%,
+    var(--color-mint-light) 45%,
+    var(--color-green-light) 100%
+  );
 }
 
 // Dashboard: subtle palette tint
@@ -17,29 +22,63 @@ app-dashboard ion-content {
 
 // Client detail: solid page backdrop so transitions don't reveal the previous page
 app-client-detail.ion-page {
-  background: linear-gradient(180deg, var(--color-frost-light) 0%, var(--color-surface-alt) 36%, var(--color-surface) 100%);
+  background: linear-gradient(
+    180deg,
+    var(--color-frost-light) 0%,
+    var(--color-surface-alt) 36%,
+    var(--color-surface) 100%
+  );
 }
 
 app-products.ion-page {
-  background: linear-gradient(180deg, var(--color-frost-light) 0%, var(--color-surface-alt) 36%, var(--color-surface) 100%);
+  background: linear-gradient(
+    180deg,
+    var(--color-frost-light) 0%,
+    var(--color-surface-alt) 36%,
+    var(--color-surface) 100%
+  );
+}
+
+app-agenda.ion-page {
+  background: var(--app-color-canvas);
 }
 
 // Message templates: opaque route backdrop to avoid previous-page flashes during navigation
 app-message-templates.ion-page {
-  background: linear-gradient(180deg, var(--color-frost-light) 0%, var(--color-surface-alt) 42%, var(--color-surface) 100%);
+  background: linear-gradient(
+    180deg,
+    var(--color-frost-light) 0%,
+    var(--color-surface-alt) 42%,
+    var(--color-surface) 100%
+  );
 }
 
 app-message-templates ion-content {
-  --background: linear-gradient(180deg, var(--color-frost-light) 0%, var(--color-surface-alt) 42%, var(--color-surface) 100%);
+  --background: linear-gradient(
+    180deg,
+    var(--color-frost-light) 0%,
+    var(--color-surface-alt) 42%,
+    var(--color-surface) 100%
+  );
 }
 
 // Settings: ensure route transitions never reveal previous page behind
 app-settings.ion-page {
-  background: linear-gradient(180deg, var(--color-frost-light) 0%, var(--color-surface-alt) 42%, var(--color-surface) 100%);
+  background: linear-gradient(
+    180deg,
+    var(--color-frost-light) 0%,
+    var(--color-surface-alt) 42%,
+    var(--color-surface) 100%
+  );
 }
 
 app-settings ion-content {
-  --background: linear-gradient(180deg, var(--color-frost-light) 0%, var(--color-surface-alt) 42%, var(--color-surface) 100%);
+  --background: linear-gradient(
+    180deg,
+    var(--color-frost-light) 0%,
+    var(--color-surface-alt) 42%,
+    var(--color-surface) 100%
+  );
 }
 
 ion-modal.app-modal {
@@ -106,7 +145,12 @@ ion-modal.app-modal.app-modal--picker .ion-page {
   -webkit-overflow-scrolling: touch;
   background:
     radial-gradient(circle at top right, rgb(var(--color-sky-rgb) / 18%), transparent 34%),
-    linear-gradient(180deg, var(--color-frost-light) 0%, var(--color-surface-alt) 42%, var(--color-surface) 100%);
+    linear-gradient(
+      180deg,
+      var(--color-frost-light) 0%,
+      var(--color-surface-alt) 42%,
+      var(--color-surface) 100%
+    );
 }
 
 .app-modal-card {
@@ -215,18 +259,34 @@ ion-content.login-content::part(scroll) {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: .75rem;
+  gap: 0.75rem;
   flex-wrap: wrap;
-  margin-top: .85rem;
-  padding: .7rem .85rem;
-  border: 1px solid rgba(var(--ion-color-warning-rgb), .28);
-  border-radius: .8rem;
-  background: rgba(var(--ion-color-warning-rgb), .1);
+  margin-top: 0.85rem;
+  padding: 0.7rem 0.85rem;
+  border: 1px solid rgba(var(--ion-color-warning-rgb), 0.28);
+  border-radius: 0.8rem;
+  background: rgba(var(--ion-color-warning-rgb), 0.1);
 }
-.payment-state--paid { background: rgba(var(--ion-color-success-rgb), .08); border-color: rgba(var(--ion-color-success-rgb), .24); }
-.payment-state > div:first-child, .payment-state__actions { display: flex; align-items: center; gap: .45rem; flex-wrap: wrap; }
-.create-payment-button { margin-top: .75rem; }
-.product-type-chip { height: 1.4rem; margin-left: .4rem; font-size: .68rem; vertical-align: middle; }
+.payment-state--paid {
+  background: rgba(var(--ion-color-success-rgb), 0.08);
+  border-color: rgba(var(--ion-color-success-rgb), 0.24);
+}
+.payment-state > div:first-child,
+.payment-state__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+}
+.create-payment-button {
+  margin-top: 0.75rem;
+}
+.product-type-chip {
+  height: 1.4rem;
+  margin-left: 0.4rem;
+  font-size: 0.68rem;
+  vertical-align: middle;
+}
 
 app-client-detail :is(.appointment-actions__primary, .appointment-actions__secondary) {
   display: contents;
@@ -236,14 +296,14 @@ app-client-detail :is(.appointment-actions__primary, .appointment-actions__secon
   app-client-detail .appt-actions[aria-label='Acciones del producto'] {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
-    gap: .5rem;
+    gap: 0.5rem;
     width: 100%;
   }
 
   app-client-detail .product-actions__statuses {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: .35rem;
+    gap: 0.35rem;
     width: 100%;
   }
 
@@ -251,7 +311,7 @@ app-client-detail :is(.appointment-actions__primary, .appointment-actions__secon
     display: grid;
     grid-template-columns: repeat(2, 2.75rem);
     justify-content: end;
-    gap: .35rem;
+    gap: 0.35rem;
     width: 100%;
   }
 
@@ -271,15 +331,17 @@ app-client-detail :is(.appointment-actions__primary, .appointment-actions__secon
     height: 2.75rem;
   }
 
-  app-client-detail :is(.product-actions__statuses, .product-actions__management) ion-button:focus-visible {
-    outline: 3px solid rgba(var(--ion-color-primary-rgb), .35);
+  app-client-detail
+    :is(.product-actions__statuses, .product-actions__management)
+    ion-button:focus-visible {
+    outline: 3px solid rgba(var(--ion-color-primary-rgb), 0.35);
     outline-offset: 2px;
   }
 
   app-client-detail .appointment-actions {
     display: grid;
     grid-template-columns: minmax(0, 1fr) 2.75rem;
-    gap: .35rem;
+    gap: 0.35rem;
     width: 100%;
   }
 
@@ -288,7 +350,7 @@ app-client-detail :is(.appointment-actions__primary, .appointment-actions__secon
     grid-column: 1;
     grid-row: 1;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: .35rem;
+    gap: 0.35rem;
     min-width: 0;
   }
 
@@ -314,8 +376,10 @@ app-client-detail :is(.appointment-actions__primary, .appointment-actions__secon
     height: 2.75rem;
   }
 
-  app-client-detail :is(.appointment-actions__primary, .appointment-actions__secondary) ion-button:focus-visible {
-    outline: 3px solid rgba(var(--ion-color-primary-rgb), .35);
+  app-client-detail
+    :is(.appointment-actions__primary, .appointment-actions__secondary)
+    ion-button:focus-visible {
+    outline: 3px solid rgba(var(--ion-color-primary-rgb), 0.35);
     outline-offset: 2px;
   }
 }
@@ -343,7 +407,9 @@ html {
   -webkit-tap-highlight-color: rgb(4 120 87 / 12%);
 }
 
-body { background: var(--app-color-canvas); }
+body {
+  background: var(--app-color-canvas);
+}
 
 :where(button, ion-button, ion-toggle, ion-segment-button, [role='button']) {
   min-height: 2.75rem;
@@ -356,7 +422,17 @@ ion-toggle {
   box-sizing: border-box;
 }
 
-:where(button, a, input, select, textarea, ion-button, ion-input, ion-select, ion-toggle):focus-visible {
+:where(
+  button,
+  a,
+  input,
+  select,
+  textarea,
+  ion-button,
+  ion-input,
+  ion-select,
+  ion-toggle
+):focus-visible {
   outline: 3px solid var(--app-color-focus);
   outline-offset: 2px;
 }
@@ -380,7 +456,9 @@ ion-toggle {
   transition: transform 160ms ease;
 }
 
-.app-skip-link:focus-visible { transform: translateY(0); }
+.app-skip-link:focus-visible {
+  transform: translateY(0);
+}
 
 .app-data,
 .stat-value,
@@ -397,5 +475,7 @@ ion-toggle {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .app-skip-link { transition: none; }
+  .app-skip-link {
+    transition: none;
+  }
 }

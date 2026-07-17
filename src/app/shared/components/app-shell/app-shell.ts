@@ -4,6 +4,7 @@ import { IonIcon, IonRouterOutlet } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import {
   cardOutline,
+  calendarOutline,
   chatbubblesOutline,
   gridOutline,
   pricetagOutline,
@@ -28,8 +29,14 @@ interface AppNavigationItem {
 export class AppShell {
   readonly navigationItems: readonly AppNavigationItem[] = [
     { label: 'Inicio', shortLabel: 'Inicio', icon: 'grid-outline', route: '/dashboard' },
+    { label: 'Agenda', shortLabel: 'Agenda', icon: 'calendar-outline', route: '/agenda' },
     { label: 'Productos', shortLabel: 'Productos', icon: 'pricetag-outline', route: '/products' },
-    { label: 'Mensajes', shortLabel: 'Mensajes', icon: 'chatbubbles-outline', route: '/message-templates' },
+    {
+      label: 'Mensajes',
+      shortLabel: 'Mensajes',
+      icon: 'chatbubbles-outline',
+      route: '/message-templates',
+    },
     { label: 'Pagos', shortLabel: 'Pagos', icon: 'card-outline', route: '/payments' },
     { label: 'Ajustes', shortLabel: 'Ajustes', icon: 'settings-outline', route: '/settings' },
   ];
@@ -37,6 +44,7 @@ export class AppShell {
   constructor() {
     addIcons({
       cardOutline,
+      calendarOutline,
       chatbubblesOutline,
       gridOutline,
       pricetagOutline,

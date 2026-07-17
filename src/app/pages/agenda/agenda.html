@@ -1,0 +1,270 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>
+      <div class="toolbar-title">
+        <span class="toolbar-title__greeting">Organización</span>
+        <h1 class="toolbar-title__name">Agenda</h1>
+      </div>
+    </ion-title>
+    <ion-buttons slot="end"><app-user-menu /></ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="agenda-content">
+  <main class="agenda-main">
+    <section class="agenda-command" aria-labelledby="agenda-range-title">
+      <div class="agenda-command__range">
+        <span class="agenda-command__kicker">{{ visibleCount() }} citas visibles</span>
+        <h2 id="agenda-range-title">{{ rangeLabel() }}</h2>
+      </div>
+
+      <div class="agenda-command__views" aria-label="Cambiar vista">
+        @for (option of views; track option.value) {
+          <button
+            type="button"
+            class="view-option"
+            [class.view-option--active]="view() === option.value"
+            [attr.aria-pressed]="view() === option.value"
+            (click)="selectView(option.value)"
+          >
+            {{ option.label }}
+          </button>
+        }
+      </div>
+
+      <div class="agenda-command__navigation" aria-label="Navegar por fechas">
+        <ion-button fill="clear" size="small" aria-label="Periodo anterior" (click)="move(-1)">
+          <ion-icon slot="icon-only" name="chevron-back-outline" aria-hidden="true" />
+        </ion-button>
+        <ion-button fill="outline" size="small" (click)="goToToday()">Hoy</ion-button>
+        <ion-button fill="clear" size="small" aria-label="Periodo siguiente" (click)="move(1)">
+          <ion-icon slot="icon-only" name="chevron-forward-outline" aria-hidden="true" />
+        </ion-button>
+      </div>
+
+      <button
+        type="button"
+        class="cancelled-filter"
+        [class.cancelled-filter--active]="showCancelled()"
+        [attr.aria-pressed]="showCancelled()"
+        (click)="toggleCancelled()"
+      >
+        <span aria-hidden="true"></span>
+        {{ showCancelled() ? 'Canceladas visibles' : 'Canceladas ocultas' }}
+      </button>
+    </section>
+
+    @if (loadState() === 'loading') {
+      <div class="agenda-feedback" role="status">
+        <ion-spinner name="crescent" />
+        <span>Cargando agenda…</span>
+      </div>
+    } @else if (loadState() === 'error') {
+      <div class="agenda-feedback agenda-feedback--error" role="alert">
+        <ion-icon name="alert-circle-outline" aria-hidden="true" />
+        <span>{{ loadError() }}</span>
+        <ion-button fill="outline" size="small" (click)="load()">
+          <ion-icon slot="start" name="refresh-outline" aria-hidden="true" />Reintentar
+        </ion-button>
+      </div>
+    } @else {
+      <section class="agenda-desktop" aria-live="polite">
+        @if (view() === 'day') {
+          <div class="day-timeline">
+            @for (appointment of selectedDay().appointments; track appointment.id) {
+              <article
+                class="timeline-event timeline-event--{{ appointment.status }}"
+                [class.timeline-event--conflict]="hasConflict(appointment)"
+              >
+                <time class="timeline-event__time" [attr.datetime]="appointment.startTime">
+                  {{ appointmentTime(appointment) }}
+                </time>
+                <span class="timeline-event__rail" aria-hidden="true"></span>
+                <div class="timeline-event__body">
+                  <div class="appointment-identity">
+                    <span class="appointment-avatar" aria-hidden="true">{{
+                      appointment.clientInitials
+                    }}</span>
+                    <div>
+                      <h3>{{ appointment.clientName }}</h3>
+                      <p>{{ appointment.title }}</p>
+                    </div>
+                  </div>
+                  <div class="appointment-state">
+                    @if (hasConflict(appointment)) {
+                      <span class="conflict-flag">
+                        <ion-icon name="alert-circle-outline" aria-hidden="true" />Conflicto
+                      </span>
+                    }
+                    <ion-chip [color]="appointment.status | appointmentStatusColor">
+                      {{ appointment.status | appointmentStatusLabel }}
+                    </ion-chip>
+                  </div>
+                  <div class="appointment-links">
+                    <a
+                      [routerLink]="['/clients', appointment.clientId]"
+                      [queryParams]="{ tab: 'appointments' }"
+                    >
+                      Ver cliente
+                    </a>
+                    @if (canOpenExternalCalendar(appointment)) {
+                      <a
+                        href="https://calendar.google.com/calendar/u/0/r"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <ion-icon name="logo-google" aria-hidden="true" />Google Calendar
+                      </a>
+                    }
+                  </div>
+                </div>
+              </article>
+            } @empty {
+              <div class="agenda-empty">
+                <ion-icon name="calendar-outline" aria-hidden="true" />
+                <h3>No hay citas este día</h3>
+                <p>El día permanece libre. Puedes moverte a otra fecha sin restricciones.</p>
+              </div>
+            }
+          </div>
+        } @else if (view() === 'week') {
+          <div class="week-board">
+            @for (day of weekDays(); track day.date.getTime()) {
+              <section class="week-day" [class.week-day--today]="day.isToday">
+                <button type="button" class="week-day__header" (click)="selectDay(day.date)">
+                  <span>{{ dayLabel(day.date) }}</span>
+                  <strong>{{ day.date.getDate() }}</strong>
+                  <small>{{ day.appointments.length }}</small>
+                </button>
+                <div class="week-day__events">
+                  @for (appointment of day.appointments; track appointment.id) {
+                    <article
+                      class="compact-event compact-event--{{ appointment.status }}"
+                      [class.compact-event--conflict]="hasConflict(appointment)"
+                    >
+                      <time [attr.datetime]="appointment.startTime">{{
+                        appointmentTime(appointment)
+                      }}</time>
+                      <strong>{{ appointment.clientName }}</strong>
+                      <span>{{ appointment.title }}</span>
+                      <div>
+                        <a
+                          [routerLink]="['/clients', appointment.clientId]"
+                          [queryParams]="{ tab: 'appointments' }"
+                        >
+                          Abrir
+                        </a>
+                        @if (canOpenExternalCalendar(appointment)) {
+                          <a
+                            href="https://calendar.google.com/calendar/u/0/r"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            aria-label="Abrir Google Calendar"
+                          >
+                            <ion-icon name="logo-google" aria-hidden="true" />
+                          </a>
+                        }
+                      </div>
+                    </article>
+                  } @empty {
+                    <span class="day-free">Libre</span>
+                  }
+                </div>
+              </section>
+            }
+          </div>
+        } @else {
+          <div class="month-board">
+            @for (label of ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']; track label) {
+              <span class="month-board__weekday">{{ label }}</span>
+            }
+            @for (day of monthDays(); track day.date.getTime()) {
+              <section
+                class="month-day"
+                [class.month-day--outside]="!day.isCurrentMonth"
+                [class.month-day--today]="day.isToday"
+              >
+                <button type="button" class="month-day__number" (click)="selectDay(day.date)">
+                  {{ day.date.getDate() }}
+                </button>
+                <div class="month-day__events">
+                  @for (appointment of day.appointments.slice(0, 3); track appointment.id) {
+                    <a
+                      class="month-event month-event--{{ appointment.status }}"
+                      [class.month-event--conflict]="hasConflict(appointment)"
+                      [routerLink]="['/clients', appointment.clientId]"
+                      [queryParams]="{ tab: 'appointments' }"
+                      [title]="appointment.clientName + ' · ' + appointment.title"
+                    >
+                      <time>{{ appointmentTime(appointment).split('–')[0] }}</time>
+                      <span>{{ appointment.clientName }}</span>
+                    </a>
+                  }
+                  @if (day.appointments.length > 3) {
+                    <button type="button" class="month-day__more" (click)="selectDay(day.date)">
+                      +{{ day.appointments.length - 3 }} más
+                    </button>
+                  }
+                </div>
+              </section>
+            }
+          </div>
+        }
+      </section>
+
+      <section class="agenda-mobile" aria-label="Citas del periodo" aria-live="polite">
+        @for (day of mobileDays(); track day.date.getTime()) {
+          <section class="mobile-day">
+            <button type="button" class="mobile-day__heading" (click)="selectDay(day.date)">
+              <span>{{ fullDayLabel(day.date) }}</span>
+              <strong>{{ day.appointments.length }}</strong>
+            </button>
+            <div class="mobile-day__timeline">
+              @for (appointment of day.appointments; track appointment.id) {
+                <article
+                  class="mobile-event"
+                  [class.mobile-event--conflict]="hasConflict(appointment)"
+                >
+                  <time [attr.datetime]="appointment.startTime">{{
+                    appointmentTime(appointment)
+                  }}</time>
+                  <span class="mobile-event__marker" aria-hidden="true"></span>
+                  <div class="mobile-event__body">
+                    <strong>{{ appointment.clientName }}</strong>
+                    <span>{{ appointment.title }}</span>
+                    <div>
+                      <ion-chip [color]="appointment.status | appointmentStatusColor">
+                        {{ appointment.status | appointmentStatusLabel }}
+                      </ion-chip>
+                      <a
+                        [routerLink]="['/clients', appointment.clientId]"
+                        [queryParams]="{ tab: 'appointments' }"
+                      >
+                        Ver cita
+                      </a>
+                      @if (canOpenExternalCalendar(appointment)) {
+                        <a
+                          href="https://calendar.google.com/calendar/u/0/r"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          Google
+                        </a>
+                      }
+                    </div>
+                  </div>
+                </article>
+              }
+            </div>
+          </section>
+        } @empty {
+          <div class="agenda-empty">
+            <ion-icon name="calendar-outline" aria-hidden="true" />
+            <h3>No hay citas en este periodo</h3>
+            <p>Usa las flechas para revisar otras fechas.</p>
+          </div>
+        }
+      </section>
+    }
+  </main>
+</ion-content>
