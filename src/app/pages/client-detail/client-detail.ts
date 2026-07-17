@@ -89,6 +89,7 @@ import {
   filterAndSortAppointments,
 } from './appointment-list.utils';
 import { roundUpToNextMinutes, validateAppointmentSchedule } from './appointment-schedule.utils';
+import { buildAppointmentCancellationAlert } from './appointment-cancellation.utils';
 
 @Component({
   selector: 'app-client-detail',
@@ -805,6 +806,16 @@ export class ClientDetailPage {
       });
   }
 
+  async confirmAppointmentCancellation(appointment: IClientAppointment): Promise<void> {
+    const alert = await this.alertCtrl.create(
+      buildAppointmentCancellationAlert(appointment, () =>
+        this.updateAppointmentStatus(appointment, 'cancelled'),
+      ),
+    );
+
+    await alert.present();
+  }
+
   retryAppointmentCalendarSync(appointment: IClientAppointment): void {
     if (this.retryingCalendarAppointmentId()) return;
     this.actionError.set(null);
@@ -896,6 +907,8 @@ export class ClientDetailPage {
       startTime: `${this.formatAppointmentDay(startDate)} · ${this.formatAppointmentHour(startDate)}`,
       endTime: this.formatAppointmentHour(endDate),
       status: a.status,
+      externalEventId: a.externalEventId,
+      externalCalendarId: a.externalCalendarId,
       calendarSyncStatus: a.calendarSyncStatus ?? 'not_synced',
       calendarSyncError: a.calendarSyncError,
       calendarSyncedAt: a.calendarSyncedAt,

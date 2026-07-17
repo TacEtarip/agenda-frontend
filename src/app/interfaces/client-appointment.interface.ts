@@ -10,6 +10,8 @@ export interface IClientAppointment {
   startTime: string;
   endTime: string;
   status: AppointmentStatus;
+  externalEventId?: string;
+  externalCalendarId?: string;
   calendarSyncStatus: CalendarSyncStatus;
   calendarSyncError?: string;
   calendarSyncedAt?: string;

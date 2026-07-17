@@ -471,7 +471,7 @@
                       size="small"
                       color="danger"
                       [disabled]="appt.status === 'completed'"
-                      (click)="updateAppointmentStatus(appt, 'cancelled')"
+                      (click)="confirmAppointmentCancellation(appt)"
                     >
                       Cancelar
                     </ion-button>
