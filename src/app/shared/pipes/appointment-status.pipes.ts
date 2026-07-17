@@ -5,6 +5,7 @@ import { AppointmentStatus } from '../../types/appointment-status.type';
 export class AppointmentStatusLabelPipe implements PipeTransform {
   transform(status: AppointmentStatus): string {
     if (status === 'scheduled') return 'Programada';
+    if (status === 'expired') return 'Vencida';
     if (status === 'completed') return 'Completada';
     return 'Cancelada';
   }
@@ -14,6 +15,7 @@ export class AppointmentStatusLabelPipe implements PipeTransform {
 export class AppointmentStatusColorPipe implements PipeTransform {
   transform(status: AppointmentStatus): string {
     if (status === 'scheduled') return 'primary';
+    if (status === 'expired') return 'warning';
     if (status === 'completed') return 'success';
     return 'danger';
   }

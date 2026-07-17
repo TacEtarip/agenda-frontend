@@ -1,5 +1,6 @@
 import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { filter, finalize, switchMap, take, takeWhile, timer } from 'rxjs';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AlertController } from '@ionic/angular';
 import { ClientStage } from '../../enums/client-stage.enum';
@@ -12,7 +13,10 @@ import { IMessageTemplate } from '../../interfaces/message-template.interface';
 import { CLIENT_STAGE_OPTIONS, getStageLabel } from '../../shared/client-stage.utils';
 import { INote } from '../../interfaces/note.interface';
 import { COMMON_ION_PAGE_IMPORTS } from '../../shared/ionic-imports';
-import { AppointmentStatusColorPipe, AppointmentStatusLabelPipe } from '../../shared/pipes/appointment-status.pipes';
+import {
+  AppointmentStatusColorPipe,
+  AppointmentStatusLabelPipe,
+} from '../../shared/pipes/appointment-status.pipes';
 import { FormatDatePipe } from '../../shared/pipes/format-date.pipe';
 import { FormatPricePipe } from '../../shared/pipes/format-price.pipe';
 import { OfferStatusColorPipe, OfferStatusLabelPipe } from '../../shared/pipes/offer-status.pipes';
@@ -46,6 +50,10 @@ import {
   copyOutline,
   pricetagOutline,
   cashOutline,
+  logoGoogle,
+  syncOutline,
+  cloudDoneOutline,
+  alertCircleOutline,
 } from 'ionicons/icons';
 import {
   IonBackButton,
@@ -75,6 +83,12 @@ import { PaymentFormModal } from '../../shared/components/payment-form-modal/pay
 import { IPaymentModalTarget } from './interfaces/payment-modal-target.interface';
 import { buildPaymentCancellationAlert } from '../../shared/payment-cancellation.utils';
 import { UserMenuComponent } from '../../shared/components/user-menu/user-menu';
+import {
+  APPOINTMENT_FILTER_OPTIONS,
+  AppointmentFilter,
+  filterAndSortAppointments,
+} from './appointment-list.utils';
+import { roundUpToNextMinutes, validateAppointmentSchedule } from './appointment-schedule.utils';
 
 @Component({
   selector: 'app-client-detail',
@@ -121,6 +135,8 @@ export class ClientDetailPage {
   private readonly paymentStore = inject(PaymentStore);
   private readonly destroyRef = inject(DestroyRef);
   readonly clientId = this.route.snapshot.paramMap.get('id') ?? '';
+  private readonly pollingCalendarAppointmentIds = new Set<string>();
+  private readonly isViewActive = signal(false);
 
   readonly allStages = CLIENT_STAGE_OPTIONS;
 
@@ -142,6 +158,7 @@ export class ClientDetailPage {
   readonly editingAppointmentId = signal<string | null>(null);
   readonly appointmentDraft = signal<IAppointmentDraft>(this.createDefaultAppointmentDraft());
   readonly appointmentDraftError = signal<string | null>(null);
+  readonly minimumAppointmentDate = signal(this.formatDateLocal(new Date()));
   readonly isAttachmentModalOpen = signal(false);
   readonly attachmentDraft = signal(this.createDefaultAttachmentDraft());
   readonly attachmentDraftError = signal<string | null>(null);
@@ -155,6 +172,7 @@ export class ClientDetailPage {
   readonly clientEditDraftError = signal<string | null>(null);
   readonly isSavingClient = signal(false);
   readonly actionError = signal<string | null>(null);
+  readonly retryingCalendarAppointmentId = signal<string | null>(null);
   readonly paymentModalTarget = signal<IPaymentModalTarget | null>(null);
   readonly paymentSourceType = PaymentSourceType;
   readonly paymentStatus = PaymentStatus;
@@ -177,25 +195,52 @@ export class ClientDetailPage {
   readonly notes = signal<INote[]>([]);
 
   readonly appointments = signal<IClientAppointment[]>([]);
+  readonly appointmentFilter = signal<AppointmentFilter>('not-cancelled');
+  readonly appointmentFilterOptions = APPOINTMENT_FILTER_OPTIONS;
+  readonly visibleAppointments = computed(() =>
+    filterAndSortAppointments(this.appointments(), this.appointmentFilter()),
+  );
   readonly isEditingCompletedAppointment = computed(() => {
     const editingId = this.editingAppointmentId();
     return Boolean(
       editingId &&
-        this.appointments().some(
-          (appointment) => appointment.id === editingId && appointment.status === 'completed',
-        ),
+      this.appointments().some(
+        (appointment) => appointment.id === editingId && appointment.status === 'completed',
+      ),
+    );
+  });
+  readonly appointmentDraftScheduleError = computed(() => {
+    if (this.isEditingCompletedAppointment()) return null;
+    const { date, startHour, endHour } = this.appointmentDraft();
+    if (!date || !startHour || !endHour) return null;
+
+    return validateAppointmentSchedule(
+      new Date(`${date}T${startHour}`),
+      new Date(`${date}T${endHour}`),
     );
   });
 
   readonly attachments = signal<IAttachment[]>([
-    { id: '1', fileName: 'proposal_v2.pdf', fileType: 'PDF', fileSize: '1.2 MB', uploadedAt: '20 feb 2026', icon: 'document-outline' },
-    { id: '2', fileName: 'client_photo.jpg', fileType: 'Imagen', fileSize: '840 KB', uploadedAt: '15 ene 2026', icon: 'image-outline' },
+    {
+      id: '1',
+      fileName: 'proposal_v2.pdf',
+      fileType: 'PDF',
+      fileSize: '1.2 MB',
+      uploadedAt: '20 feb 2026',
+      icon: 'document-outline',
+    },
+    {
+      id: '2',
+      fileName: 'client_photo.jpg',
+      fileType: 'Imagen',
+      fileSize: '840 KB',
+      uploadedAt: '15 ene 2026',
+      icon: 'image-outline',
+    },
   ]);
 
   readonly currentClientProducts = computed((): IEnrichedClientProduct[] => {
-    const productMap = new Map(
-      this.salesCatalogStore.products().map((p) => [p.id, p]),
-    );
+    const productMap = new Map(this.salesCatalogStore.products().map((p) => [p.id, p]));
     return this.salesCatalogStore
       .clientProducts()
       .filter((offer) => offer.clientId === this.client().id)
@@ -205,7 +250,7 @@ export class ClientDetailPage {
         const resolvedProductType = product?.type ?? ProductType.PRODUCT;
         const resolvedProductPrice = offer.customPrice ?? product?.price;
         const resolvedProductQuantity =
-          resolvedProductType === ProductType.PRODUCT ? offer.quantity ?? 1 : undefined;
+          resolvedProductType === ProductType.PRODUCT ? (offer.quantity ?? 1) : undefined;
         return {
           ...offer,
           resolvedProductName: product?.name ?? 'Producto desconocido',
@@ -287,14 +332,34 @@ export class ClientDetailPage {
       copyOutline,
       pricetagOutline,
       cashOutline,
+      logoGoogle,
+      syncOutline,
+      cloudDoneOutline,
+      alertCircleOutline,
     });
     const tab = this.route.snapshot.queryParamMap.get('tab');
     if (Object.values(ClientDetailSegment).includes(tab as ClientDetailSegment)) {
       this.activeSegment.set(tab as ClientDetailSegment);
     }
+    timer(15_000, 15_000)
+      .pipe(
+        filter(
+          () => this.isViewActive() && this.activeSegment() === ClientDetailSegment.APPOINTMENTS,
+        ),
+        switchMap(() => this.appointmentApi.getAllByClient(this.clientId)),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe({
+        next: (appointments) =>
+          this.appointments.set(
+            appointments.map((appointment) => this.mapApiAppointment(appointment)),
+          ),
+        error: () => undefined,
+      });
   }
 
   ionViewWillEnter(): void {
+    this.isViewActive.set(true);
     if (this.clientId) {
       this.clientApi
         .getById(this.clientId)
@@ -309,7 +374,14 @@ export class ClientDetailPage {
       this.appointmentApi
         .getAllByClient(this.clientId)
         .pipe(takeUntilDestroyed(this.destroyRef))
-        .subscribe((appts) => this.appointments.set(appts.map((a) => this.mapApiAppointment(a))));
+        .subscribe((appts) => {
+          this.appointments.set(appts.map((a) => this.mapApiAppointment(a)));
+          for (const appointment of appts) {
+            if (appointment.calendarSyncStatus === 'pending') {
+              this.refreshAppointmentSyncStatus(appointment.id);
+            }
+          }
+        });
       this.paymentStore.load({ clientId: this.clientId, limit: 100 });
       this.salesCatalogStore.loadProducts();
       this.salesCatalogStore.loadClientProducts(this.clientId);
@@ -317,11 +389,20 @@ export class ClientDetailPage {
     }
   }
 
+  ionViewWillLeave(): void {
+    this.isViewActive.set(false);
+  }
+
   onSegmentChange(event: Event) {
     const segment = this.getEventValue<ClientDetailSegment>(event);
     if (!segment) return;
     this.activeSegment.set(segment);
-    void this.router.navigate([], { relativeTo: this.route, queryParams: { tab: segment === ClientDetailSegment.NOTES ? null : segment }, queryParamsHandling: 'merge', replaceUrl: true });
+    void this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { tab: segment === ClientDetailSegment.NOTES ? null : segment },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
   }
 
   openEditClientModal() {
@@ -342,10 +423,7 @@ export class ClientDetailPage {
     this.clientEditDraftError.set(null);
   }
 
-  onClientEditDraftChange(
-    field: 'firstName' | 'lastName' | 'email' | 'phoneNumber',
-    event: Event,
-  ) {
+  onClientEditDraftChange(field: 'firstName' | 'lastName' | 'email' | 'phoneNumber', event: Event) {
     const target = event.target as HTMLInputElement;
     this.clientEditDraft.update((draft) => ({
       ...draft,
@@ -437,9 +515,7 @@ export class ClientDetailPage {
         .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe({
           next: (updated) => {
-            this.notes.update((notes) =>
-              notes.map((n) => (n.id === editingId ? updated : n)),
-            );
+            this.notes.update((notes) => notes.map((n) => (n.id === editingId ? updated : n)));
             this.closeNoteModal();
           },
           error: () => {
@@ -480,6 +556,7 @@ export class ClientDetailPage {
   }
 
   openCreateAppointmentModal() {
+    this.minimumAppointmentDate.set(this.formatDateLocal(new Date()));
     this.editingAppointmentId.set(null);
     this.appointmentDraft.set(this.createDefaultAppointmentDraft());
     this.appointmentDraftError.set(null);
@@ -487,6 +564,7 @@ export class ClientDetailPage {
   }
 
   openEditAppointmentModal(appointment: IClientAppointment) {
+    this.minimumAppointmentDate.set(this.formatDateLocal(new Date()));
     const fallbackDraft = this.createDefaultAppointmentDraft();
     const startAt = appointment.startAt ?? `${fallbackDraft.date}T${fallbackDraft.startHour}`;
     const endAt = appointment.endAt ?? `${fallbackDraft.date}T${fallbackDraft.endHour}`;
@@ -495,9 +573,9 @@ export class ClientDetailPage {
     this.appointmentDraft.set({
       title: appointment.title,
       description: appointment.description ?? '',
-      date: startAt.slice(0, 10),
-      startHour: startAt.slice(11, 16),
-      endHour: endAt.slice(11, 16),
+      date: this.formatAppointmentInputDate(new Date(startAt)),
+      startHour: this.formatAppointmentInputHour(new Date(startAt)),
+      endHour: this.formatAppointmentInputHour(new Date(endAt)),
     });
     this.appointmentDraftError.set(null);
     this.isAppointmentModalOpen.set(true);
@@ -557,10 +635,7 @@ export class ClientDetailPage {
     this.closeAttachmentModal();
   }
 
-  onAppointmentDraftTextChange(
-    field: 'title' | 'description',
-    event: Event,
-  ) {
+  onAppointmentDraftTextChange(field: 'title' | 'description', event: Event) {
     const target = event.target as HTMLInputElement | HTMLTextAreaElement;
     this.appointmentDraft.update((draft) => ({
       ...draft,
@@ -568,10 +643,7 @@ export class ClientDetailPage {
     }));
   }
 
-  onAppointmentDraftDateChange(
-    field: 'date' | 'startHour' | 'endHour',
-    event: Event,
-  ) {
+  onAppointmentDraftDateChange(field: 'date' | 'startHour' | 'endHour', event: Event) {
     const value = this.getEventValue<string | string[]>(event);
     const parsedValue = Array.isArray(value) ? value[0] : value;
     let nextValue = '';
@@ -598,9 +670,17 @@ export class ClientDetailPage {
     return this.formatAppointmentDay(date);
   });
 
-  readonly appointmentDraftStartHourLabel = computed(() => this.appointmentDraft().startHour || '--:--');
+  readonly appointmentDraftStartHourLabel = computed(
+    () => this.appointmentDraft().startHour || '--:--',
+  );
 
-  readonly appointmentDraftEndHourLabel = computed(() => this.appointmentDraft().endHour || '--:--');
+  readonly appointmentDraftEndHourLabel = computed(
+    () => this.appointmentDraft().endHour || '--:--',
+  );
+
+  setAppointmentFilter(filter: AppointmentFilter | null | undefined): void {
+    if (filter) this.appointmentFilter.set(filter);
+  }
 
   saveAppointmentFromModal() {
     this.actionError.set(null);
@@ -622,6 +702,7 @@ export class ClientDetailPage {
               ),
             );
             this.closeAppointmentModal();
+            this.refreshAppointmentSyncStatus(updated.id);
           },
           error: () => {
             this.actionError.set('No se pudo actualizar la descripción de la cita.');
@@ -646,8 +727,9 @@ export class ClientDetailPage {
       return;
     }
 
-    if (endDate.getTime() <= startDate.getTime()) {
-      this.appointmentDraftError.set('La hora de fin debe ser mayor que la de inicio.');
+    const scheduleError = validateAppointmentSchedule(startDate, endDate);
+    if (scheduleError) {
+      this.appointmentDraftError.set(scheduleError);
       return;
     }
 
@@ -656,9 +738,9 @@ export class ClientDetailPage {
         .update(editingId, {
           title,
           description: draft.description.trim() || undefined,
-          startTime: startAt,
-          endTime: endAt,
-          ...(editingAppointment?.status === 'cancelled'
+          startTime: startDate.toISOString(),
+          endTime: endDate.toISOString(),
+          ...(['cancelled', 'expired'].includes(editingAppointment?.status ?? '')
             ? { status: 'scheduled' as const }
             : {}),
         })
@@ -669,6 +751,7 @@ export class ClientDetailPage {
               appts.map((a) => (a.id === editingId ? this.mapApiAppointment(updated) : a)),
             );
             this.closeAppointmentModal();
+            this.refreshAppointmentSyncStatus(updated.id);
           },
           error: () => {
             this.actionError.set('No se pudo actualizar la cita.');
@@ -680,14 +763,15 @@ export class ClientDetailPage {
           clientId: this.clientId,
           title,
           description: draft.description.trim() || undefined,
-          startTime: startAt,
-          endTime: endAt,
+          startTime: startDate.toISOString(),
+          endTime: endDate.toISOString(),
         })
         .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe({
           next: (created) => {
             this.appointments.update((appts) => [this.mapApiAppointment(created), ...appts]);
             this.closeAppointmentModal();
+            this.refreshAppointmentSyncStatus(created.id);
           },
           error: () => {
             this.actionError.set('No se pudo crear la cita.');
@@ -696,10 +780,7 @@ export class ClientDetailPage {
     }
   }
 
-  updateAppointmentStatus(
-    appointment: IClientAppointment,
-    status: IClientAppointment['status'],
-  ) {
+  updateAppointmentStatus(appointment: IClientAppointment, status: IClientAppointment['status']) {
     if (appointment.status === status) return;
     if (appointment.status === 'completed') {
       this.actionError.set('Las citas completadas no se pueden modificar.');
@@ -716,10 +797,90 @@ export class ClientDetailPage {
               item.id === appointment.id ? this.mapApiAppointment(updated) : item,
             ),
           );
+          this.refreshAppointmentSyncStatus(updated.id);
         },
         error: () => {
           this.actionError.set('No se pudo actualizar el estado de la cita.');
         },
+      });
+  }
+
+  retryAppointmentCalendarSync(appointment: IClientAppointment): void {
+    if (this.retryingCalendarAppointmentId()) return;
+    this.actionError.set(null);
+    this.retryingCalendarAppointmentId.set(appointment.id);
+    this.appointmentApi
+      .retryCalendarSync(appointment.id)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (updated) => {
+          this.appointments.update((appointments) =>
+            appointments.map((item) =>
+              item.id === appointment.id ? this.mapApiAppointment(updated) : item,
+            ),
+          );
+          this.retryingCalendarAppointmentId.set(null);
+          this.refreshAppointmentSyncStatus(updated.id);
+        },
+        error: () => {
+          this.retryingCalendarAppointmentId.set(null);
+          this.actionError.set('No se pudo reintentar. Comprueba que Google siga vinculado.');
+        },
+      });
+  }
+
+  calendarSyncLabel(appointment: IClientAppointment): string {
+    switch (appointment.calendarSyncStatus) {
+      case 'pending':
+        return 'Pendiente de sincronizar con Google';
+      case 'synced':
+        return appointment.status === 'cancelled'
+          ? 'Eliminada de Google Calendar'
+          : 'Sincronizada con Google Calendar';
+      case 'failed':
+        return 'Error al sincronizar con Google';
+      default:
+        return 'Sin sincronización con Google';
+    }
+  }
+
+  calendarSyncIcon(appointment: IClientAppointment): string {
+    switch (appointment.calendarSyncStatus) {
+      case 'pending':
+        return 'sync-outline';
+      case 'synced':
+        return 'cloud-done-outline';
+      case 'failed':
+        return 'alert-circle-outline';
+      default:
+        return 'logo-google';
+    }
+  }
+
+  private refreshAppointmentSyncStatus(appointmentId: string): void {
+    if (this.pollingCalendarAppointmentIds.has(appointmentId)) return;
+    this.pollingCalendarAppointmentIds.add(appointmentId);
+    timer(1_000, 1_500)
+      .pipe(
+        take(6),
+        switchMap(() => this.appointmentApi.getAllByClient(this.clientId)),
+        takeWhile(
+          (appointments) =>
+            appointments.some(
+              (appointment) =>
+                appointment.id === appointmentId && appointment.calendarSyncStatus === 'pending',
+            ),
+          true,
+        ),
+        finalize(() => this.pollingCalendarAppointmentIds.delete(appointmentId)),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe({
+        next: (appointments) =>
+          this.appointments.set(
+            appointments.map((appointment) => this.mapApiAppointment(appointment)),
+          ),
+        error: () => undefined,
       });
   }
 
@@ -735,7 +896,23 @@ export class ClientDetailPage {
       startTime: `${this.formatAppointmentDay(startDate)} · ${this.formatAppointmentHour(startDate)}`,
       endTime: this.formatAppointmentHour(endDate),
       status: a.status,
+      calendarSyncStatus: a.calendarSyncStatus ?? 'not_synced',
+      calendarSyncError: a.calendarSyncError,
+      calendarSyncedAt: a.calendarSyncedAt,
     };
+  }
+
+  private formatAppointmentInputDate(date: Date): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
+  private formatAppointmentInputHour(date: Date): string {
+    const hour = String(date.getHours()).padStart(2, '0');
+    const minute = String(date.getMinutes()).padStart(2, '0');
+    return `${hour}:${minute}`;
   }
 
   private formatAppointmentDay(dateInput: Date): string {
@@ -755,15 +932,14 @@ export class ClientDetailPage {
   }
 
   private createDefaultAppointmentDraft(): IAppointmentDraft {
-    const now = new Date();
-    now.setSeconds(0, 0);
-    const end = new Date(now.getTime() + 60 * 60 * 1000);
+    const start = roundUpToNextMinutes(new Date(), 15);
+    const end = new Date(start.getTime() + 60 * 60 * 1000);
 
     return {
       title: '',
       description: '',
-      date: this.formatDateLocal(now),
-      startHour: this.formatHourLocal(now),
+      date: this.formatDateLocal(start),
+      startHour: this.formatHourLocal(start),
       endHour: this.formatHourLocal(end),
     };
   }
@@ -860,7 +1036,9 @@ export class ClientDetailPage {
 
   onDraftProductQuantityChange(event: Event) {
     const input = event.target as HTMLIonInputElement;
-    const sanitized = String((event as CustomEvent<{ value?: string | number | null }>).detail.value ?? '')
+    const sanitized = String(
+      (event as CustomEvent<{ value?: string | number | null }>).detail.value ?? '',
+    )
       .replace(/\D/g, '')
       .replace(/^0+/, '');
     input.value = sanitized;
@@ -882,9 +1060,7 @@ export class ClientDetailPage {
 
     if (
       this.currentClientProducts().some(
-        (offer) =>
-          offer.productId === productId &&
-          offer.status !== ClientProductStatus.SOLD,
+        (offer) => offer.productId === productId && offer.status !== ClientProductStatus.SOLD,
       )
     ) {
       this.productLinkError.set('Este producto ya está vinculado al cliente.');
@@ -1010,9 +1186,10 @@ export class ClientDetailPage {
     }
 
     const alert = await this.alertCtrl.create({
-      header: offer.resolvedProductType === ProductType.PRODUCT
-        ? 'Cambiar precio y cantidad'
-        : 'Cambiar precio',
+      header:
+        offer.resolvedProductType === ProductType.PRODUCT
+          ? 'Cambiar precio y cantidad'
+          : 'Cambiar precio',
       inputs,
       buttons: [
         { text: 'Cancelar', role: 'cancel' },
@@ -1021,7 +1198,10 @@ export class ClientDetailPage {
           handler: () => {
             this.salesCatalogStore.updateClientProduct(offer.id, {
               customPrice: null,
-              quantity: offer.resolvedProductType === ProductType.PRODUCT ? offer.resolvedProductQuantity : null,
+              quantity:
+                offer.resolvedProductType === ProductType.PRODUCT
+                  ? offer.resolvedProductQuantity
+                  : null,
               updatedAt: new Date().toISOString(),
             });
           },
@@ -1083,17 +1263,20 @@ export class ClientDetailPage {
     if (this.client().stage === newStage) return;
 
     this.actionError.set(null);
-    this.clientApi.update(this.clientId, { stage: newStage }).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: ({ client }) => {
-        this.client.update((current) => ({
-          ...current,
-          ...client,
-        }));
-      },
-      error: () => {
-        this.actionError.set('No se pudo actualizar la etapa del cliente.');
-      },
-    });
+    this.clientApi
+      .update(this.clientId, { stage: newStage })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: ({ client }) => {
+          this.client.update((current) => ({
+            ...current,
+            ...client,
+          }));
+        },
+        error: () => {
+          this.actionError.set('No se pudo actualizar la etapa del cliente.');
+        },
+      });
   }
 
   private confirmDeleteNote(noteId: string): void {
@@ -1212,7 +1395,10 @@ export class ClientDetailPage {
   }
 
   onPaymentCompleted(payment: IPayment): void {
-    if (payment.status === PaymentStatus.PAID && payment.sourceType === PaymentSourceType.CLIENT_PRODUCT) {
+    if (
+      payment.status === PaymentStatus.PAID &&
+      payment.sourceType === PaymentSourceType.CLIENT_PRODUCT
+    ) {
       const offer = this.currentClientProducts().find((item) => item.id === payment.sourceId);
       if (offer && offer.status !== ClientProductStatus.SOLD) {
         this.quickSetProductStatus(offer, ClientProductStatus.SOLD, true);
@@ -1236,7 +1422,9 @@ export class ClientDetailPage {
     const client = this.client();
     const clientName = `${client.firstName} ${client.lastName}`.trim();
     const alert = await this.alertCtrl.create(
-      buildPaymentCancellationAlert(clientName, payment.amount, () => this.performPaymentCancellation(payment)),
+      buildPaymentCancellationAlert(clientName, payment.amount, () =>
+        this.performPaymentCancellation(payment),
+      ),
     );
     await alert.present();
   }
@@ -1254,13 +1442,13 @@ export class ClientDetailPage {
   }
 
   paymentStatusLabel(status: PaymentStatus): string {
-    return ({
+    return {
       [PaymentStatus.PENDING]: 'Pago pendiente',
       [PaymentStatus.PAID]: 'Pagado',
       [PaymentStatus.FAILED]: 'Fallido',
       [PaymentStatus.CANCELLED]: 'Cancelado',
       [PaymentStatus.REFUNDED]: 'Reembolsado',
-    })[status];
+    }[status];
   }
 
   private getEventValue<T>(event: Event): T | null {
@@ -1271,13 +1459,13 @@ export class ClientDetailPage {
   private sanitizePriceInput(rawValue: string): string {
     const normalized = rawValue.replace(',', '.').replace(/[^\d.]/g, '');
     const [integer = '', ...decimalParts] = normalized.split('.');
-    return decimalParts.length
-      ? `${integer}.${decimalParts.join('').slice(0, 2)}`
-      : integer;
+    return decimalParts.length ? `${integer}.${decimalParts.join('').slice(0, 2)}` : integer;
   }
 
   private parseOptionalPrice(rawValue: string | number | undefined): number | undefined {
-    const normalized = String(rawValue ?? '').replace(',', '.').trim();
+    const normalized = String(rawValue ?? '')
+      .replace(',', '.')
+      .trim();
     if (!normalized) return undefined;
     const value = Number(normalized);
     if (!Number.isFinite(value) || value < 0) return undefined;

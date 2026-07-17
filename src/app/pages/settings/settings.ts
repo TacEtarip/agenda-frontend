@@ -373,8 +373,12 @@ export class SettingsPage {
   setIntegration(event: Event) {
     const nextIntegration = this.getEventValue<IntegrationProvider>(event);
     if (!nextIntegration) return;
-    if (!VALID_INTEGRATION_PROVIDERS.has(nextIntegration)) return;
-    this.currentIntegration.set(nextIntegration);
+    this.selectIntegration(nextIntegration);
+  }
+
+  selectIntegration(provider: IntegrationProvider): void {
+    if (!VALID_INTEGRATION_PROVIDERS.has(provider)) return;
+    this.currentIntegration.set(provider);
     this.integrationSavedMessage.set(null);
   }
 

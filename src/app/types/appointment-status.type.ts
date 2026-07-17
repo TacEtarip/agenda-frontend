@@ -1,1 +1,1 @@
-export type AppointmentStatus = 'scheduled' | 'completed' | 'cancelled';
+export type AppointmentStatus = 'scheduled' | 'expired' | 'completed' | 'cancelled';

@@ -30,4 +30,8 @@ export class AppointmentApiService {
   remove(id: string): Observable<void> {
     return this.http.delete<void>(`${this.url}/${id}`);
   }
+
+  retryCalendarSync(id: string): Observable<IAppointmentApi> {
+    return this.http.post<IAppointmentApi>(`${this.url}/${id}/calendar-sync/retry`, {});
+  }
 }

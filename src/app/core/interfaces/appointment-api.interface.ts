@@ -1,4 +1,5 @@
 import { AppointmentStatus } from '../../types/appointment-status.type';
+import { CalendarSyncStatus } from '../../types/calendar-sync-status.type';
 
 export interface IAppointmentApi {
   id: string;
@@ -9,4 +10,9 @@ export interface IAppointmentApi {
   startTime: string;
   endTime: string;
   status: AppointmentStatus;
+  externalEventId?: string;
+  externalCalendarId?: string;
+  calendarSyncStatus?: CalendarSyncStatus;
+  calendarSyncError?: string;
+  calendarSyncedAt?: string;
 }
