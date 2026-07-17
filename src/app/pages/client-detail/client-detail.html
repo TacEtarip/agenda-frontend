@@ -360,7 +360,43 @@
                     }}
                   </ion-button>
                 }
+                @if (appt.externalEventId) {
+                  <ion-button
+                    fill="clear"
+                    size="small"
+                    href="https://calendar.google.com/calendar/u/0/r"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label="Abrir Google Calendar en una pestaña nueva"
+                  >
+                    Abrir calendario
+                  </ion-button>
+                }
               </div>
+
+              @if (appt.scheduleConflicts.length > 0) {
+                <div class="appointment-conflict-warning" role="alert">
+                  <ion-icon name="alert-circle-outline" aria-hidden="true"></ion-icon>
+                  <div>
+                    <strong>Conflicto de horario con Google Calendar</strong>
+                    <span>
+                      Hay otro evento ocupado durante esta cita. Reprograma la cita o libera ese
+                      horario en Google.
+                    </span>
+                    <ion-button
+                      class="appointment-conflict-warning__calendar-link"
+                      fill="clear"
+                      size="small"
+                      href="https://calendar.google.com/calendar/u/0/r"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <ion-icon slot="start" name="logo-google" aria-hidden="true"></ion-icon>
+                      Abrir Google Calendar
+                    </ion-button>
+                  </div>
+                </div>
+              }
 
               <div class="appointment-card__details">
                 <section class="appointment-card__section" aria-label="Fecha y hora">
@@ -631,15 +667,32 @@
                       <p class="appointment-modal__error">{{ error }}</p>
                     }
 
+                    @if (appointmentAvailabilityMessage(); as availabilityMessage) {
+                      <p
+                        class="appointment-modal__availability appointment-modal__availability--{{
+                          appointmentAvailability().status
+                        }}"
+                        aria-live="polite"
+                      >
+                        {{ availabilityMessage }}
+                      </p>
+                    }
+                    @if (appointmentAvailability().status === 'error') {
+                      <ion-button
+                        fill="clear"
+                        size="small"
+                        (click)="retryAppointmentAvailabilityCheck()"
+                      >
+                        Reintentar comprobación
+                      </ion-button>
+                    }
+
                     <div class="app-modal-actions">
                       <ion-button fill="outline" color="medium" (click)="closeAppointmentModal()">
                         Cancelar
                       </ion-button>
                       <ion-button
-                        [disabled]="
-                          !isEditingCompletedAppointment() &&
-                          appointmentDraftScheduleError() !== null
-                        "
+                        [disabled]="isAppointmentSaveDisabled()"
                         (click)="saveAppointmentFromModal()"
                       >
                         Guardar

@@ -9,6 +9,7 @@ const appointment: IClientAppointment = {
   endTime: '16:00',
   status: 'scheduled',
   calendarSyncStatus: 'not_synced',
+  scheduleConflicts: [],
 };
 
 describe('buildAppointmentCancellationAlert', () => {

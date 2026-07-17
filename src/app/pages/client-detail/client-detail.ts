@@ -1,6 +1,18 @@
 import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { filter, finalize, switchMap, take, takeWhile, timer } from 'rxjs';
+import {
+  catchError,
+  filter,
+  finalize,
+  map,
+  of,
+  Subject,
+  switchMap,
+  take,
+  takeWhile,
+  timer,
+} from 'rxjs';
+import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AlertController } from '@ionic/angular';
 import { ClientStage } from '../../enums/client-stage.enum';
@@ -90,6 +102,12 @@ import {
 } from './appointment-list.utils';
 import { roundUpToNextMinutes, validateAppointmentSchedule } from './appointment-schedule.utils';
 import { buildAppointmentCancellationAlert } from './appointment-cancellation.utils';
+import {
+  AppointmentAvailabilityViewState,
+  appointmentAvailabilityMessage,
+  availabilityStateFromResult,
+} from './appointment-availability.utils';
+import { ICheckAppointmentAvailabilityPayload } from '../../core/interfaces/appointment-availability-api.interface';
 
 @Component({
   selector: 'app-client-detail',
@@ -138,6 +156,8 @@ export class ClientDetailPage {
   readonly clientId = this.route.snapshot.paramMap.get('id') ?? '';
   private readonly pollingCalendarAppointmentIds = new Set<string>();
   private readonly isViewActive = signal(false);
+  private readonly appointmentAvailabilityRequests =
+    new Subject<ICheckAppointmentAvailabilityPayload>();
 
   readonly allStages = CLIENT_STAGE_OPTIONS;
 
@@ -159,6 +179,9 @@ export class ClientDetailPage {
   readonly editingAppointmentId = signal<string | null>(null);
   readonly appointmentDraft = signal<IAppointmentDraft>(this.createDefaultAppointmentDraft());
   readonly appointmentDraftError = signal<string | null>(null);
+  readonly appointmentAvailability = signal<AppointmentAvailabilityViewState>({
+    status: 'idle',
+  });
   readonly minimumAppointmentDate = signal(this.formatDateLocal(new Date()));
   readonly isAttachmentModalOpen = signal(false);
   readonly attachmentDraft = signal(this.createDefaultAttachmentDraft());
@@ -219,6 +242,14 @@ export class ClientDetailPage {
       new Date(`${date}T${startHour}`),
       new Date(`${date}T${endHour}`),
     );
+  });
+  readonly appointmentAvailabilityMessage = computed(() =>
+    appointmentAvailabilityMessage(this.appointmentAvailability()),
+  );
+  readonly isAppointmentSaveDisabled = computed(() => {
+    if (this.isEditingCompletedAppointment()) return false;
+    if (this.appointmentDraftScheduleError() !== null) return true;
+    return ['checking', 'conflict', 'error'].includes(this.appointmentAvailability().status);
   });
 
   readonly attachments = signal<IAttachment[]>([
@@ -357,6 +388,18 @@ export class ClientDetailPage {
           ),
         error: () => undefined,
       });
+    this.appointmentAvailabilityRequests
+      .pipe(
+        switchMap((request) =>
+          timer(300).pipe(
+            switchMap(() => this.appointmentApi.checkAvailability(request)),
+            map((result) => availabilityStateFromResult(result)),
+            catchError((error: unknown) => of(this.availabilityErrorState(error))),
+          ),
+        ),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe((state) => this.appointmentAvailability.set(state));
   }
 
   ionViewWillEnter(): void {
@@ -562,6 +605,7 @@ export class ClientDetailPage {
     this.appointmentDraft.set(this.createDefaultAppointmentDraft());
     this.appointmentDraftError.set(null);
     this.isAppointmentModalOpen.set(true);
+    this.queueAppointmentAvailabilityCheck();
   }
 
   openEditAppointmentModal(appointment: IClientAppointment) {
@@ -580,11 +624,13 @@ export class ClientDetailPage {
     });
     this.appointmentDraftError.set(null);
     this.isAppointmentModalOpen.set(true);
+    this.queueAppointmentAvailabilityCheck();
   }
 
   closeAppointmentModal() {
     this.isAppointmentModalOpen.set(false);
     this.appointmentDraftError.set(null);
+    this.appointmentAvailability.set({ status: 'idle' });
   }
 
   openCreateAttachmentModal() {
@@ -661,6 +707,7 @@ export class ClientDetailPage {
       ...draft,
       [field]: nextValue,
     }));
+    this.queueAppointmentAvailabilityCheck();
   }
 
   readonly appointmentDraftDateLabel = computed(() => {
@@ -678,6 +725,10 @@ export class ClientDetailPage {
   readonly appointmentDraftEndHourLabel = computed(
     () => this.appointmentDraft().endHour || '--:--',
   );
+
+  retryAppointmentAvailabilityCheck(): void {
+    this.queueAppointmentAvailabilityCheck();
+  }
 
   setAppointmentFilter(filter: AppointmentFilter | null | undefined): void {
     if (filter) this.appointmentFilter.set(filter);
@@ -754,9 +805,7 @@ export class ClientDetailPage {
             this.closeAppointmentModal();
             this.refreshAppointmentSyncStatus(updated.id);
           },
-          error: () => {
-            this.actionError.set('No se pudo actualizar la cita.');
-          },
+          error: (error) => this.handleAppointmentSaveError(error, 'actualizar'),
         });
     } else {
       this.appointmentApi
@@ -774,9 +823,7 @@ export class ClientDetailPage {
             this.closeAppointmentModal();
             this.refreshAppointmentSyncStatus(created.id);
           },
-          error: () => {
-            this.actionError.set('No se pudo crear la cita.');
-          },
+          error: (error) => this.handleAppointmentSaveError(error, 'crear'),
         });
     }
   }
@@ -912,7 +959,74 @@ export class ClientDetailPage {
       calendarSyncStatus: a.calendarSyncStatus ?? 'not_synced',
       calendarSyncError: a.calendarSyncError,
       calendarSyncedAt: a.calendarSyncedAt,
+      scheduleConflicts: a.scheduleConflicts ?? [],
     };
+  }
+
+  private queueAppointmentAvailabilityCheck(): void {
+    if (this.isEditingCompletedAppointment()) {
+      this.appointmentAvailability.set({ status: 'idle' });
+      return;
+    }
+    const { date, startHour, endHour } = this.appointmentDraft();
+    if (!date || !startHour || !endHour) {
+      this.appointmentAvailability.set({ status: 'idle' });
+      return;
+    }
+    const startTime = new Date(`${date}T${startHour}`);
+    const endTime = new Date(`${date}T${endHour}`);
+    if (validateAppointmentSchedule(startTime, endTime)) {
+      this.appointmentAvailability.set({ status: 'idle' });
+      return;
+    }
+    this.appointmentAvailability.set({ status: 'checking' });
+    this.appointmentAvailabilityRequests.next({
+      startTime: startTime.toISOString(),
+      endTime: endTime.toISOString(),
+      ...(this.editingAppointmentId()
+        ? { excludeAppointmentId: this.editingAppointmentId()! }
+        : {}),
+    });
+  }
+
+  private availabilityErrorState(error: unknown): AppointmentAvailabilityViewState {
+    if (
+      error instanceof HttpErrorResponse &&
+      error.status === 409 &&
+      error.error?.code === 'APPOINTMENT_TIME_CONFLICT'
+    ) {
+      return availabilityStateFromResult({
+        available: false,
+        externalCalendarChecked: Boolean(error.error.externalCalendarChecked),
+        conflicts: Array.isArray(error.error.conflicts) ? error.error.conflicts : [],
+      });
+    }
+    if (
+      error instanceof HttpErrorResponse &&
+      error.error?.code === 'EXTERNAL_CALENDAR_AVAILABILITY_UNAVAILABLE'
+    ) {
+      return {
+        status: 'error',
+        message: 'No se pudo verificar Google Calendar. Intenta nuevamente antes de guardar.',
+      };
+    }
+    return {
+      status: 'error',
+      message: 'No se pudo comprobar la disponibilidad. Intenta nuevamente.',
+    };
+  }
+
+  private handleAppointmentSaveError(error: unknown, action: 'crear' | 'actualizar'): void {
+    if (
+      error instanceof HttpErrorResponse &&
+      ['APPOINTMENT_TIME_CONFLICT', 'EXTERNAL_CALENDAR_AVAILABILITY_UNAVAILABLE'].includes(
+        error.error?.code,
+      )
+    ) {
+      this.appointmentAvailability.set(this.availabilityErrorState(error));
+      return;
+    }
+    this.actionError.set(`No se pudo ${action} la cita.`);
   }
 
   private formatAppointmentInputDate(date: Date): string {

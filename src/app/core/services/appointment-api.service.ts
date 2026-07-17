@@ -5,6 +5,10 @@ import { environment } from '../../../environments/environment';
 import { IAppointmentApi } from '../interfaces/appointment-api.interface';
 import { ICreateAppointmentPayload } from '../interfaces/create-appointment-payload.interface';
 import { IUpdateAppointmentPayload } from '../interfaces/update-appointment-payload.interface';
+import {
+  IAppointmentAvailabilityApi,
+  ICheckAppointmentAvailabilityPayload,
+} from '../interfaces/appointment-availability-api.interface';
 
 @Injectable({ providedIn: 'root' })
 export class AppointmentApiService {
@@ -17,6 +21,12 @@ export class AppointmentApiService {
 
   getAllByClient(clientId: string): Observable<IAppointmentApi[]> {
     return this.http.get<IAppointmentApi[]>(`${this.url}/client/${clientId}`);
+  }
+
+  checkAvailability(
+    payload: ICheckAppointmentAvailabilityPayload,
+  ): Observable<IAppointmentAvailabilityApi> {
+    return this.http.post<IAppointmentAvailabilityApi>(`${this.url}/availability`, payload);
   }
 
   create(payload: ICreateAppointmentPayload): Observable<IAppointmentApi> {

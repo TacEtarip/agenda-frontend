@@ -1,6 +1,14 @@
 import { AppointmentStatus } from '../types/appointment-status.type';
 import { CalendarSyncStatus } from '../types/calendar-sync-status.type';
 
+export interface IClientAppointmentScheduleConflict {
+  id: string;
+  source: 'google';
+  conflictStartTime: string;
+  conflictEndTime: string;
+  detectedAt: string;
+}
+
 export interface IClientAppointment {
   id: string;
   title: string;
@@ -15,4 +23,5 @@ export interface IClientAppointment {
   calendarSyncStatus: CalendarSyncStatus;
   calendarSyncError?: string;
   calendarSyncedAt?: string;
+  scheduleConflicts: IClientAppointmentScheduleConflict[];
 }

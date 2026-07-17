@@ -13,6 +13,7 @@ const appointment = (
   endTime: startAt,
   status,
   calendarSyncStatus: 'not_synced',
+  scheduleConflicts: [],
 });
 
 describe('filterAndSortAppointments', () => {

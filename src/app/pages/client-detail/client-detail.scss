@@ -538,6 +538,50 @@ ion-toolbar ion-button {
   }
 }
 
+.appointment-conflict-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  margin-top: 0.75rem;
+  padding: 0.7rem 0.8rem;
+  border: 1px solid color-mix(in srgb, var(--ion-color-warning) 55%, transparent);
+  border-radius: 0.8rem;
+  background: color-mix(in srgb, var(--ion-color-warning) 10%, white);
+  color: var(--color-text);
+
+  ion-icon {
+    flex-shrink: 0;
+    margin-top: 0.1rem;
+    color: var(--ion-color-warning-shade);
+    font-size: 1.15rem;
+  }
+
+  div {
+    display: grid;
+    gap: 0.2rem;
+  }
+
+  strong {
+    font-size: 0.78rem;
+  }
+
+  span {
+    color: var(--color-text-muted);
+    font-size: 0.75rem;
+    line-height: 1.45;
+  }
+
+  &__calendar-link {
+    width: fit-content;
+    min-height: 2rem;
+    margin: 0.15rem 0 -0.2rem -0.65rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    --padding-start: 0.65rem;
+    --padding-end: 0.65rem;
+  }
+}
+
 .appointment-card__details {
   display: grid;
   grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
@@ -656,6 +700,27 @@ ion-toolbar ion-button {
     color: var(--color-danger);
     font-size: 0.75rem;
     font-weight: 600;
+  }
+
+  &__availability {
+    margin: 0.65rem 0 0;
+    border-radius: 0.75rem;
+    padding: 0.65rem 0.75rem;
+    background: var(--color-surface-alt);
+    color: var(--color-text-muted);
+    font-size: 0.75rem;
+    font-weight: 600;
+
+    &--available {
+      background: rgb(var(--color-green-rgb) / 10%);
+      color: var(--color-green-shade);
+    }
+
+    &--conflict,
+    &--error {
+      background: rgb(var(--ion-color-danger-rgb) / 10%);
+      color: var(--ion-color-danger);
+    }
   }
 }
 
