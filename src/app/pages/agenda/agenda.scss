@@ -4,29 +4,40 @@
 }
 
 ion-toolbar {
-  --background: rgb(255 255 255 / 96%);
+  --background: var(--app-color-surface);
+  --color: var(--app-color-ink);
   --border-color: var(--app-color-border);
-  --min-height: 4.4rem;
+  --min-height: 4.5rem;
+
+  padding-inline: 0.25rem;
+  box-shadow: none;
+}
+
+ion-back-button,
+ion-toolbar ion-button {
+  --color: var(--app-color-primary-strong);
 }
 
 .toolbar-title {
-  display: grid;
-  gap: 0.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
 }
 
 .toolbar-title__greeting {
-  color: var(--app-color-primary);
-  font-size: 0.68rem;
-  font-weight: 800;
-  letter-spacing: 0.1em;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  opacity: 0.82;
   text-transform: uppercase;
 }
 
 .toolbar-title__name {
   margin: 0;
   color: var(--app-color-ink);
-  font-size: 1.05rem;
-  font-weight: 800;
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.2;
 }
 
 .agenda-content {
@@ -95,12 +106,19 @@ ion-toolbar {
 }
 
 .view-option,
-.cancelled-filter,
 .week-day__header,
 .month-day__number,
 .month-day__more,
-.mobile-day__heading {
+.month-day__add,
+.month-event,
+.quick-add,
+.mobile-day__heading,
+.mobile-quick-add,
+.appointment-links button,
+.compact-event button,
+.mobile-event button {
   border: 0;
+  background: transparent;
   font: inherit;
   cursor: pointer;
 }
@@ -132,30 +150,60 @@ ion-toolbar {
   margin: 0;
 }
 
-.cancelled-filter {
-  display: inline-flex;
+.agenda-command > ion-button {
   min-height: 2.5rem;
+  margin: 0;
+}
+
+.agenda-filters {
+  display: grid;
+  grid-template-columns: max-content minmax(11rem, 15rem) minmax(13rem, 18rem) 1fr;
+  align-items: center;
+  gap: 0.75rem;
+  margin: -0.25rem 0 0.85rem;
+  padding: 0.55rem 0.8rem;
+  border: 1px solid var(--app-color-border);
+  border-radius: var(--app-radius-md);
+  background: rgb(255 255 255 / 76%);
+}
+
+.agenda-filters__label {
+  display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  padding: 0.45rem 0.65rem;
-  border-radius: 0.75rem;
-  background: transparent;
-  color: var(--app-color-muted);
+  color: var(--app-color-primary-strong);
   font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.agenda-filters ion-select {
+  --background: var(--app-color-surface);
+  --border-color: transparent;
+  --border-radius: 0.65rem;
+
+  min-height: 2.75rem;
+  padding-inline: 0.65rem;
+  border: 1px solid var(--app-color-border);
+  border-radius: 0.65rem;
+}
+
+.agenda-filters > p {
+  margin: 0;
+  color: var(--app-color-muted);
+  font-size: 0.68rem;
+  line-height: 1.4;
+  text-align: right;
+}
+
+.agenda-notice {
+  margin: 0 0 0.85rem;
+  padding: 0.65rem 0.8rem;
+  border-left: 3px solid var(--app-color-primary);
+  border-radius: 0.6rem;
+  background: var(--app-color-primary-soft);
+  color: var(--app-color-primary-strong);
+  font-size: 0.74rem;
   font-weight: 700;
-  white-space: nowrap;
-}
-
-.cancelled-filter span {
-  width: 0.55rem;
-  height: 0.55rem;
-  border: 2px solid currentcolor;
-  border-radius: 50%;
-}
-
-.cancelled-filter--active {
-  background: rgb(var(--ion-color-danger-rgb) / 8%);
-  color: var(--ion-color-danger);
 }
 
 .agenda-feedback,
@@ -345,11 +393,15 @@ ion-toolbar {
 }
 
 .appointment-links a,
+.appointment-links button,
 .compact-event a,
-.mobile-event a {
+.compact-event button,
+.mobile-event a,
+.mobile-event button {
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
+  padding: 0;
   color: var(--app-color-primary-strong);
   font-size: 0.7rem;
   font-weight: 800;
@@ -419,6 +471,28 @@ ion-toolbar {
   align-content: start;
   gap: 0.45rem;
   padding: 0.5rem;
+}
+
+.quick-add {
+  display: inline-flex;
+  min-height: 2rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  border: 1px dashed var(--app-color-border);
+  border-radius: 0.6rem;
+  color: var(--app-color-primary-strong);
+  font-size: 0.64rem;
+  font-weight: 800;
+}
+
+.quick-add:hover,
+.quick-add:focus-visible,
+.mobile-quick-add:hover,
+.mobile-quick-add:focus-visible {
+  border-color: var(--app-color-primary);
+  background: var(--app-color-primary-soft);
+  outline: 0;
 }
 
 .compact-event {
@@ -504,11 +578,32 @@ ion-toolbar {
 }
 
 .month-day {
+  position: relative;
   min-height: 8rem;
   padding: 0.45rem;
   border-right: 1px solid var(--app-color-border);
   border-bottom: 1px solid var(--app-color-border);
   background: var(--app-color-surface);
+}
+
+.month-day__add {
+  position: absolute;
+  top: 0.45rem;
+  left: 0.45rem;
+  display: grid;
+  width: 1.6rem;
+  min-height: 1.6rem;
+  place-items: center;
+  border-radius: 50%;
+  color: var(--app-color-primary);
+  opacity: 0;
+}
+
+.month-day:hover .month-day__add,
+.month-day__add:focus-visible {
+  background: var(--app-color-primary-soft);
+  opacity: 1;
+  outline: 0;
 }
 
 .month-day--outside {
@@ -554,7 +649,9 @@ ion-toolbar {
   background: var(--app-color-primary-soft);
   color: var(--app-color-ink);
   font-size: 0.62rem;
+  text-align: left;
   text-decoration: none;
+  cursor: pointer;
 }
 
 .month-event--completed {
@@ -596,9 +693,15 @@ ion-toolbar {
     grid-template-columns: minmax(12rem, 1fr) max-content max-content;
   }
 
-  .cancelled-filter {
+  .agenda-command > ion-button {
     grid-column: 2 / 4;
     justify-self: end;
+  }
+  .agenda-filters {
+    grid-template-columns: max-content 1fr 1fr;
+  }
+  .agenda-filters > p {
+    display: none;
   }
   .week-board,
   .month-board {
@@ -627,9 +730,16 @@ ion-toolbar {
   .agenda-command__navigation {
     justify-self: start;
   }
-  .cancelled-filter {
+  .agenda-command > ion-button {
     grid-column: 2;
     justify-self: end;
+  }
+  .agenda-filters {
+    grid-template-columns: 1fr 1fr;
+    padding: 0.5rem;
+  }
+  .agenda-filters__label {
+    grid-column: 1 / -1;
   }
   .agenda-desktop {
     display: none;
@@ -668,6 +778,20 @@ ion-toolbar {
 
 .mobile-day__timeline {
   padding: 0.75rem;
+}
+
+.mobile-quick-add {
+  display: inline-flex;
+  width: 100%;
+  min-height: 2.4rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  border: 1px dashed var(--app-color-border);
+  border-radius: 0.65rem;
+  color: var(--app-color-primary-strong);
+  font-size: 0.68rem;
+  font-weight: 800;
 }
 
 .mobile-event {
@@ -748,9 +872,11 @@ ion-toolbar {
   .view-option {
     padding-inline: 0.4rem;
   }
-  .cancelled-filter {
-    max-width: 8rem;
-    white-space: normal;
+  .agenda-filters {
+    grid-template-columns: 1fr;
+  }
+  .agenda-filters__label {
+    grid-column: 1;
   }
   .mobile-event {
     grid-template-columns: 4.1rem 0.7rem minmax(0, 1fr);

@@ -1,5 +1,7 @@
 import { IClientAppointment } from '../../interfaces/client-appointment.interface';
 
+export type AppointmentCancellationTarget = Pick<IClientAppointment, 'title' | 'externalEventId'>;
+
 export interface AppointmentCancellationAlertOptions {
   header: string;
   subHeader: string;
@@ -11,8 +13,8 @@ export interface AppointmentCancellationAlertOptions {
   }>;
 }
 
-export function buildAppointmentCancellationAlert(
-  appointment: IClientAppointment,
+export function buildAppointmentCancellationAlert<T extends AppointmentCancellationTarget>(
+  appointment: T,
   onConfirm: () => void,
 ): AppointmentCancellationAlertOptions {
   const hasExternalCalendarEvent = Boolean(appointment.externalEventId);

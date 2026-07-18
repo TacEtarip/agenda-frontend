@@ -9,15 +9,17 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
 import { forkJoin } from 'rxjs';
-import { IonSpinner } from '@ionic/angular/standalone';
+import { IonBackButton, IonSelect, IonSelectOption, IonSpinner } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import {
   alertCircleOutline,
+  addOutline,
   calendarOutline,
   chevronBackOutline,
   chevronForwardOutline,
   logoGoogle,
   refreshOutline,
+  optionsOutline,
   timeOutline,
 } from 'ionicons/icons';
 import { AppointmentApiService } from '../../core/services/appointment-api.service';
@@ -40,6 +42,12 @@ import {
   moveCalendarPeriod,
   normalizeCalendarDate,
 } from './agenda-date.utils';
+import {
+  AGENDA_STATUS_FILTERS,
+  AgendaStatusFilter,
+  filterAgendaAppointments,
+} from './agenda-filter.utils';
+import { AppointmentEditorComponent } from './appointment-editor/appointment-editor.component';
 
 interface AgendaAppointment extends IAppointmentApi {
   readonly clientName: string;
@@ -60,9 +68,13 @@ interface AgendaDay {
     RouterLink,
     ...COMMON_ION_PAGE_IMPORTS,
     IonSpinner,
+    IonBackButton,
+    IonSelect,
+    IonSelectOption,
     UserMenuComponent,
     AppointmentStatusColorPipe,
     AppointmentStatusLabelPipe,
+    AppointmentEditorComponent,
   ],
   templateUrl: './agenda.html',
   styleUrl: './agenda.scss',
@@ -77,14 +89,27 @@ export class AgendaPage {
   readonly selectedDate = signal(normalizeCalendarDate(new Date()));
   readonly appointments = signal<IAppointmentApi[]>([]);
   readonly clients = signal<IClient[]>([]);
-  readonly showCancelled = signal(false);
+  readonly statusFilter = signal<AgendaStatusFilter>('active');
+  readonly clientFilter = signal('all');
   readonly loadState = signal<UiState>('idle');
   readonly loadError = signal<string | null>(null);
+  readonly actionNotice = signal<string | null>(null);
+  readonly isEditorOpen = signal(false);
+  readonly editingAppointment = signal<IAppointmentApi | null>(null);
+  readonly editorInitialDate = signal(normalizeCalendarDate(new Date()));
+  readonly statusFilters = AGENDA_STATUS_FILTERS;
+
+  readonly sortedClients = computed(() =>
+    [...this.clients()].sort((first, second) =>
+      `${first.firstName} ${first.lastName}`.localeCompare(
+        `${second.firstName} ${second.lastName}`,
+      ),
+    ),
+  );
 
   readonly visibleAppointments = computed<AgendaAppointment[]>(() => {
     const clients = new Map(this.clients().map((client) => [client.id, client]));
-    return this.appointments()
-      .filter((appointment) => this.showCancelled() || appointment.status !== 'cancelled')
+    return filterAgendaAppointments(this.appointments(), this.statusFilter(), this.clientFilter())
       .map((appointment) => {
         const client = clients.get(appointment.clientId);
         const clientName = client
@@ -172,10 +197,12 @@ export class AgendaPage {
   constructor() {
     addIcons({
       alertCircleOutline,
+      addOutline,
       calendarOutline,
       chevronBackOutline,
       chevronForwardOutline,
       logoGoogle,
+      optionsOutline,
       refreshOutline,
       timeOutline,
     });
@@ -220,13 +247,62 @@ export class AgendaPage {
     this.selectedDate.set(normalizeCalendarDate(new Date()));
   }
 
-  toggleCancelled(): void {
-    this.showCancelled.update((visible) => !visible);
+  setStatusFilter(event: Event): void {
+    const value = this.eventValue<AgendaStatusFilter>(event);
+    if (value) this.statusFilter.set(value);
+  }
+
+  setClientFilter(event: Event): void {
+    const value = this.eventValue<string>(event);
+    if (value) this.clientFilter.set(value);
   }
 
   selectDay(date: Date): void {
     this.selectedDate.set(normalizeCalendarDate(date));
     this.view.set('day');
+  }
+
+  openCreate(date = this.selectedDate()): void {
+    const normalized = normalizeCalendarDate(date);
+    const today = normalizeCalendarDate(new Date());
+    this.editorInitialDate.set(normalized.getTime() < today.getTime() ? today : normalized);
+    this.editingAppointment.set(null);
+    this.actionNotice.set(null);
+    this.isEditorOpen.set(true);
+  }
+
+  openEdit(appointment: IAppointmentApi): void {
+    this.editingAppointment.set(appointment);
+    this.editorInitialDate.set(normalizeCalendarDate(new Date(appointment.startTime)));
+    this.actionNotice.set(null);
+    this.isEditorOpen.set(true);
+  }
+
+  closeEditor(): void {
+    this.isEditorOpen.set(false);
+    this.editingAppointment.set(null);
+  }
+
+  handleAppointmentSaved(appointment: IAppointmentApi): void {
+    const wasEditing = this.editingAppointment() !== null;
+    this.upsertAppointment(appointment);
+    this.selectedDate.set(normalizeCalendarDate(new Date(appointment.startTime)));
+    this.actionNotice.set(wasEditing ? 'Cita actualizada.' : 'Cita creada y añadida a la Agenda.');
+    this.closeEditor();
+  }
+
+  handleAppointmentCancelled(appointment: IAppointmentApi): void {
+    this.upsertAppointment(appointment);
+    this.actionNotice.set(
+      appointment.externalEventId
+        ? 'Cita cancelada. También se actualizará el calendario vinculado.'
+        : 'Cita cancelada.',
+    );
+    this.closeEditor();
+  }
+
+  canCreateOn(date: Date): boolean {
+    return normalizeCalendarDate(date).getTime() >= normalizeCalendarDate(new Date()).getTime();
   }
 
   dayLabel(date: Date): string {
@@ -258,6 +334,19 @@ export class AgendaPage {
 
   canOpenExternalCalendar(appointment: IAppointmentApi): boolean {
     return Boolean(appointment.externalEventId || appointment.scheduleConflicts?.length);
+  }
+
+  private upsertAppointment(updated: IAppointmentApi): void {
+    this.appointments.update((appointments) => {
+      const exists = appointments.some((appointment) => appointment.id === updated.id);
+      return exists
+        ? appointments.map((appointment) => (appointment.id === updated.id ? updated : appointment))
+        : [...appointments, updated];
+    });
+  }
+
+  private eventValue<T>(event: Event): T | null {
+    return (event as CustomEvent<{ value?: T }>).detail?.value ?? null;
   }
 
   private toAgendaDay(date: Date, selectedMonth = date.getMonth()): AgendaDay {

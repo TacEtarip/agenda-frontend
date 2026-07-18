@@ -1,0 +1,215 @@
+<ion-modal
+  [isOpen]="true"
+  [canDismiss]="canDismiss"
+  [backdropDismiss]="!saving()"
+  class="app-modal"
+  (didDismiss)="closed.emit()"
+>
+  <ng-template>
+    <ion-header>
+      <ion-toolbar>
+        <ion-title>{{ isEditing() ? 'Editar cita' : 'Programar cita' }}</ion-title>
+        <ion-buttons slot="end">
+          <ion-button aria-label="Cerrar modal" [disabled]="saving()" (click)="requestClose()">
+            <ion-icon slot="icon-only" name="close-outline" aria-hidden="true" />
+          </ion-button>
+        </ion-buttons>
+      </ion-toolbar>
+    </ion-header>
+
+    <div class="app-modal-content" data-testid="appointment-editor">
+      <section class="app-modal-shell">
+        <ion-card class="app-modal-card">
+          <ion-card-content class="app-modal-card__content">
+            <div class="app-modal-header">
+              <div class="app-modal-icon">
+                <ion-icon name="time-outline" aria-hidden="true" />
+              </div>
+
+              <div class="app-modal-copy">
+                <p class="app-modal-eyebrow">Agenda</p>
+                <h2>{{ isEditing() ? 'Editar cita' : 'Programar cita' }}</h2>
+                <p>
+                  Define cliente, fecha, hora y notas. Agenda comprobará cruces internos y Google
+                  Calendar antes de guardar.
+                </p>
+              </div>
+            </div>
+
+            <div class="app-modal-body appointment-modal">
+              <ion-select
+                label="Cliente"
+                labelPlacement="floating"
+                fill="outline"
+                interface="popover"
+                class="appointment-modal__field"
+                data-testid="appointment-client"
+                [disabled]="isEditing()"
+                [value]="draft().clientId"
+                (ionChange)="onClientChange($event)"
+              >
+                @for (client of clients(); track client.id) {
+                  <ion-select-option [value]="client.id">
+                    {{ client.firstName }} {{ client.lastName }}
+                  </ion-select-option>
+                }
+              </ion-select>
+
+              <ion-input
+                label="Título"
+                labelPlacement="floating"
+                fill="outline"
+                class="appointment-modal__field"
+                data-testid="appointment-title"
+                [disabled]="isCompleted()"
+                [value]="draft().title"
+                (ionInput)="onTextChange('title', $event)"
+              />
+
+              <ion-textarea
+                autoGrow="true"
+                rows="3"
+                class="appointment-modal__field appointment-modal__notes"
+                label="Descripción (opcional)"
+                labelPlacement="floating"
+                fill="outline"
+                data-testid="appointment-description"
+                [value]="draft().description"
+                (ionInput)="onTextChange('description', $event)"
+              />
+
+              @if (!isCompleted()) {
+                <div class="appointment-modal__pickers">
+                  <div class="appointment-modal__selector-card">
+                    <p class="appointment-modal__picker-title">Fecha</p>
+                    <ion-datetime-button datetime="agenda-appt-date-picker" />
+                  </div>
+
+                  <div class="appointment-modal__selector-card">
+                    <p class="appointment-modal__picker-title">Desde</p>
+                    <ion-datetime-button datetime="agenda-appt-start-hour-picker" />
+                  </div>
+
+                  <div class="appointment-modal__selector-card">
+                    <p class="appointment-modal__picker-title">Hasta</p>
+                    <ion-datetime-button datetime="agenda-appt-end-hour-picker" />
+                  </div>
+                </div>
+
+                <ion-modal [keepContentsMounted]="true" class="app-modal app-modal--picker">
+                  <ng-template>
+                    <ion-datetime
+                      id="agenda-appt-date-picker"
+                      presentation="date"
+                      data-testid="appointment-date"
+                      [min]="minimumDate"
+                      [preferWheel]="false"
+                      [value]="draft().date"
+                      (ionChange)="onScheduleChange('date', $event)"
+                    />
+                  </ng-template>
+                </ion-modal>
+
+                <ion-modal [keepContentsMounted]="true" class="app-modal app-modal--picker">
+                  <ng-template>
+                    <ion-datetime
+                      id="agenda-appt-start-hour-picker"
+                      presentation="time"
+                      hour-cycle="h23"
+                      data-testid="appointment-start-time"
+                      [preferWheel]="true"
+                      [value]="draft().startHour"
+                      (ionChange)="onScheduleChange('startHour', $event)"
+                    />
+                  </ng-template>
+                </ion-modal>
+
+                <ion-modal [keepContentsMounted]="true" class="app-modal app-modal--picker">
+                  <ng-template>
+                    <ion-datetime
+                      id="agenda-appt-end-hour-picker"
+                      presentation="time"
+                      hour-cycle="h23"
+                      data-testid="appointment-end-time"
+                      [preferWheel]="true"
+                      [value]="draft().endHour"
+                      (ionChange)="onScheduleChange('endHour', $event)"
+                    />
+                  </ng-template>
+                </ion-modal>
+              } @else {
+                <p
+                  class="appointment-modal__availability appointment-modal__availability--available"
+                >
+                  <ion-icon name="checkmark-circle-outline" aria-hidden="true" />
+                  La cita está completada. Solo puedes actualizar su descripción.
+                </p>
+              }
+
+              @if (error() || scheduleError(); as editorError) {
+                <p class="appointment-modal__error" role="alert">{{ editorError }}</p>
+              }
+
+              @if (availabilityMessage(); as message) {
+                <p
+                  class="appointment-modal__availability appointment-modal__availability--{{
+                    availability().status
+                  }}"
+                  aria-live="polite"
+                >
+                  @if (availability().status === 'checking') {
+                    <ion-spinner name="crescent" />
+                  }
+                  {{ message }}
+                </p>
+              }
+
+              @if (availability().status === 'error') {
+                <ion-button fill="clear" size="small" (click)="retryAvailabilityCheck()">
+                  Reintentar comprobación
+                </ion-button>
+              }
+
+              <div class="app-modal-actions">
+                @if (canCancel()) {
+                  <ion-button
+                    fill="clear"
+                    color="danger"
+                    data-testid="cancel-appointment"
+                    [disabled]="saving()"
+                    (click)="confirmCancellation()"
+                  >
+                    <ion-icon slot="start" name="trash-outline" aria-hidden="true" />
+                    Cancelar cita
+                  </ion-button>
+                }
+
+                <span class="appointment-modal__action-spacer"></span>
+
+                <ion-button
+                  fill="outline"
+                  color="medium"
+                  [disabled]="saving()"
+                  (click)="requestClose()"
+                >
+                  Cancelar
+                </ion-button>
+                <ion-button
+                  data-testid="save-appointment"
+                  [disabled]="saveDisabled()"
+                  (click)="save()"
+                >
+                  @if (saving()) {
+                    <ion-spinner name="crescent" />
+                  } @else {
+                    Guardar
+                  }
+                </ion-button>
+              </div>
+            </div>
+          </ion-card-content>
+        </ion-card>
+      </section>
+    </div>
+  </ng-template>
+</ion-modal>

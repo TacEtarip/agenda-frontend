@@ -1,0 +1,112 @@
+:host {
+  display: contents;
+}
+
+.appointment-modal {
+  &__field {
+    margin-bottom: 0.7rem;
+  }
+
+  &__notes {
+    border: 1px solid var(--color-border);
+    border-radius: 0.95rem;
+    --padding-start: 0.75rem;
+    --padding-end: 0.75rem;
+    --padding-top: 0.55rem;
+    --padding-bottom: 0.55rem;
+    font-size: 0.82rem;
+  }
+
+  &__pickers {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.7rem;
+  }
+
+  &__selector-card {
+    padding: 0.55rem 0.65rem 0.65rem;
+    border: 1px solid var(--color-border);
+    border-radius: 1rem;
+    background: var(--color-surface);
+  }
+
+  &__picker-title {
+    margin: 0 0 0.45rem;
+    padding: 0;
+    color: var(--color-text-muted);
+    font-size: 0.75rem;
+    font-weight: 700;
+  }
+
+  &__selector-value {
+    margin: 0.35rem 0 0;
+    color: var(--color-text);
+    font-size: 0.82rem;
+    font-weight: 700;
+  }
+
+  &__error {
+    margin: 0.65rem 0 0;
+    color: var(--color-danger);
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+
+  &__availability {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    margin: 0.65rem 0 0;
+    padding: 0.65rem 0.75rem;
+    border-radius: 0.75rem;
+    background: var(--color-surface-alt);
+    color: var(--color-text-muted);
+    font-size: 0.75rem;
+    font-weight: 600;
+
+    &--available {
+      background: rgb(var(--color-green-rgb) / 10%);
+      color: var(--color-green-shade);
+    }
+
+    &--conflict,
+    &--error {
+      background: rgb(var(--ion-color-danger-rgb) / 10%);
+      color: var(--ion-color-danger);
+    }
+
+    ion-spinner {
+      width: 1rem;
+      height: 1rem;
+    }
+  }
+
+  &__action-spacer {
+    flex: 1 1 auto;
+  }
+}
+
+.appointment-modal ion-select {
+  --background: rgb(255 255 255 / 82%);
+}
+
+.appointment-modal ion-datetime-button::part(native) {
+  width: 100%;
+  justify-content: center;
+  border: 1px solid rgb(var(--color-green-rgb) / 25%);
+  border-radius: 0.8rem;
+}
+
+@media (max-width: 560px) {
+  .appointment-modal__pickers {
+    grid-template-columns: 1fr;
+  }
+
+  .appointment-modal__action-spacer {
+    display: none;
+  }
+
+  .app-modal-actions ion-button {
+    flex: 1 1 auto;
+  }
+}

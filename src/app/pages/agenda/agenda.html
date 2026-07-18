@@ -1,5 +1,8 @@
 <ion-header>
   <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/dashboard" text="Atrás" />
+    </ion-buttons>
     <ion-title>
       <div class="toolbar-title">
         <span class="toolbar-title__greeting">Organización</span>
@@ -42,17 +45,47 @@
         </ion-button>
       </div>
 
-      <button
-        type="button"
-        class="cancelled-filter"
-        [class.cancelled-filter--active]="showCancelled()"
-        [attr.aria-pressed]="showCancelled()"
-        (click)="toggleCancelled()"
-      >
-        <span aria-hidden="true"></span>
-        {{ showCancelled() ? 'Canceladas visibles' : 'Canceladas ocultas' }}
-      </button>
+      <ion-button data-testid="new-appointment" (click)="openCreate()">
+        <ion-icon slot="start" name="add-outline" aria-hidden="true" />Nueva cita
+      </ion-button>
     </section>
+
+    <section class="agenda-filters" aria-label="Filtrar citas">
+      <div class="agenda-filters__label">
+        <ion-icon name="options-outline" aria-hidden="true" />
+        <span>Filtrar agenda</span>
+      </div>
+      <ion-select
+        label="Estado"
+        labelPlacement="stacked"
+        interface="popover"
+        [value]="statusFilter()"
+        (ionChange)="setStatusFilter($event)"
+      >
+        @for (filter of statusFilters; track filter.value) {
+          <ion-select-option [value]="filter.value">{{ filter.label }}</ion-select-option>
+        }
+      </ion-select>
+      <ion-select
+        label="Cliente"
+        labelPlacement="stacked"
+        interface="popover"
+        [value]="clientFilter()"
+        (ionChange)="setClientFilter($event)"
+      >
+        <ion-select-option value="all">Todos los clientes</ion-select-option>
+        @for (client of sortedClients(); track client.id) {
+          <ion-select-option [value]="client.id">
+            {{ client.firstName }} {{ client.lastName }}
+          </ion-select-option>
+        }
+      </ion-select>
+      <p>El rango se controla con las vistas Día, Semana y Mes.</p>
+    </section>
+
+    @if (actionNotice(); as notice) {
+      <p class="agenda-notice" role="status">{{ notice }}</p>
+    }
 
     @if (loadState() === 'loading') {
       <div class="agenda-feedback" role="status">
@@ -101,6 +134,7 @@
                     </ion-chip>
                   </div>
                   <div class="appointment-links">
+                    <button type="button" (click)="openEdit(appointment)">Editar cita</button>
                     <a
                       [routerLink]="['/clients', appointment.clientId]"
                       [queryParams]="{ tab: 'appointments' }"
@@ -123,7 +157,10 @@
               <div class="agenda-empty">
                 <ion-icon name="calendar-outline" aria-hidden="true" />
                 <h3>No hay citas este día</h3>
-                <p>El día permanece libre. Puedes moverte a otra fecha sin restricciones.</p>
+                <p>El día permanece libre. Tú decides si quieres programar una cita.</p>
+                <ion-button [disabled]="!canCreateOn(selectedDate())" (click)="openCreate()">
+                  <ion-icon slot="start" name="add-outline" aria-hidden="true" />Programar cita
+                </ion-button>
               </div>
             }
           </div>
@@ -137,6 +174,16 @@
                   <small>{{ day.appointments.length }}</small>
                 </button>
                 <div class="week-day__events">
+                  @if (canCreateOn(day.date)) {
+                    <button
+                      type="button"
+                      class="quick-add"
+                      [attr.aria-label]="'Crear cita el ' + fullDayLabel(day.date)"
+                      (click)="openCreate(day.date)"
+                    >
+                      <ion-icon name="add-outline" aria-hidden="true" />Programar
+                    </button>
+                  }
                   @for (appointment of day.appointments; track appointment.id) {
                     <article
                       class="compact-event compact-event--{{ appointment.status }}"
@@ -148,6 +195,7 @@
                       <strong>{{ appointment.clientName }}</strong>
                       <span>{{ appointment.title }}</span>
                       <div>
+                        <button type="button" (click)="openEdit(appointment)">Editar</button>
                         <a
                           [routerLink]="['/clients', appointment.clientId]"
                           [queryParams]="{ tab: 'appointments' }"
@@ -187,18 +235,28 @@
                 <button type="button" class="month-day__number" (click)="selectDay(day.date)">
                   {{ day.date.getDate() }}
                 </button>
+                @if (canCreateOn(day.date)) {
+                  <button
+                    type="button"
+                    class="month-day__add"
+                    [attr.aria-label]="'Crear cita el ' + fullDayLabel(day.date)"
+                    (click)="openCreate(day.date)"
+                  >
+                    <ion-icon name="add-outline" aria-hidden="true" />
+                  </button>
+                }
                 <div class="month-day__events">
                   @for (appointment of day.appointments.slice(0, 3); track appointment.id) {
-                    <a
+                    <button
+                      type="button"
                       class="month-event month-event--{{ appointment.status }}"
                       [class.month-event--conflict]="hasConflict(appointment)"
-                      [routerLink]="['/clients', appointment.clientId]"
-                      [queryParams]="{ tab: 'appointments' }"
                       [title]="appointment.clientName + ' · ' + appointment.title"
+                      (click)="openEdit(appointment)"
                     >
                       <time>{{ appointmentTime(appointment).split('–')[0] }}</time>
                       <span>{{ appointment.clientName }}</span>
-                    </a>
+                    </button>
                   }
                   @if (day.appointments.length > 3) {
                     <button type="button" class="month-day__more" (click)="selectDay(day.date)">
@@ -236,6 +294,7 @@
                       <ion-chip [color]="appointment.status | appointmentStatusColor">
                         {{ appointment.status | appointmentStatusLabel }}
                       </ion-chip>
+                      <button type="button" (click)="openEdit(appointment)">Editar</button>
                       <a
                         [routerLink]="['/clients', appointment.clientId]"
                         [queryParams]="{ tab: 'appointments' }"
@@ -255,6 +314,11 @@
                   </div>
                 </article>
               }
+              @if (canCreateOn(day.date)) {
+                <button type="button" class="mobile-quick-add" (click)="openCreate(day.date)">
+                  <ion-icon name="add-outline" aria-hidden="true" />Nueva cita este día
+                </button>
+              }
             </div>
           </section>
         } @empty {
@@ -268,3 +332,14 @@
     }
   </main>
 </ion-content>
+
+@if (isEditorOpen()) {
+  <app-appointment-editor
+    [clients]="sortedClients()"
+    [appointment]="editingAppointment()"
+    [initialDate]="editorInitialDate()"
+    (closed)="closeEditor()"
+    (saved)="handleAppointmentSaved($event)"
+    (cancelled)="handleAppointmentCancelled($event)"
+  />
+}
