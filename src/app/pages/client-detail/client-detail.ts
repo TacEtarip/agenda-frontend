@@ -80,7 +80,6 @@ import {
   IonSelectOption,
   IonTextarea,
   IonToggle,
-  IonItem,
   IonLabel,
 } from '@ionic/angular/standalone';
 import { ClientDetailSegment } from './enums/client-detail-segment.enum';
@@ -108,6 +107,7 @@ import {
   availabilityStateFromResult,
 } from './appointment-availability.utils';
 import { ICheckAppointmentAvailabilityPayload } from '../../core/interfaces/appointment-availability-api.interface';
+import { interpolateTemplate } from '../../shared/template-interpolation.utils';
 
 @Component({
   selector: 'app-client-detail',
@@ -125,7 +125,6 @@ import { ICheckAppointmentAvailabilityPayload } from '../../core/interfaces/appo
     IonSelect,
     IonSelectOption,
     IonTextarea,
-    IonItem,
     IonLabel,
     RouterLink,
     AppointmentStatusColorPipe,
@@ -174,10 +173,12 @@ export class ClientDetailPage {
   readonly isNoteModalOpen = signal(false);
   readonly editingNoteId = signal<string | null>(null);
   readonly noteDraft = signal('');
+  readonly initialNoteDraft = signal('');
   readonly noteDraftError = signal<string | null>(null);
   readonly isAppointmentModalOpen = signal(false);
   readonly editingAppointmentId = signal<string | null>(null);
   readonly appointmentDraft = signal<IAppointmentDraft>(this.createDefaultAppointmentDraft());
+  readonly initialAppointmentDraft = signal<IAppointmentDraft>(this.createDefaultAppointmentDraft());
   readonly appointmentDraftError = signal<string | null>(null);
   readonly appointmentAvailability = signal<AppointmentAvailabilityViewState>({
     status: 'idle',
@@ -193,9 +194,14 @@ export class ClientDetailPage {
     email: '',
     phoneNumber: '',
   });
+  readonly initialClientEditDraft = signal(this.clientEditDraft());
   readonly clientEditDraftError = signal<string | null>(null);
   readonly isSavingClient = signal(false);
   readonly actionError = signal<string | null>(null);
+  readonly clientLoading = signal(true);
+  readonly clientLoadError = signal<string | null>(null);
+  readonly clientNotFound = signal(false);
+  readonly hasValidClient = computed(() => !this.clientLoading() && !this.clientLoadError() && !this.clientNotFound() && Boolean(this.client().id));
   readonly retryingCalendarAppointmentId = signal<string | null>(null);
   readonly paymentModalTarget = signal<IPaymentModalTarget | null>(null);
   readonly paymentSourceType = PaymentSourceType;
@@ -252,24 +258,7 @@ export class ClientDetailPage {
     return ['checking', 'conflict', 'error'].includes(this.appointmentAvailability().status);
   });
 
-  readonly attachments = signal<IAttachment[]>([
-    {
-      id: '1',
-      fileName: 'proposal_v2.pdf',
-      fileType: 'PDF',
-      fileSize: '1.2 MB',
-      uploadedAt: '20 feb 2026',
-      icon: 'document-outline',
-    },
-    {
-      id: '2',
-      fileName: 'client_photo.jpg',
-      fileType: 'Imagen',
-      fileSize: '840 KB',
-      uploadedAt: '15 ene 2026',
-      icon: 'image-outline',
-    },
-  ]);
+  readonly attachments = signal<IAttachment[]>([]);
 
   readonly currentClientProducts = computed((): IEnrichedClientProduct[] => {
     const productMap = new Map(this.salesCatalogStore.products().map((p) => [p.id, p]));
@@ -331,8 +320,9 @@ export class ClientDetailPage {
 
     if (templates.length > 0) {
       const template = templates[0];
-      const message = template.messageBody.replace('{{name}}', this.client().firstName);
-      return `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+      const rendered = this.renderTemplate(template);
+      if (rendered.unresolvedTokens.length > 0) return `https://wa.me/${phone}`;
+      return `https://wa.me/${phone}?text=${encodeURIComponent(rendered.message)}`;
     }
 
     return `https://wa.me/${phone}`;
@@ -405,10 +395,7 @@ export class ClientDetailPage {
   ionViewWillEnter(): void {
     this.isViewActive.set(true);
     if (this.clientId) {
-      this.clientApi
-        .getById(this.clientId)
-        .pipe(takeUntilDestroyed(this.destroyRef))
-        .subscribe((client) => this.client.set(client));
+      this.loadClient();
 
       this.noteApi
         .getAllByClient(this.clientId)
@@ -431,6 +418,27 @@ export class ClientDetailPage {
       this.salesCatalogStore.loadClientProducts(this.clientId);
       this.messageTemplateStore.load();
     }
+  }
+
+  loadClient(): void {
+    if (!this.clientId) {
+      this.clientLoading.set(false);
+      this.clientNotFound.set(true);
+      return;
+    }
+    this.clientLoading.set(true);
+    this.clientLoadError.set(null);
+    this.clientNotFound.set(false);
+    this.clientApi.getById(this.clientId).pipe(
+      takeUntilDestroyed(this.destroyRef),
+      finalize(() => this.clientLoading.set(false)),
+    ).subscribe({
+      next: (client) => this.client.set(client),
+      error: (error: unknown) => {
+        if (error instanceof HttpErrorResponse && error.status === 404) this.clientNotFound.set(true);
+        else this.clientLoadError.set('No se pudo cargar la información del cliente.');
+      },
+    });
   }
 
   ionViewWillLeave(): void {
@@ -457,6 +465,7 @@ export class ClientDetailPage {
       email: client.email,
       phoneNumber: client.phone,
     });
+    this.initialClientEditDraft.set(this.clientEditDraft());
     this.clientEditDraftError.set(null);
     this.isClientEditModalOpen.set(true);
   }
@@ -465,6 +474,16 @@ export class ClientDetailPage {
     if (this.isSavingClient()) return;
     this.isClientEditModalOpen.set(false);
     this.clientEditDraftError.set(null);
+  }
+
+  readonly canDismissClientEdit = async (): Promise<boolean> =>
+    !this.isSavingClient() && (
+      JSON.stringify(this.clientEditDraft()) === JSON.stringify(this.initialClientEditDraft()) ||
+      this.confirmDiscard('cliente')
+    );
+
+  async requestCloseEditClientModal(): Promise<void> {
+    if (await this.canDismissClientEdit()) this.closeEditClientModal();
   }
 
   onClientEditDraftChange(field: 'firstName' | 'lastName' | 'email' | 'phoneNumber', event: Event) {
@@ -520,6 +539,7 @@ export class ClientDetailPage {
   openCreateNoteModal() {
     this.editingNoteId.set(null);
     this.noteDraft.set('');
+    this.initialNoteDraft.set('');
     this.noteDraftError.set(null);
     this.isNoteModalOpen.set(true);
   }
@@ -527,6 +547,7 @@ export class ClientDetailPage {
   openEditNoteModal(note: INote) {
     this.editingNoteId.set(note.id);
     this.noteDraft.set(note.content);
+    this.initialNoteDraft.set(note.content);
     this.noteDraftError.set(null);
     this.isNoteModalOpen.set(true);
   }
@@ -536,6 +557,13 @@ export class ClientDetailPage {
     this.editingNoteId.set(null);
     this.noteDraft.set('');
     this.noteDraftError.set(null);
+  }
+
+  readonly canDismissNote = async (): Promise<boolean> =>
+    this.noteDraft() === this.initialNoteDraft() || this.confirmDiscard('nota');
+
+  async requestCloseNoteModal(): Promise<void> {
+    if (await this.canDismissNote()) this.closeNoteModal();
   }
 
   onNoteDraftChange(event: Event) {
@@ -603,6 +631,7 @@ export class ClientDetailPage {
     this.minimumAppointmentDate.set(this.formatDateLocal(new Date()));
     this.editingAppointmentId.set(null);
     this.appointmentDraft.set(this.createDefaultAppointmentDraft());
+    this.initialAppointmentDraft.set(this.appointmentDraft());
     this.appointmentDraftError.set(null);
     this.isAppointmentModalOpen.set(true);
     this.queueAppointmentAvailabilityCheck();
@@ -622,6 +651,7 @@ export class ClientDetailPage {
       startHour: this.formatAppointmentInputHour(new Date(startAt)),
       endHour: this.formatAppointmentInputHour(new Date(endAt)),
     });
+    this.initialAppointmentDraft.set(this.appointmentDraft());
     this.appointmentDraftError.set(null);
     this.isAppointmentModalOpen.set(true);
     this.queueAppointmentAvailabilityCheck();
@@ -631,6 +661,14 @@ export class ClientDetailPage {
     this.isAppointmentModalOpen.set(false);
     this.appointmentDraftError.set(null);
     this.appointmentAvailability.set({ status: 'idle' });
+  }
+
+  readonly canDismissAppointment = async (): Promise<boolean> =>
+    JSON.stringify(this.appointmentDraft()) === JSON.stringify(this.initialAppointmentDraft()) ||
+    this.confirmDiscard('cita');
+
+  async requestCloseAppointmentModal(): Promise<void> {
+    if (await this.canDismissAppointment()) this.closeAppointmentModal();
   }
 
   openCreateAttachmentModal() {
@@ -1221,13 +1259,16 @@ export class ClientDetailPage {
       customPrice,
       quantity,
       notes: this.draftProductNotes().trim() || undefined,
+    }).subscribe({
+      next: () => {
+        this.draftProductId.set('');
+        this.draftProductStatus.set(ClientProductStatus.OFFERED);
+        this.draftProductCustomPrice.set('');
+        this.draftProductQuantity.set('1');
+        this.draftProductNotes.set('');
+      },
+      error: () => this.productLinkError.set('No se pudo vincular el producto. Conservamos los datos para que puedas reintentar.'),
     });
-
-    this.draftProductId.set('');
-    this.draftProductStatus.set(ClientProductStatus.OFFERED);
-    this.draftProductCustomPrice.set('');
-    this.draftProductQuantity.set('1');
-    this.draftProductNotes.set('');
   }
 
   quickSetProductStatus(offer: IClientProduct, status: ClientProductStatus, force = false) {
@@ -1243,7 +1284,7 @@ export class ClientDetailPage {
     this.salesCatalogStore.updateClientProduct(offer.id, {
       status,
       updatedAt: new Date().toISOString(),
-    });
+    }).subscribe({ error: () => this.actionError.set('No se pudo actualizar el producto del cliente.') });
   }
 
   async openEditProductNotesAlert(offer: IClientProduct) {
@@ -1270,7 +1311,7 @@ export class ClientDetailPage {
             this.salesCatalogStore.updateClientProduct(offer.id, {
               notes: data.notes?.trim() || undefined,
               updatedAt: new Date().toISOString(),
-            });
+            }).subscribe({ error: () => this.actionError.set('No se pudieron guardar las notas del producto.') });
           },
         },
       ],
@@ -1330,7 +1371,7 @@ export class ClientDetailPage {
                   ? offer.resolvedProductQuantity
                   : null,
               updatedAt: new Date().toISOString(),
-            });
+            }).subscribe({ error: () => this.actionError.set('No se pudo restaurar el precio del catálogo.') });
           },
         },
         {
@@ -1350,7 +1391,7 @@ export class ClientDetailPage {
               customPrice,
               quantity,
               updatedAt: new Date().toISOString(),
-            });
+            }).subscribe({ error: () => this.actionError.set('No se pudo actualizar el precio del producto.') });
             return true;
           },
         },
@@ -1375,7 +1416,9 @@ export class ClientDetailPage {
           text: 'Eliminar',
           role: 'destructive',
           handler: () => {
-            this.salesCatalogStore.deleteClientProduct(offer.id);
+            this.salesCatalogStore.deleteClientProduct(offer.id).subscribe({
+              error: () => this.actionError.set('No se pudo eliminar el vínculo con el producto.'),
+            });
           },
         },
       ],
@@ -1445,8 +1488,11 @@ export class ClientDetailPage {
               templateId: template.id,
               stage,
               messageBody: data.messageBody,
+            }).subscribe({
+              next: () => void alert.dismiss(),
+              error: () => this.actionError.set('No se pudo guardar la plantilla.'),
             });
-            return true;
+            return false;
           },
         },
       ],
@@ -1464,7 +1510,9 @@ export class ClientDetailPage {
           text: 'Eliminar',
           role: 'destructive',
           handler: () => {
-            this.messageTemplateStore.deleteTemplate(template.id);
+            this.messageTemplateStore.deleteTemplate(template.id).subscribe({
+              error: () => this.actionError.set('No se pudo eliminar la plantilla.'),
+            });
           },
         },
       ],
@@ -1473,13 +1521,32 @@ export class ClientDetailPage {
   }
 
   personalizeTemplateMessage(template: IMessageTemplate): string {
-    return template.messageBody.replace('{{name}}', this.client().firstName);
+    return this.renderTemplate(template).message;
   }
 
   getTemplateWhatsAppUrl(template: IMessageTemplate): string {
     const phone = this.client().phone.replaceAll(/\D/g, '');
-    const message = this.personalizeTemplateMessage(template);
-    return `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+    const rendered = this.renderTemplate(template);
+    if (rendered.unresolvedTokens.length > 0) return '';
+    return `https://wa.me/${phone}?text=${encodeURIComponent(rendered.message)}`;
+  }
+
+  unresolvedTemplateTokens(template: IMessageTemplate): readonly string[] {
+    return this.renderTemplate(template).unresolvedTokens;
+  }
+
+  private renderTemplate(template: IMessageTemplate) {
+    const nextAppointment = this.visibleAppointments().find((appointment) => appointment.status !== 'cancelled');
+    const paymentUrl = this.payments().find((payment) => payment.checkoutUrl)?.checkoutUrl;
+    return interpolateTemplate(template.messageBody, {
+      name: this.client().firstName,
+      date: nextAppointment
+        ? nextAppointment.startAt
+          ? new Date(nextAppointment.startAt).toLocaleString('es-PE', { dateStyle: 'long', timeStyle: 'short' })
+          : nextAppointment.startTime
+        : undefined,
+      paymentUrl,
+    });
   }
 
   openAppointmentPayment(appointment: IClientAppointment): void {
@@ -1581,6 +1648,20 @@ export class ClientDetailPage {
   private getEventValue<T>(event: Event): T | null {
     const value = (event as CustomEvent<{ value?: T }>).detail?.value;
     return value ?? null;
+  }
+
+  private async confirmDiscard(item: 'cliente' | 'nota' | 'cita'): Promise<boolean> {
+    const alert = await this.alertCtrl.create({
+      header: 'Descartar cambios',
+      message: `Hay cambios sin guardar en ${item === 'cliente' ? 'el cliente' : `la ${item}`}. ¿Quieres descartarlos?`,
+      buttons: [
+        { text: 'Seguir editando', role: 'cancel' },
+        { text: 'Descartar', role: 'destructive' },
+      ],
+    });
+    await alert.present();
+    const result = await alert.onDidDismiss();
+    return result.role === 'destructive';
   }
 
   private sanitizePriceInput(rawValue: string): string {

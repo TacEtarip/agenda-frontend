@@ -2,6 +2,7 @@ import { Injectable, inject, signal } from '@angular/core';
 import { IMessageTemplate } from '../../interfaces/message-template.interface';
 import { MessageTemplateApiService } from '../../core/services/message-template-api.service';
 import { IUpsertMessageTemplateInput } from './interfaces/upsert-message-template-input.interface';
+import { Observable, catchError, finalize, tap, throwError } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
 export class MessageTemplateStore {
@@ -10,10 +11,12 @@ export class MessageTemplateStore {
   private readonly templatesState = signal<IMessageTemplate[]>([]);
   private readonly templatesLoadingState = signal(false);
   private readonly templatesErrorState = signal<string | null>(null);
+  private readonly templatesMutatingState = signal(false);
 
   readonly templates = this.templatesState.asReadonly();
   readonly templatesLoading = this.templatesLoadingState.asReadonly();
   readonly templatesError = this.templatesErrorState.asReadonly();
+  readonly templatesMutating = this.templatesMutatingState.asReadonly();
 
   load(): void {
     const requestId = ++this.loadRequestId;
@@ -33,44 +36,42 @@ export class MessageTemplateStore {
     });
   }
 
-  saveTemplate(input: IUpsertMessageTemplateInput): void {
+  saveTemplate(input: IUpsertMessageTemplateInput): Observable<IMessageTemplate> {
     const messageBody = input.messageBody.trim();
-    if (!messageBody) return;
+    if (!messageBody) return throwError(() => new Error('El mensaje es obligatorio.'));
 
     this.templatesErrorState.set(null);
+    this.templatesMutatingState.set(true);
 
-    if (input.templateId) {
-      this.templateApi.update(input.templateId, { stage: input.stage, messageBody }).subscribe({
-        next: (updated) => {
-          this.templatesState.update((templates) =>
-            templates.map((t) => (t.id === input.templateId ? updated : t)),
-          );
-        },
-        error: () => {
-          this.templatesErrorState.set('No se pudo actualizar la plantilla.');
-        },
-      });
-    } else {
-      this.templateApi.create({ stage: input.stage, messageBody }).subscribe({
-        next: (created) => {
-          this.templatesState.update((templates) => [created, ...templates]);
-        },
-        error: () => {
-          this.templatesErrorState.set('No se pudo crear la plantilla.');
-        },
-      });
-    }
+    const request = input.templateId
+      ? this.templateApi.update(input.templateId, { stage: input.stage, messageBody })
+      : this.templateApi.create({ stage: input.stage, messageBody });
+
+    return request.pipe(
+      tap((saved) => this.templatesState.update((templates) => input.templateId
+        ? templates.map((template) => template.id === input.templateId ? saved : template)
+        : [saved, ...templates])),
+      catchError((error: unknown) => {
+        this.templatesErrorState.set(input.templateId
+          ? 'No se pudo actualizar la plantilla.'
+          : 'No se pudo crear la plantilla.');
+        return throwError(() => error);
+      }),
+      finalize(() => this.templatesMutatingState.set(false)),
+    );
   }
 
-  deleteTemplate(templateId: string): void {
+  deleteTemplate(templateId: string): Observable<void> {
     this.templatesErrorState.set(null);
-    this.templateApi.remove(templateId).subscribe({
-      next: () => {
-        this.templatesState.update((templates) => templates.filter((t) => t.id !== templateId));
-      },
-      error: () => {
+    this.templatesMutatingState.set(true);
+    return this.templateApi.remove(templateId).pipe(
+      tap(() => this.templatesState.update((templates) =>
+        templates.filter((template) => template.id !== templateId))),
+      catchError((error: unknown) => {
         this.templatesErrorState.set('No se pudo eliminar la plantilla.');
-      },
-    });
+        return throwError(() => error);
+      }),
+      finalize(() => this.templatesMutatingState.set(false)),
+    );
   }
 }

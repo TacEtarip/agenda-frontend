@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { of } from 'rxjs';
+import { of, Subject } from 'rxjs';
 import { describe, expect, it, vi } from 'vitest';
 import { PaymentMethod } from '../../../enums/payment-method.enum';
 import { PaymentOrigin } from '../../../enums/payment-origin.enum';
@@ -65,5 +65,31 @@ describe('PaymentFormModal', () => {
 
     expect(store.createLink).not.toHaveBeenCalled();
     expect(fixture.componentInstance.error()).toContain('mayor a cero');
+  });
+
+  it('cannot be dismissed and does not emit close while submitting', async () => {
+    const request = new Subject<never>();
+    const store = { createLink: vi.fn().mockReturnValue(request), registerManual: vi.fn() };
+    await TestBed.configureTestingModule({
+      imports: [PaymentFormModal],
+      providers: [{ provide: PaymentStore, useValue: store }],
+    }).compileComponents();
+    const fixture = TestBed.createComponent(PaymentFormModal);
+    fixture.componentRef.setInput('opened', true);
+    fixture.componentRef.setInput('sourceType', PaymentSourceType.APPOINTMENT);
+    fixture.componentRef.setInput('sourceId', 'appointment-1');
+    fixture.componentRef.setInput('concept', 'Consulta');
+    fixture.componentRef.setInput('clientName', 'Andrea Pérez');
+    await fixture.whenStable();
+    const closed = vi.fn();
+    fixture.componentInstance.closed.subscribe(closed);
+    fixture.componentInstance.amount.set('50');
+
+    fixture.componentInstance.submit();
+    fixture.componentInstance.requestClose();
+
+    expect(fixture.componentInstance.submitting()).toBe(true);
+    expect(fixture.componentInstance.canDismiss()).toBe(false);
+    expect(closed).not.toHaveBeenCalled();
   });
 });

@@ -49,11 +49,15 @@ export class MessageTemplatesPage {
   private readonly fb = inject(FormBuilder);
   private readonly destroyRef = inject(DestroyRef);
   private readonly alertCtrl = inject(AlertController);
-  private readonly messageTemplateStore = inject(MessageTemplateStore);
+  readonly messageTemplateStore = inject(MessageTemplateStore);
   private readonly templateApi = inject(MessageTemplateApiService);
 
   readonly allStages = CLIENT_STAGE_OPTIONS;
   readonly templates = this.messageTemplateStore.templates;
+  readonly templatesLoading = this.messageTemplateStore.templatesLoading;
+  readonly templatesMutating = this.messageTemplateStore.templatesMutating;
+  readonly templatesError = this.messageTemplateStore.templatesError;
+  readonly mutationError = signal<string | null>(null);
 
   readonly isComposerModalOpen = signal(false);
   readonly variables = signal<TemplateVariableMetadata[]>([
@@ -156,7 +160,9 @@ export class MessageTemplatesPage {
     this.isComposerModalOpen.set(true);
   }
 
-  closeComposerModal(resetForm = true) {
+  async closeComposerModal(resetForm = true): Promise<void> {
+    if (this.templatesMutating()) return;
+    if (this.composerForm.dirty && !(await this.confirmDiscard())) return;
     this.isComposerModalOpen.set(false);
     this.editingTemplateId.set(null);
 
@@ -165,6 +171,19 @@ export class MessageTemplatesPage {
       this.composerForm.markAsPristine();
       this.composerForm.markAsUntouched();
     }
+  }
+
+  readonly canDismissComposer = async (): Promise<boolean> => {
+    if (this.templatesMutating()) return false;
+    return !this.composerForm.dirty || this.confirmDiscard();
+  };
+
+  onComposerDidDismiss(): void {
+    this.isComposerModalOpen.set(false);
+    this.editingTemplateId.set(null);
+    this.composerForm.reset({ messageBody: '' });
+    this.composerForm.markAsPristine();
+    this.mutationError.set(null);
   }
 
   async insertVariable(key: TemplateVariableMetadata['key']) {
@@ -193,13 +212,18 @@ export class MessageTemplatesPage {
       return;
     }
 
+    this.mutationError.set(null);
     this.messageTemplateStore.saveTemplate({
       templateId: this.editingTemplateId() ?? undefined,
       stage: this.composerStage(),
       messageBody,
+    }).subscribe({
+      next: () => {
+        this.composerForm.markAsPristine();
+        this.isComposerModalOpen.set(false);
+      },
+      error: () => this.mutationError.set('No se pudo guardar la plantilla. Conservamos tu borrador para que puedas reintentar.'),
     });
-
-    this.closeComposerModal();
   }
 
   humanizeMessage(message: string): string {
@@ -220,7 +244,9 @@ export class MessageTemplatesPage {
           text: 'Eliminar',
           role: 'destructive',
           handler: () => {
-            this.messageTemplateStore.deleteTemplate(template.id);
+            this.messageTemplateStore.deleteTemplate(template.id).subscribe({
+              error: () => this.mutationError.set('No se pudo eliminar la plantilla. Inténtalo nuevamente.'),
+            });
           },
         },
       ],
@@ -233,5 +259,19 @@ export class MessageTemplatesPage {
     return (
       this.allStages.find((option) => option.value === stage)?.label ?? stage
     );
+  }
+
+  private async confirmDiscard(): Promise<boolean> {
+    const alert = await this.alertCtrl.create({
+      header: 'Descartar cambios',
+      message: 'La plantilla tiene cambios sin guardar. ¿Quieres descartarlos?',
+      buttons: [
+        { text: 'Seguir editando', role: 'cancel' },
+        { text: 'Descartar', role: 'destructive' },
+      ],
+    });
+    await alert.present();
+    const result = await alert.onDidDismiss();
+    return result.role === 'destructive';
   }
 }

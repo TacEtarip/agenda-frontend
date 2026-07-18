@@ -345,8 +345,14 @@ ion-toolbar ion-button {
 
 @media (max-width: 640px) {
   .stats-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.4rem;
+    padding: 0.75rem;
   }
+
+  .stat-card__content { padding: 0.55rem 0.3rem; }
+  .stat-icon { width: 2rem; height: 2rem; margin-bottom: 0.35rem; }
+  .stat-value { font-size: 1rem; }
 
   .template-empty-state {
     grid-template-columns: 1fr;

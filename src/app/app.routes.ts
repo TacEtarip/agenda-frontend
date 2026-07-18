@@ -5,6 +5,7 @@ export const routes: Routes = [
   { path: '', pathMatch: 'full', canActivate: [sessionRedirectGuard], children: [] },
   {
     path: 'login',
+    title: 'Iniciar sesión | TacEtarip',
     canActivate: [guestGuard],
     loadComponent: () => import('./pages/auth/login/login').then((m) => m.LoginPage),
   },

@@ -1,10 +1,10 @@
-<ion-modal class="app-modal payment-modal" [isOpen]="opened()" (didPresent)="reset()" (didDismiss)="closed.emit()">
+<ion-modal class="app-modal payment-modal" [isOpen]="opened()" [canDismiss]="canDismiss" [backdropDismiss]="!submitting()" (didPresent)="reset()" (didDismiss)="requestClose()">
   <ng-template>
     <ion-header>
       <ion-toolbar>
         <ion-title>Crear cobro</ion-title>
         <ion-buttons slot="end">
-          <ion-button (click)="closed.emit()" aria-label="Cerrar cobro">
+          <ion-button (click)="requestClose()" [disabled]="submitting()" aria-label="Cerrar cobro">
             <ion-icon slot="icon-only" name="close-outline" aria-hidden="true" />
           </ion-button>
         </ion-buttons>
@@ -59,26 +59,30 @@
             (ionInput)="setText('reference', $event)" />
         }
 
-        @if (error()) { <ion-note color="danger" role="alert">{{ error() }}</ion-note> }
+        @if (error()) { <ion-note color="danger" role="alert" aria-live="assertive">{{ error() }}</ion-note> }
         <div class="app-modal-actions">
-          <ion-button fill="outline" color="medium" (click)="closed.emit()">Cancelar</ion-button>
+          <ion-button fill="outline" color="medium" (click)="requestClose()" [disabled]="submitting()">Cancelar</ion-button>
           <ion-button class="submit-payment" (click)="submit()" [disabled]="submitting()">
             <ion-icon slot="start" [name]="mode() === 'LINK' ? 'link-outline' : 'cash-outline'" aria-hidden="true" />
             {{ submitting() ? 'Procesando…' : mode() === 'LINK' ? 'Generar enlace' : 'Registrar pago' }}
           </ion-button>
         </div>
       } @else {
-        <div class="payment-result" role="status">
-          <ion-icon name="link-outline" aria-hidden="true" />
-          <h2>Enlace generado</h2>
+        <div class="payment-result" role="status" aria-live="polite">
+          <ion-icon [name]="mode() === 'LINK' ? 'link-outline' : 'cash-outline'" aria-hidden="true" />
+          <h2>{{ mode() === 'LINK' ? 'Enlace generado' : 'Pago registrado' }}</h2>
           <p>{{ generatedPayment()!.amount | formatPrice }} · {{ generatedPayment()!.description }}</p>
+          @if (mode() === 'LINK') {
           <a [href]="generatedPayment()!.checkoutUrl" target="_blank" rel="noopener noreferrer">{{ generatedPayment()!.checkoutUrl }}</a>
+          @if (error()) { <ion-note color="danger" role="alert">{{ error() }}</ion-note> }
           <ion-button expand="block" fill="outline" (click)="copyLink()">
             <ion-icon slot="start" name="copy-outline" aria-hidden="true" />{{ copied() ? 'Copiado' : 'Copiar enlace' }}
           </ion-button>
           <ion-button expand="block" color="success" (click)="sendWhatsApp()" [disabled]="!clientPhone()">
             <ion-icon slot="start" name="logo-whatsapp" aria-hidden="true" />Enviar por WhatsApp
           </ion-button>
+          }
+          <ion-button expand="block" [fill]="mode() === 'LINK' ? 'clear' : 'solid'" (click)="requestClose()">Finalizar</ion-button>
         </div>
       }
             </div>

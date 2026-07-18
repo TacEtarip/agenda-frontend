@@ -52,6 +52,7 @@
       placeholder="Buscar productos…"
       aria-label="Buscar productos"
       [debounce]="200"
+      [value]="searchQuery()"
       (ionInput)="onSearch($event)"
       class="search-bar">
     </ion-searchbar>
@@ -86,6 +87,14 @@
   </div>
 
   <div class="products-list">
+    @if (productsLoading()) {
+      <div class="empty-state" role="status" aria-live="polite"><p class="empty-state__text">Cargando productos…</p></div>
+    } @else if (productsError()) {
+      <div class="empty-state" role="alert">
+        <p class="empty-state__text">{{ productsError() }}</p>
+        <ion-button fill="outline" size="small" (click)="salesCatalogStore.loadProducts()">Reintentar</ion-button>
+      </div>
+    } @else {
     @for (product of pagedProducts(); track product.id) {
       <ion-card class="product-card">
         <ion-card-content class="product-card__content">
@@ -124,11 +133,14 @@
     @empty {
       <div class="empty-state" role="status">
         <ion-icon name="pricetag-outline" aria-hidden="true"></ion-icon>
-        <p class="empty-state__text">No hay productos para mostrar</p>
-        <p class="empty-state__hint">Agrega tu primera oferta para empezar a vincularla con clientes.</p>
+        <p class="empty-state__text">{{ searchQuery() ? 'Ningún producto coincide con tu búsqueda' : 'Todavía no hay productos' }}</p>
+        <p class="empty-state__hint">{{ searchQuery() ? 'Prueba otro término o limpia la búsqueda.' : 'Agrega tu primera oferta para empezar a vincularla con clientes.' }}</p>
       </div>
     }
+    }
   </div>
+
+  @if (mutationError()) { <p class="form-feedback form-feedback--error" role="alert">{{ mutationError() }}</p> }
 
   <ion-infinite-scroll
     (ionInfinite)="loadMoreProducts($event)"
@@ -141,7 +153,8 @@
 
 <ion-modal
   [isOpen]="isCreateModalOpen()"
-  (didDismiss)="closeCreateProductModal()"
+  [canDismiss]="canDismissCreateProduct"
+  (didDismiss)="onCreateProductModalDidDismiss()"
   class="app-modal">
   <ng-template>
     <ion-header>
@@ -181,7 +194,8 @@
                   label="Nombre"
                   labelPlacement="floating"
                   fill="outline"
-                  shape="round">
+                  [attr.aria-invalid]="createProductForm.controls.name.touched && createProductForm.controls.name.invalid"
+                  aria-describedby="product-name-error">
                 </ion-input>
 
                 <ion-select
@@ -203,7 +217,6 @@
                   helperText="Soles peruanos (PEN)"
                   labelPlacement="floating"
                   fill="outline"
-                  shape="round"
                   (ionInput)="onPriceInput($event)"
                   (ionBlur)="formatPriceInput()">
                   <span slot="start" class="currency-prefix" aria-hidden="true">S/</span>
@@ -223,12 +236,12 @@
                 createProductForm.controls.name.touched &&
                 createProductForm.controls.name.hasError('required')
               ) {
-                <p class="form-feedback form-feedback--error">El nombre es obligatorio.</p>
+                <p id="product-name-error" class="form-feedback form-feedback--error" role="alert">El nombre es obligatorio.</p>
               } @else if (
                 createProductForm.controls.name.touched &&
                 createProductForm.controls.name.hasError('maxlength')
               ) {
-                <p class="form-feedback form-feedback--error">
+                <p id="product-name-error" class="form-feedback form-feedback--error" role="alert">
                   El nombre no puede superar los 80 caracteres.
                 </p>
               }
@@ -242,10 +255,14 @@
                 </p>
               }
 
+              @if (mutationError()) {
+                <p class="form-feedback form-feedback--error" role="alert">{{ mutationError() }}</p>
+              }
+
               <div class="app-modal-actions composer-form__actions">
-                <ion-button type="submit">
+                <ion-button type="submit" [disabled]="productsMutating()">
                   <ion-icon slot="start" name="add-outline" aria-hidden="true"></ion-icon>
-                  Guardar producto
+                  {{ productsMutating() ? 'Guardando…' : 'Guardar producto' }}
                 </ion-button>
 
                 <ion-button

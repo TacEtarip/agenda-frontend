@@ -19,6 +19,8 @@
       <button
         type="button"
         aria-controls="profile-settings"
+        [class.active]="activeSection() === 'profile-settings'"
+        [attr.aria-current]="activeSection() === 'profile-settings' ? 'true' : null"
         (click)="scrollToSection('profile-settings')"
       >
         Perfil
@@ -26,6 +28,8 @@
       <button
         type="button"
         aria-controls="calendar-settings"
+        [class.active]="activeSection() === 'calendar-settings'"
+        [attr.aria-current]="activeSection() === 'calendar-settings' ? 'true' : null"
         (click)="scrollToSection('calendar-settings')"
       >
         Calendarios
@@ -33,6 +37,8 @@
       <button
         type="button"
         aria-controls="whatsapp-settings"
+        [class.active]="activeSection() === 'whatsapp-settings'"
+        [attr.aria-current]="activeSection() === 'whatsapp-settings' ? 'true' : null"
         (click)="scrollToSection('whatsapp-settings')"
       >
         WhatsApp
@@ -40,6 +46,8 @@
       <button
         type="button"
         aria-controls="payment-settings"
+        [class.active]="activeSection() === 'payment-settings'"
+        [attr.aria-current]="activeSection() === 'payment-settings' ? 'true' : null"
         (click)="scrollToSection('payment-settings')"
       >
         Pagos
@@ -66,7 +74,6 @@
                   label="Nombre"
                   labelPlacement="floating"
                   fill="outline"
-                  shape="round"
                 >
                 </ion-input>
 
@@ -77,7 +84,6 @@
                   label="Apellido"
                   labelPlacement="floating"
                   fill="outline"
-                  shape="round"
                 >
                 </ion-input>
 
@@ -91,7 +97,6 @@
                   label="Correo electrónico"
                   labelPlacement="floating"
                   fill="outline"
-                  shape="round"
                 >
                 </ion-input>
 
@@ -104,7 +109,6 @@
                   label="Teléfono"
                   labelPlacement="floating"
                   fill="outline"
-                  shape="round"
                 >
                 </ion-input>
               </div>
@@ -175,15 +179,16 @@
 
               <ion-item
                 lines="none"
-                class="integration-item"
-                (click)="selectIntegration(IntegrationProvider.MICROSOFT)"
+                class="integration-item integration-item--disabled"
+                disabled="true"
+                aria-label="Microsoft 365, próximamente"
               >
                 <ion-icon slot="start" name="logo-microsoft" aria-hidden="true"></ion-icon>
                 <ion-label>
-                  <h3>Microsoft</h3>
-                  <p>Conecta Outlook Calendar y contactos.</p>
+                  <h3>Microsoft <ion-badge color="medium">Próximamente</ion-badge></h3>
+                  <p>La integración con Outlook Calendar aún no está disponible.</p>
                 </ion-label>
-                <ion-radio slot="end" value="microsoft"></ion-radio>
+                <ion-radio slot="end" value="microsoft" disabled="true"></ion-radio>
               </ion-item>
             </ion-radio-group>
 
@@ -230,6 +235,12 @@
                   <ion-button fill="outline" size="small" (click)="loadGoogleStatus()">
                     Reintentar
                   </ion-button>
+                }
+                @if (googleError()) {
+                  <div class="integration-status" role="alert">
+                    <p>{{ googleError() }}</p>
+                    <ion-button fill="outline" size="small" (click)="loadGoogleStatus()">Reintentar</ion-button>
+                  </div>
                 }
               </div>
             }
@@ -296,12 +307,13 @@
             <div class="actions-row">
               <ion-button
                 [disabled]="
+                  isSavingIntegration() ||
                   isGoogleLoading() ||
                   (currentIntegration() === IntegrationProvider.GOOGLE && !googleStatus().connected)
                 "
                 (click)="saveIntegration()"
               >
-                Guardar integración
+                {{ isSavingIntegration() ? 'Guardando…' : 'Guardar integración' }}
               </ion-button>
             </div>
 
@@ -309,6 +321,12 @@
               <p class="status-message" aria-live="polite">
                 <ion-icon name="checkmark-circle-outline" aria-hidden="true"></ion-icon>
                 <span>{{ integrationSavedMessage() }}</span>
+              </p>
+            }
+            @if (integrationErrorMessage()) {
+              <p class="status-message status-message--error" role="alert" aria-live="assertive">
+                <ion-icon name="information-circle-outline" aria-hidden="true"></ion-icon>
+                <span>{{ integrationErrorMessage() }}</span>
               </p>
             }
           </ion-card-content>
@@ -348,6 +366,13 @@
                 </ion-button>
               </div>
 
+              @if (whatsappError()) {
+                <div class="integration-status" role="alert">
+                  <p>{{ whatsappError() }}</p>
+                  <ion-button fill="outline" size="small" (click)="checkWhatsappStatus()">Reintentar</ion-button>
+                </div>
+              }
+
               @if (whatsappStatus() === 'WAITING_QR') {
                 <div class="qr-container" aria-live="polite">
                   @if (isPollingQr() && !whatsappQrImage()) {
@@ -364,6 +389,12 @@
                       Abre WhatsApp en tu teléfono, entra a Dispositivos vinculados y selecciona
                       Vincular un dispositivo.
                     </p>
+                  }
+                  @if (whatsappQrError()) {
+                    <div role="alert">
+                      <p>{{ whatsappQrError() }}</p>
+                      <ion-button fill="outline" size="small" (click)="checkWhatsappStatus()">Reintentar QR</ion-button>
+                    </div>
                   }
                 </div>
               }

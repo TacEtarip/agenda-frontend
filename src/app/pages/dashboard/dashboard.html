@@ -192,14 +192,15 @@
 @defer (when isAddClientModalOpen()) {
 <ion-modal
   [isOpen]="isAddClientModalOpen()"
-  (didDismiss)="closeAddClientModal()"
+  [canDismiss]="canDismissAddClient"
+  (didDismiss)="onAddClientModalDidDismiss()"
   class="app-modal">
   <ng-template>
     <ion-header>
       <ion-toolbar>
         <ion-title>Agregar cliente</ion-title>
         <ion-buttons slot="end">
-          <ion-button (click)="closeAddClientModal()" aria-label="Cerrar modal">
+          <ion-button (click)="requestCloseAddClientModal()" aria-label="Cerrar modal">
             <ion-icon slot="icon-only" name="close-outline" aria-hidden="true"></ion-icon>
           </ion-button>
         </ion-buttons>
@@ -233,7 +234,6 @@
                   label="Nombre"
                   labelPlacement="floating"
                   fill="outline"
-                  shape="round"
                   [attr.aria-describedby]="addClientForm.controls.firstName.touched && addClientForm.controls.firstName.invalid ? 'add-client-first-name-error' : null">
                 </ion-input>
                 @if (addClientForm.controls.firstName.touched && addClientForm.controls.firstName.invalid) {
@@ -250,7 +250,6 @@
                   label="Apellido"
                   labelPlacement="floating"
                   fill="outline"
-                  shape="round"
                   [attr.aria-describedby]="addClientForm.controls.lastName.touched && addClientForm.controls.lastName.invalid ? 'add-client-last-name-error' : null">
                 </ion-input>
                 @if (addClientForm.controls.lastName.touched && addClientForm.controls.lastName.invalid) {
@@ -270,7 +269,6 @@
                   label="Correo electrónico"
                   labelPlacement="floating"
                   fill="outline"
-                  shape="round"
                   [attr.aria-describedby]="addClientForm.controls.email.touched && addClientForm.controls.email.invalid ? 'add-client-email-error' : null">
                 </ion-input>
                 @if (addClientForm.controls.email.touched && addClientForm.controls.email.invalid) {
@@ -289,7 +287,6 @@
                   label="Número de teléfono"
                   labelPlacement="floating"
                   fill="outline"
-                  shape="round"
                   [attr.aria-describedby]="addClientForm.controls.phone.touched && addClientForm.controls.phone.invalid ? 'add-client-phone-error' : null">
                 </ion-input>
                 @if (addClientForm.controls.phone.touched && addClientForm.controls.phone.invalid) {
@@ -305,7 +302,6 @@
                     label="Etapa del cliente"
                     labelPlacement="floating"
                     fill="outline"
-                    shape="round"
                     aria-describedby="add-client-stage-context">
                     @for (option of stageOptions(); track option.value) {
                       <ion-select-option [value]="option.value">

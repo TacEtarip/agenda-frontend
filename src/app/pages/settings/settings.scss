@@ -89,7 +89,8 @@ ion-toolbar ion-button {
   touch-action: manipulation;
 }
 .settings-nav button:hover,
-.settings-nav button:focus-visible {
+.settings-nav button:focus-visible,
+.settings-nav button.active {
   color: var(--color-green-shade);
   background: var(--color-green-light);
 }
@@ -162,7 +163,9 @@ ion-toolbar ion-button {
     grid-template-columns: 1fr;
   }
   .settings-nav {
-    position: static;
+    position: sticky;
+    top: 0;
+    z-index: 5;
     display: flex;
     overflow-x: auto;
     scroll-padding-inline: 0.5rem;

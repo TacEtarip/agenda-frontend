@@ -275,7 +275,14 @@ ion-toolbar ion-button {
 }
 
 @media (max-width: 600px) {
+  .detail-segment-scroll { overflow: visible; }
+  .detail-segment {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
   .detail-segment ion-segment-button {
+    min-width: 0;
     font-size: 0.76rem;
     --padding-start: 0.5rem;
     --padding-end: 0.5rem;
@@ -289,6 +296,9 @@ ion-toolbar ion-button {
     margin-left: 0.125rem;
   }
 }
+
+.segment-coming-soon { display: block; font-size: 0.58rem; color: var(--color-text-muted); }
+.attachments-coming-soon { margin: 1rem; padding: 2rem 1rem; text-align: center; }
 
 .tab-content {
   padding: 0 1rem 6rem;

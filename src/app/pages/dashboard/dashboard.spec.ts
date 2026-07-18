@@ -1,6 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { FormBuilder } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
+import { AlertController } from '@ionic/angular/standalone';
 import { describe, expect, it, vi } from 'vitest';
 import { AppointmentApiService } from '../../core/services/appointment-api.service';
 import { AuthService } from '../../core/services/auth.service';
@@ -23,6 +24,7 @@ describe('DashboardPage client form', () => {
         { provide: PaymentApiService, useValue: {} },
         { provide: ActivatedRoute, useValue: { snapshot: { queryParamMap: { get: () => null } } } },
         { provide: Router, useValue: { navigate: vi.fn() } },
+        { provide: AlertController, useValue: { create: vi.fn() } },
       ],
     });
     const page = TestBed.runInInjectionContext(() => new DashboardPage());
@@ -46,6 +48,7 @@ describe('DashboardPage client form', () => {
         { provide: PaymentApiService, useValue: {} },
         { provide: ActivatedRoute, useValue: { snapshot: { queryParamMap: { get: () => null } } } },
         { provide: Router, useValue: { navigate: vi.fn() } },
+        { provide: AlertController, useValue: { create: vi.fn() } },
       ],
     });
     const page = TestBed.runInInjectionContext(() => new DashboardPage());

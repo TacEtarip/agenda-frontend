@@ -5,7 +5,7 @@ export class FormatDatePipe implements PipeTransform {
   transform(dateIso: string): string {
     const date = new Date(dateIso);
     if (Number.isNaN(date.getTime())) return '';
-    return date.toLocaleDateString('es-ES', {
+    return date.toLocaleDateString('es-PE', {
       day: 'numeric',
       month: 'short',
       year: 'numeric',

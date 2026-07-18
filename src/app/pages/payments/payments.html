@@ -57,14 +57,12 @@
           <p class="date-filter__label">Desde</p>
           <div class="date-filter__control">
             <ion-datetime-button datetime="payments-from-picker" />
-            <p class="date-filter__value" aria-hidden="true">{{ fromFilterLabel() }}</p>
           </div>
         </div>
         <div class="date-filter">
           <p class="date-filter__label">Hasta</p>
           <div class="date-filter__control">
             <ion-datetime-button datetime="payments-to-picker" />
-            <p class="date-filter__value" aria-hidden="true">{{ toFilterLabel() }}</p>
           </div>
         </div>
         <ion-button class="payment-filters__clear" fill="outline" size="small" (click)="clearFilters()">Limpiar</ion-button>
@@ -101,8 +99,13 @@
       @if (loading()) {
         <div class="payments-feedback" role="status">Cargando pagos…</div>
       } @else if (loadError()) {
-        <div class="payments-feedback payments-feedback--error" role="alert">{{ loadError() }}</div>
+        <div class="payments-feedback payments-feedback--error" role="alert">
+          <span>{{ loadError() }}</span>
+          <ion-button fill="outline" size="small" (click)="load()">Reintentar</ion-button>
+        </div>
       } @else {
+        @if (actionSuccess()) { <div class="payments-feedback" role="status" aria-live="polite">{{ actionSuccess() }}</div> }
+        @if (actionError()) { <div class="payments-feedback payments-feedback--error" role="alert">{{ actionError() }}</div> }
         @for (payment of payments(); track payment.id) {
           <ion-card class="payment-card">
             <ion-card-content class="payment-card__content">
@@ -122,16 +125,16 @@
               </div>
               @if (payment.status === paymentStatus.PENDING) {
                 <div class="payment-card__actions">
+                  <ion-button size="small" color="success" (click)="sendLink(payment)" [disabled]="!payment.checkoutUrl"><ion-icon slot="start" name="logo-whatsapp" aria-hidden="true" />WhatsApp</ion-button>
                   <ion-button fill="outline" size="small" (click)="copyLink(payment)" [disabled]="!payment.checkoutUrl"><ion-icon slot="start" name="copy-outline" aria-hidden="true" />Copiar</ion-button>
-                  <ion-button fill="outline" size="small" color="success" (click)="sendLink(payment)" [disabled]="!payment.checkoutUrl"><ion-icon slot="start" name="logo-whatsapp" aria-hidden="true" />WhatsApp</ion-button>
-                  <ion-button fill="clear" size="small" (click)="regenerate(payment)"><ion-icon slot="start" name="refresh-outline" aria-hidden="true" />Regenerar</ion-button>
+                  <ion-button fill="clear" size="small" (click)="regenerate(payment)" [disabled]="regeneratingPaymentId() !== null"><ion-icon slot="start" name="refresh-outline" aria-hidden="true" />{{ regeneratingPaymentId() === payment.id ? 'Regenerando…' : 'Regenerar' }}</ion-button>
                   <ion-button fill="clear" size="small" color="danger" (click)="cancel(payment)" [disabled]="cancellingPaymentId() !== null"><ion-icon slot="start" name="trash-outline" aria-hidden="true" />{{ cancellingPaymentId() === payment.id ? 'Cancelando…' : 'Cancelar' }}</ion-button>
                 </div>
               }
             </ion-card-content>
           </ion-card>
         } @empty {
-          <div class="payments-feedback" role="status">No hay pagos en este estado.</div>
+          <div class="payments-feedback" role="status">{{ hasFilters() ? 'No hay pagos que coincidan con los filtros.' : 'Todavía no hay pagos en este estado.' }}</div>
         }
 
         @if (totalPages() > 1) {

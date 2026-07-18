@@ -55,6 +55,14 @@
     </p>
   </div>
 
+  @if (templatesLoading()) {
+    <div class="template-empty-state" role="status" aria-live="polite"><p>Cargando plantillas…</p></div>
+  } @else if (templatesError()) {
+    <div class="template-empty-state" role="alert">
+      <p>{{ templatesError() }}</p>
+      <ion-button fill="outline" size="small" (click)="messageTemplateStore.load()">Reintentar</ion-button>
+    </div>
+  } @else {
   <div class="templates-list">
     @for (section of stageSections(); track section.value) {
       <ion-card class="template-card" [class.template-card--empty]="section.templates.length === 0">
@@ -109,12 +117,15 @@
       </ion-card>
     }
   </div>
+  }
+  @if (mutationError()) { <p class="form-feedback form-feedback--error" role="alert">{{ mutationError() }}</p> }
   </main>
 </ion-content>
 
 <ion-modal
   [isOpen]="isComposerModalOpen()"
-  (didDismiss)="closeComposerModal()"
+  [canDismiss]="canDismissComposer"
+  (didDismiss)="onComposerDidDismiss()"
   class="app-modal">
   <ng-template>
     <ion-header>
@@ -175,7 +186,9 @@
                 fill="outline"
                 autoGrow="true"
                 rows="7"
-                class="composer-form__field">
+                class="composer-form__field"
+                [attr.aria-invalid]="composerForm.controls.messageBody.touched && (composerForm.controls.messageBody.invalid || !validation().valid)"
+                aria-describedby="template-message-error">
               </ion-textarea>
 
               <div class="composer-meta">
@@ -189,24 +202,28 @@
                 composerForm.controls.messageBody.touched &&
                 composerForm.controls.messageBody.hasError('required')
               ) {
-                <p class="form-feedback form-feedback--error">
+                <p id="template-message-error" class="form-feedback form-feedback--error" role="alert">
                   El mensaje es obligatorio.
                 </p>
               } @else if (
                 composerForm.controls.messageBody.touched &&
                 composerForm.controls.messageBody.hasError('maxlength')
               ) {
-                <p class="form-feedback form-feedback--error">
+                <p id="template-message-error" class="form-feedback form-feedback--error" role="alert">
                   La plantilla no puede superar los 700 caracteres.
                 </p>
               } @else if (validation().malformedTokens.length > 0) {
-                <p class="form-feedback form-feedback--error">
+                <p id="template-message-error" class="form-feedback form-feedback--error" role="alert">
                   Revisa la sintaxis de los datos automáticos: {{ validation().malformedTokens.join(', ') }}.
                 </p>
               } @else if (validation().unknownVariables.length > 0) {
-                <p class="form-feedback form-feedback--error">
+                <p id="template-message-error" class="form-feedback form-feedback--error" role="alert">
                   Datos automáticos desconocidos: {{ validation().unknownVariables.join(', ') }}.
                 </p>
+              }
+
+              @if (mutationError()) {
+                <p class="form-feedback form-feedback--error" role="alert">{{ mutationError() }}</p>
               }
 
               <section class="message-preview" aria-live="polite">
@@ -231,9 +248,9 @@
                 <ion-button fill="outline" color="medium" type="button" (click)="closeComposerModal()">
                   Cancelar
                 </ion-button>
-                <ion-button type="submit" [disabled]="composerForm.invalid || !validation().valid">
+                <ion-button type="submit" [disabled]="composerForm.invalid || !validation().valid || templatesMutating()">
                   <ion-icon slot="start" [name]="isEditing() ? 'create-outline' : 'add-outline'" aria-hidden="true"></ion-icon>
-                  {{ isEditing() ? 'Guardar cambios' : 'Guardar plantilla' }}
+                  {{ templatesMutating() ? 'Guardando…' : isEditing() ? 'Guardar cambios' : 'Guardar plantilla' }}
                 </ion-button>
               </div>
             </form>

@@ -16,6 +16,7 @@
           class="app-shell__nav-link"
           [routerLink]="item.route"
           routerLinkActive="app-shell__nav-link--active"
+          ariaCurrentWhenActive="page"
           [routerLinkActiveOptions]="{ exact: true }"
           [attr.aria-label]="item.label"
           [title]="item.label">
@@ -36,6 +37,7 @@
         class="app-shell__bottom-link"
         [routerLink]="item.route"
         routerLinkActive="app-shell__bottom-link--active"
+        ariaCurrentWhenActive="page"
         [routerLinkActiveOptions]="{ exact: true }"
         [attr.aria-label]="item.label">
         <ion-icon [name]="item.icon" aria-hidden="true" />

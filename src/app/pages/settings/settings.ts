@@ -30,6 +30,7 @@ import {
   IonToggle,
   IonSpinner,
   IonContent,
+  AlertController,
 } from '@ionic/angular/standalone';
 import { AuthService } from '../../core/services/auth.service';
 import { WhatsAppApiService } from '../../core/services/whatsapp-api.service';
@@ -80,6 +81,8 @@ export class SettingsPage {
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
   private readonly storedSettings = this.loadStoredSettings();
+  private lastPersistedSettings: IUserSettingsStorage = this.storedSettings;
+  private readonly alertCtrl = inject(AlertController);
 
   readonly profileForm = this.fb.nonNullable.group({
     firstName: ['', [Validators.required, Validators.maxLength(60)]],
@@ -100,12 +103,18 @@ export class SettingsPage {
   readonly profileSavedMessage = signal<string | null>(null);
   readonly isProfileLoading = signal(false);
   readonly integrationSavedMessage = signal<string | null>(null);
+  readonly integrationErrorMessage = signal<string | null>(null);
+  readonly googleError = signal<string | null>(null);
+  readonly whatsappError = signal<string | null>(null);
+  readonly whatsappQrError = signal<string | null>(null);
+  readonly isSavingIntegration = signal(false);
   readonly googleStatus = signal<IGoogleIntegrationStatus>({
     configured: false,
     connected: false,
     scopes: [],
   });
   readonly isGoogleLoading = signal(false);
+  readonly activeSection = signal('profile-settings');
 
   // WhatsApp Signals
   readonly whatsappStatus = signal<MessagingStatus>('INITIALIZING');
@@ -172,6 +181,7 @@ export class SettingsPage {
   connectGoogle(): void {
     this.isGoogleLoading.set(true);
     this.integrationSavedMessage.set(null);
+    this.googleError.set(null);
     this.googleIntegrationApi
       .createAuthorizationUrl()
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -188,18 +198,30 @@ export class SettingsPage {
             globalThis.location.assign(authorizationUrl.toString());
           } catch {
             this.isGoogleLoading.set(false);
-            this.integrationSavedMessage.set('No se pudo iniciar la conexión segura con Google.');
+            this.googleError.set('No se pudo iniciar la conexión segura con Google.');
           }
         },
         error: () => {
           this.isGoogleLoading.set(false);
-          this.integrationSavedMessage.set('Google todavía no está configurado en el servidor.');
+          this.googleError.set('Google todavía no está configurado en el servidor.');
         },
       });
   }
 
-  disconnectGoogle(): void {
+  async disconnectGoogle(): Promise<void> {
+    const alert = await this.alertCtrl.create({
+      header: 'Desvincular Google',
+      message: 'Las citas dejarán de sincronizarse con Google Calendar. ¿Quieres continuar?',
+      buttons: [
+        { text: 'Cancelar', role: 'cancel' },
+        { text: 'Desvincular', role: 'destructive' },
+      ],
+    });
+    await alert.present();
+    const result = await alert.onDidDismiss();
+    if (result.role !== 'destructive') return;
     this.isGoogleLoading.set(true);
+    this.googleError.set(null);
     this.googleIntegrationApi
       .disconnect()
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -216,7 +238,7 @@ export class SettingsPage {
           this.isGoogleLoading.set(false);
         },
         error: () => {
-          this.integrationSavedMessage.set('No se pudo desvincular la cuenta Google.');
+          this.googleError.set('No se pudo desvincular la cuenta Google.');
           this.isGoogleLoading.set(false);
         },
       });
@@ -224,6 +246,7 @@ export class SettingsPage {
 
   loadGoogleStatus(): void {
     this.isGoogleLoading.set(true);
+    this.googleError.set(null);
     this.googleIntegrationApi
       .getStatus()
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -242,6 +265,7 @@ export class SettingsPage {
             scopes: [],
           });
           this.isGoogleLoading.set(false);
+          this.googleError.set('No se pudo consultar el estado de Google.');
         },
       });
   }
@@ -281,6 +305,8 @@ export class SettingsPage {
 
   checkWhatsappStatus() {
     this.isPollingQr.set(true);
+    this.whatsappError.set(null);
+    this.whatsappQrError.set(null);
     this.whatsappApi
       .getStatus()
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -294,13 +320,17 @@ export class SettingsPage {
             this.whatsappQrImage.set(null);
           }
         },
-        error: () => this.isPollingQr.set(false),
+        error: () => {
+          this.isPollingQr.set(false);
+          this.whatsappError.set('No se pudo consultar el estado de WhatsApp.');
+        },
       });
   }
 
   async scrollToSection(sectionId: string): Promise<void> {
     const target = document.getElementById(sectionId);
     if (!target) return;
+    this.activeSection.set(sectionId);
 
     const content = this.content();
     const scrollElement = await content.getScrollElement();
@@ -332,11 +362,15 @@ export class SettingsPage {
               this.whatsappQrImage.set(qrDataUrl);
             } catch (err) {
               console.error('Error rendering QR code', err);
+              this.whatsappQrError.set('No se pudo generar la imagen del código QR.');
             }
           }
           this.isPollingQr.set(false);
         },
-        error: () => this.isPollingQr.set(false),
+        error: () => {
+          this.isPollingQr.set(false);
+          this.whatsappQrError.set('No se pudo obtener el código QR.');
+        },
       });
   }
 
@@ -378,6 +412,7 @@ export class SettingsPage {
 
   selectIntegration(provider: IntegrationProvider): void {
     if (!VALID_INTEGRATION_PROVIDERS.has(provider)) return;
+    if (provider === IntegrationProvider.MICROSOFT) return;
     this.currentIntegration.set(provider);
     this.integrationSavedMessage.set(null);
   }
@@ -393,10 +428,11 @@ export class SettingsPage {
   updatePaymentSetting(event: Event) {
     const isEnabled = Boolean((event as CustomEvent<{ checked?: boolean }>).detail?.checked);
     this.enablePayments.set(isEnabled);
-    this.saveIntegration(); // Reuse to auto-save or call persistSettings
+    this.saveIntegration();
   }
 
   saveIntegration() {
+    if (this.isSavingIntegration()) return;
     const provider = this.currentIntegration();
     const savedAt = new Date().toLocaleTimeString('es-ES', {
       hour: '2-digit',
@@ -409,9 +445,9 @@ export class SettingsPage {
       enablePayments: this.enablePayments(),
     };
 
-    this.persistSettings(settingsObj);
-
-    // Call Backend
+    this.isSavingIntegration.set(true);
+    this.integrationSavedMessage.set(null);
+    this.integrationErrorMessage.set(null);
     this.userApi
       .updateMySettings({
         integrationProvider: settingsObj.integrationProvider,
@@ -420,8 +456,12 @@ export class SettingsPage {
         sendDailyDigest: settingsObj.integrationSettings.sendDailyDigest,
         paymentEnabled: settingsObj.enablePayments,
       })
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
+          this.persistSettings(settingsObj);
+          this.lastPersistedSettings = settingsObj;
+          this.isSavingIntegration.set(false);
           if (provider === IntegrationProvider.NONE) {
             this.integrationSavedMessage.set(`Integración desactivada a las ${savedAt}.`);
             return;
@@ -432,8 +472,12 @@ export class SettingsPage {
             `Configuración de ${providerLabel} y pagos guardada a las ${savedAt}.`,
           );
         },
-        error: (err) => {
-          console.error('Failed to sync settings with backend', err);
+        error: () => {
+          this.currentIntegration.set(this.lastPersistedSettings.integrationProvider);
+          this.integrationSettings.set(this.lastPersistedSettings.integrationSettings);
+          this.enablePayments.set(this.lastPersistedSettings.enablePayments);
+          this.isSavingIntegration.set(false);
+          this.integrationErrorMessage.set('No se pudieron guardar los ajustes. Se restauró la última configuración guardada.');
         },
       });
   }
@@ -457,7 +501,9 @@ export class SettingsPage {
       const parsed = JSON.parse(raw) as Partial<IUserSettingsStorage>;
       const integrationProvider = parsed.integrationProvider;
       const validProvider =
-        integrationProvider && VALID_INTEGRATION_PROVIDERS.has(integrationProvider)
+        integrationProvider &&
+        integrationProvider !== IntegrationProvider.MICROSOFT &&
+        VALID_INTEGRATION_PROVIDERS.has(integrationProvider)
           ? integrationProvider
           : IntegrationProvider.NONE;
 

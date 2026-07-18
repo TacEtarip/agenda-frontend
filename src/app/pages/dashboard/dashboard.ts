@@ -31,6 +31,7 @@ import {
   IonSelect,
   IonSelectOption,
   IonSpinner,
+  AlertController,
 } from '@ionic/angular/standalone';
 import { AuthService } from '../../core/services/auth.service';
 import { ClientApiService } from '../../core/services/client-api.service';
@@ -73,6 +74,7 @@ export class DashboardPage {
   private readonly destroyRef = inject(DestroyRef);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly alertCtrl = inject(AlertController);
 
   readonly userName = computed(() => {
     const user = this.authService.currentUser();
@@ -285,6 +287,31 @@ export class DashboardPage {
     if (resetForm) {
       this.resetAddClientForm();
     }
+  }
+
+  readonly canDismissAddClient = async (): Promise<boolean> => {
+    if (this.isCreatingClient()) return false;
+    if (!this.addClientForm.dirty) return true;
+
+    const alert = await this.alertCtrl.create({
+      header: 'Descartar cliente',
+      message: 'Hay datos sin guardar. ¿Quieres descartarlos?',
+      buttons: [
+        { text: 'Seguir editando', role: 'cancel' },
+        { text: 'Descartar', role: 'destructive' },
+      ],
+    });
+    await alert.present();
+    const result = await alert.onDidDismiss();
+    return result.role === 'destructive';
+  };
+
+  async requestCloseAddClientModal(): Promise<void> {
+    if (await this.canDismissAddClient()) this.closeAddClientModal();
+  }
+
+  onAddClientModalDidDismiss(): void {
+    this.closeAddClientModal();
   }
 
   createClient() {

@@ -30,6 +30,7 @@ import { ProductSort } from './enums/product-sort.enum';
 import { VALID_PRODUCT_SORTS } from './constants/product-sort.constants';
 import { ProductType } from '../../enums/product-type.enum';
 import { UserMenuComponent } from '../../shared/components/user-menu/user-menu';
+import { ActivatedRoute, Router } from '@angular/router';
 
 @Component({
   selector: 'app-products',
@@ -54,7 +55,9 @@ import { UserMenuComponent } from '../../shared/components/user-menu/user-menu';
 export class ProductsPage {
   private readonly fb = inject(FormBuilder);
   private readonly alertCtrl = inject(AlertController);
-  private readonly salesCatalogStore = inject(SalesCatalogStore);
+  readonly salesCatalogStore = inject(SalesCatalogStore);
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
   private readonly priceFormatter = new Intl.NumberFormat('es-PE', {
     style: 'currency',
     currency: 'PEN',
@@ -62,6 +65,10 @@ export class ProductsPage {
   });
 
   readonly products = this.salesCatalogStore.products;
+  readonly productsLoading = this.salesCatalogStore.productsLoading;
+  readonly productsMutating = this.salesCatalogStore.productsMutating;
+  readonly productsError = this.salesCatalogStore.productsError;
+  readonly mutationError = signal<string | null>(null);
 
   readonly isCreateModalOpen = signal(false);
   readonly productDisplayLimit = signal(20);
@@ -130,6 +137,10 @@ export class ProductsPage {
       swapVerticalOutline,
       trashOutline,
     });
+    const query = this.route.snapshot.queryParamMap;
+    this.searchQuery.set(query.get('q') ?? '');
+    const sort = query.get('sort') as ProductSort | null;
+    if (sort && VALID_PRODUCT_SORTS.has(sort)) this.sortMode.set(sort);
   }
 
   ionViewWillEnter(): void {
@@ -139,6 +150,7 @@ export class ProductsPage {
   onSearch(event: CustomEvent) {
     this.searchQuery.set(event.detail.value ?? '');
     this.productDisplayLimit.set(20);
+    this.syncQueryParams();
   }
 
   onSortChange(event: Event) {
@@ -147,6 +159,7 @@ export class ProductsPage {
     if (VALID_PRODUCT_SORTS.has(nextSort)) {
       this.sortMode.set(nextSort);
       this.productDisplayLimit.set(20);
+      this.syncQueryParams();
     }
   }
 
@@ -190,11 +203,24 @@ export class ProductsPage {
     this.isCreateModalOpen.set(true);
   }
 
-  closeCreateProductModal(resetForm = true) {
+  async closeCreateProductModal(resetForm = true): Promise<void> {
+    if (this.productsMutating()) return;
+    if (this.createProductForm.dirty && !(await this.confirmDiscard())) return;
     this.isCreateModalOpen.set(false);
     if (resetForm) {
       this.resetCreateProductForm();
     }
+  }
+
+  readonly canDismissCreateProduct = async (): Promise<boolean> => {
+    if (this.productsMutating()) return false;
+    return !this.createProductForm.dirty || this.confirmDiscard();
+  };
+
+  onCreateProductModalDidDismiss(): void {
+    this.isCreateModalOpen.set(false);
+    this.resetCreateProductForm();
+    this.mutationError.set(null);
   }
 
   createProduct() {
@@ -217,14 +243,19 @@ export class ProductsPage {
       return;
     }
 
+    this.mutationError.set(null);
     this.salesCatalogStore.addProduct({
       name: trimmedName,
       description: description.trim() || undefined,
       price: parsedPrice,
       type,
+    }).subscribe({
+      next: () => {
+        this.createProductForm.markAsPristine();
+        this.isCreateModalOpen.set(false);
+      },
+      error: () => this.mutationError.set('No se pudo guardar el producto. Conservamos tu borrador para que puedas reintentar.'),
     });
-
-    this.closeCreateProductModal();
   }
 
   resetCreateProductForm() {
@@ -271,12 +302,16 @@ export class ProductsPage {
             const parsedPrice = this.parsePrice(data.price);
             if (parsedPrice === null) return false;
 
+            this.mutationError.set(null);
             this.salesCatalogStore.updateProduct(product.id, {
               name,
               description: data.description?.trim() || undefined,
               price: parsedPrice ?? undefined,
+            }).subscribe({
+              next: () => void alert.dismiss(),
+              error: () => this.mutationError.set('No se pudo actualizar el producto. Inténtalo nuevamente.'),
             });
-            return true;
+            return false;
           },
         },
       ],
@@ -295,7 +330,9 @@ export class ProductsPage {
           text: 'Eliminar',
           role: 'destructive',
           handler: () => {
-            this.salesCatalogStore.deleteProduct(product.id);
+            this.salesCatalogStore.deleteProduct(product.id).subscribe({
+              error: () => this.mutationError.set('No se pudo eliminar el producto. Inténtalo nuevamente.'),
+            });
           },
         },
       ],
@@ -307,7 +344,35 @@ export class ProductsPage {
   toggleProductType(product: IProduct): void {
     this.salesCatalogStore.updateProduct(product.id, {
       type: product.type === ProductType.SERVICE ? ProductType.PRODUCT : ProductType.SERVICE,
+    }).subscribe({
+      error: () => this.mutationError.set('No se pudo cambiar el tipo de producto. Inténtalo nuevamente.'),
     });
+  }
+
+  private syncQueryParams(): void {
+    void this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: {
+        q: this.searchQuery().trim() || null,
+        sort: this.sortMode() === ProductSort.RECENT ? null : this.sortMode(),
+      },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
+  }
+
+  private async confirmDiscard(): Promise<boolean> {
+    const alert = await this.alertCtrl.create({
+      header: 'Descartar cambios',
+      message: 'Hay información sin guardar. ¿Quieres descartarla?',
+      buttons: [
+        { text: 'Seguir editando', role: 'cancel' },
+        { text: 'Descartar', role: 'destructive' },
+      ],
+    });
+    await alert.present();
+    const result = await alert.onDidDismiss();
+    return result.role === 'destructive';
   }
 
   private parsePrice(rawPrice?: string): number | null | undefined {

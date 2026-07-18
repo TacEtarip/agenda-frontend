@@ -125,7 +125,12 @@
   min-width: 0;
   height: 100%;
   overflow: hidden;
-  outline: none;
+  outline: 0 solid transparent;
+}
+
+.app-shell__viewport:focus-visible {
+  outline: 3px solid var(--app-color-focus);
+  outline-offset: -3px;
 }
 
 .app-shell__bottom-nav {
@@ -218,7 +223,7 @@
     padding-inline: 0.1rem;
   }
   .app-shell__bottom-link span {
-    font-size: 0.62rem;
+    font-size: 0.68rem;
   }
 }
 

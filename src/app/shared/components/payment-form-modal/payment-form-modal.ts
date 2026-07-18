@@ -146,6 +146,7 @@ export class PaymentFormModal {
   }
 
   submit(): void {
+    if (this.submitting()) return;
     const amount = Number(this.amount().replace(',', '.'));
     if (!Number.isFinite(amount) || amount <= 0) {
       this.error.set('Ingresa un monto mayor a cero.');
@@ -172,8 +173,7 @@ export class PaymentFormModal {
       next: (payment) => {
         this.submitting.set(false);
         this.paymentCompleted.emit(payment);
-        if (this.mode() === 'LINK') this.generatedPayment.set(payment);
-        else this.closed.emit();
+        this.generatedPayment.set(payment);
       },
       error: (response) => {
         this.submitting.set(false);
@@ -185,8 +185,19 @@ export class PaymentFormModal {
   async copyLink(): Promise<void> {
     const url = this.generatedPayment()?.checkoutUrl;
     if (!url) return;
-    await navigator.clipboard.writeText(url);
-    this.copied.set(true);
+    try {
+      await navigator.clipboard.writeText(url);
+      this.copied.set(true);
+      this.error.set(null);
+    } catch {
+      this.error.set('No se pudo copiar el enlace. Selecciónalo y cópialo manualmente.');
+    }
+  }
+
+  readonly canDismiss = (): boolean => !this.submitting();
+
+  requestClose(): void {
+    if (!this.submitting()) this.closed.emit();
   }
 
   sendWhatsApp(): void {

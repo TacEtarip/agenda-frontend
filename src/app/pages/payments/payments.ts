@@ -92,6 +92,10 @@ export class PaymentsPage {
   readonly loading = this.paymentsStore.loading;
   readonly loadError = this.paymentsStore.error;
   readonly cancellingPaymentId = signal<string | null>(null);
+  readonly regeneratingPaymentId = signal<string | null>(null);
+  readonly actionSuccess = signal<string | null>(null);
+  readonly actionError = signal<string | null>(null);
+  readonly hasFilters = computed(() => Boolean(this.clientFilter() || this.sourceFilter() || this.fromFilter() || this.toFilter()));
   readonly pendingCount = computed(() => this.viewSegment() === PaymentStatus.PENDING ? this.total() : 0);
   readonly totalPages = computed(() => Math.max(1, Math.ceil(this.total() / this.pageSize)));
   readonly paymentStatus = PaymentStatus;
@@ -202,7 +206,15 @@ export class PaymentsPage {
   }
 
   async copyLink(payment: IPayment): Promise<void> {
-    if (payment.checkoutUrl) await navigator.clipboard.writeText(payment.checkoutUrl);
+    if (!payment.checkoutUrl) return;
+    try {
+      await navigator.clipboard.writeText(payment.checkoutUrl);
+      this.actionError.set(null);
+      this.actionSuccess.set('Enlace copiado al portapapeles.');
+    } catch {
+      this.actionSuccess.set(null);
+      this.actionError.set('No se pudo copiar el enlace.');
+    }
   }
 
   sendLink(payment: IPayment): void {
@@ -210,6 +222,7 @@ export class PaymentsPage {
     if (!client?.phone || !payment.checkoutUrl) return;
     const message = `Hola ${client.firstName}. Te compartimos el enlace de pago por ${payment.description} (${payment.amount.toFixed(2)} PEN): ${payment.checkoutUrl}`;
     window.open(`https://wa.me/${client.phone.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`, '_blank', 'noopener');
+    this.actionSuccess.set('Se abrió WhatsApp con el enlace listo para enviar.');
   }
 
   async cancel(payment: IPayment): Promise<void> {
@@ -223,23 +236,43 @@ export class PaymentsPage {
   }
 
   private performPaymentCancellation(payment: IPayment): void {
+    this.actionError.set(null);
+    this.actionSuccess.set(null);
     this.cancellingPaymentId.set(payment.id);
     this.paymentsStore.cancel(payment.id).subscribe({
       next: () => {
         this.cancellingPaymentId.set(null);
+        this.actionSuccess.set('Cobro cancelado.');
         this.load();
       },
-      error: () => this.cancellingPaymentId.set(null),
+      error: () => {
+        this.cancellingPaymentId.set(null);
+        this.actionError.set('No se pudo cancelar el cobro. Inténtalo nuevamente.');
+      },
     });
   }
 
   regenerate(payment: IPayment): void {
+    if (this.regeneratingPaymentId()) return;
+    this.regeneratingPaymentId.set(payment.id);
+    this.actionError.set(null);
+    this.actionSuccess.set(null);
     this.paymentsStore.createLink({
       sourceType: payment.sourceType,
       sourceId: payment.sourceId,
       amount: payment.amount,
       description: payment.description,
-    }).subscribe({ next: () => this.load() });
+    }).subscribe({
+      next: () => {
+        this.regeneratingPaymentId.set(null);
+        this.actionSuccess.set('Se generó un nuevo enlace de pago.');
+        this.load();
+      },
+      error: () => {
+        this.regeneratingPaymentId.set(null);
+        this.actionError.set('No se pudo regenerar el enlace. Inténtalo nuevamente.');
+      },
+    });
   }
 
   private formatFilterDate(value: string): string {
@@ -249,7 +282,7 @@ export class PaymentsPage {
     return date.toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' });
   }
 
-  private load(): void {
+  load(): void {
     this.paymentsStore.load({
       status: this.viewSegment(),
       clientId: this.clientFilter() || undefined,

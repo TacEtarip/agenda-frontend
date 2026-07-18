@@ -17,6 +17,22 @@
 
 <ion-content class="client-detail-content">
   <main class="client-detail-main">
+    @if (clientLoading()) {
+      <section class="empty-state" role="status" aria-live="polite"><h1>Cargando cliente…</h1></section>
+    } @else if (clientNotFound()) {
+      <section class="empty-state" role="alert">
+        <h1>Cliente no encontrado</h1>
+        <p>El registro no existe o ya no está disponible.</p>
+        <ion-button routerLink="/dashboard">Volver a clientes</ion-button>
+      </section>
+    } @else if (clientLoadError()) {
+      <section class="empty-state" role="alert">
+        <h1>No pudimos cargar el cliente</h1>
+        <p>{{ clientLoadError() }}</p>
+        <ion-button (click)="loadClient()">Reintentar</ion-button>
+        <ion-button fill="outline" routerLink="/dashboard">Volver</ion-button>
+      </section>
+    } @else {
     <!-- Client Hero Card -->
     <ion-card class="hero-card">
       <ion-card-content class="hero-card__content">
@@ -28,7 +44,7 @@
 
           <!-- Info -->
           <div class="client-hero__info">
-            <h2 class="client-hero__name">{{ client().firstName }} {{ client().lastName }}</h2>
+            <h1 class="client-hero__name">{{ client().firstName }} {{ client().lastName }}</h1>
             <p class="client-hero__email">{{ client().email }}</p>
             <p class="client-hero__phone">{{ client().phone }}</p>
             <p class="client-hero__since">Cliente desde {{ client().createdAt }}</p>
@@ -112,6 +128,7 @@
     @defer (when isClientEditModalOpen()) {
       <ion-modal
         [isOpen]="isClientEditModalOpen()"
+        [canDismiss]="canDismissClientEdit"
         (didDismiss)="closeEditClientModal()"
         class="app-modal"
       >
@@ -120,7 +137,7 @@
             <ion-toolbar>
               <ion-title>Editar cliente</ion-title>
               <ion-buttons slot="end">
-                <ion-button aria-label="Cerrar edición de cliente" (click)="closeEditClientModal()">
+                <ion-button aria-label="Cerrar edición de cliente" (click)="requestCloseEditClientModal()">
                   <ion-icon slot="icon-only" name="close-outline" aria-hidden="true"></ion-icon>
                 </ion-button>
               </ion-buttons>
@@ -183,7 +200,7 @@
                     }
 
                     <div class="app-modal-actions">
-                      <ion-button fill="outline" color="medium" (click)="closeEditClientModal()">
+                      <ion-button fill="outline" color="medium" (click)="requestCloseEditClientModal()">
                         Cancelar
                       </ion-button>
                       <ion-button [disabled]="isSavingClient()" (click)="saveClientFromModal()">
@@ -223,7 +240,7 @@
         <ion-segment-button value="attachments">
           <ion-label>
             Archivos
-            <ion-badge color="primary" class="segment-badge">{{ attachments().length }}</ion-badge>
+            <span class="segment-coming-soon">Próximamente</span>
           </ion-label>
         </ion-segment-button>
         <ion-segment-button value="products">
@@ -530,6 +547,7 @@
     @defer (when isAppointmentModalOpen()) {
       <ion-modal
         [isOpen]="isAppointmentModalOpen()"
+        [canDismiss]="canDismissAppointment"
         (didDismiss)="closeAppointmentModal()"
         class="app-modal"
       >
@@ -538,7 +556,7 @@
             <ion-toolbar>
               <ion-title>{{ editingAppointmentId() ? 'Editar cita' : 'Programar cita' }}</ion-title>
               <ion-buttons slot="end">
-                <ion-button (click)="closeAppointmentModal()" aria-label="Cerrar modal">
+                <ion-button (click)="requestCloseAppointmentModal()" aria-label="Cerrar modal">
                   <ion-icon slot="icon-only" name="close-outline" aria-hidden="true"></ion-icon>
                 </ion-button>
               </ion-buttons>
@@ -577,7 +595,9 @@
                       autoGrow="true"
                       rows="3"
                       class="appointment-modal__field appointment-modal__notes"
-                      placeholder="Descripcion (opcional)"
+                      label="Descripción (opcional)"
+                      labelPlacement="floating"
+                      fill="outline"
                       [value]="appointmentDraft().description"
                       (ionInput)="onAppointmentDraftTextChange('description', $event)"
                     >
@@ -688,7 +708,7 @@
                     }
 
                     <div class="app-modal-actions">
-                      <ion-button fill="outline" color="medium" (click)="closeAppointmentModal()">
+                      <ion-button fill="outline" color="medium" (click)="requestCloseAppointmentModal()">
                         Cancelar
                       </ion-button>
                       <ion-button
@@ -708,13 +728,13 @@
     }
 
     @defer (when isNoteModalOpen()) {
-      <ion-modal [isOpen]="isNoteModalOpen()" (didDismiss)="closeNoteModal()" class="app-modal">
+      <ion-modal [isOpen]="isNoteModalOpen()" [canDismiss]="canDismissNote" (didDismiss)="closeNoteModal()" class="app-modal">
         <ng-template>
           <ion-header>
             <ion-toolbar>
               <ion-title>{{ editingNoteId() ? 'Editar nota' : 'Agregar nota' }}</ion-title>
               <ion-buttons slot="end">
-                <ion-button (click)="closeNoteModal()" aria-label="Cerrar modal">
+                <ion-button (click)="requestCloseNoteModal()" aria-label="Cerrar modal">
                   <ion-icon slot="icon-only" name="close-outline" aria-hidden="true"></ion-icon>
                 </ion-button>
               </ion-buttons>
@@ -757,7 +777,7 @@
                     }
 
                     <div class="app-modal-actions">
-                      <ion-button fill="outline" color="medium" (click)="closeNoteModal()">
+                      <ion-button fill="outline" color="medium" (click)="requestCloseNoteModal()">
                         Cancelar
                       </ion-button>
                       <ion-button (click)="saveNoteFromModal()">
@@ -774,7 +794,7 @@
       </ion-modal>
     }
 
-    @defer (when isAttachmentModalOpen()) {
+    @if (false) {
       <ion-modal
         [isOpen]="isAttachmentModalOpen()"
         (didDismiss)="closeAttachmentModal()"
@@ -863,43 +883,11 @@
 
     <!-- ── Attachments Tab ── -->
     @if (activeSegment() === 'attachments') {
-      <div class="tab-context-action">
-        <ion-button
-          expand="block"
-          fill="outline"
-          class="contextual-create-btn"
-          (click)="openCreateAttachmentModal()"
-        >
-          <ion-icon slot="start" name="add-outline" aria-hidden="true"></ion-icon>
-          Agregar archivo
-        </ion-button>
-      </div>
-
-      <ion-list lines="inset" class="attachments-list">
-        @for (file of attachments(); track file.id) {
-          <ion-item>
-            <div slot="start" class="file-icon">
-              <ion-icon [name]="file.icon" class="file-icon__inner" aria-hidden="true"></ion-icon>
-            </div>
-            <ion-label>
-              <h3 class="file-name">{{ file.fileName }}</h3>
-              <p class="file-meta">{{ file.fileType }} · {{ file.fileSize }}</p>
-              <p class="file-date">{{ file.uploadedAt }}</p>
-            </ion-label>
-            <ion-button slot="end" fill="clear" color="primary" aria-label="Descargar archivo">
-              <ion-icon
-                slot="icon-only"
-                name="cloud-download-outline"
-                aria-hidden="true"
-              ></ion-icon>
-            </ion-button>
-          </ion-item>
-        } @empty {
-          <ion-item>
-            <ion-label class="empty-label">No hay archivos cargados</ion-label>
-          </ion-item>
-        }
-      </ion-list>
+      <section class="empty-state attachments-coming-soon" role="status">
+        <ion-icon name="document-outline" aria-hidden="true"></ion-icon>
+        <h2>Archivos estará disponible próximamente</h2>
+        <p>La carga, persistencia y descarga de documentos aún no están conectadas. No se guardará ningún archivo desde esta pantalla.</p>
+      </section>
     }
 
     <!-- ── Products Tab ── -->
@@ -990,7 +978,9 @@
               autoGrow="true"
               rows="3"
               class="product-linker-notes"
-              placeholder="Notas de seguimiento (opcional)…"
+              label="Notas de seguimiento (opcional)"
+              labelPlacement="floating"
+              fill="outline"
               (ionInput)="onDraftProductNotesChange($event)"
             >
             </ion-textarea>
@@ -1251,6 +1241,11 @@
               </ion-card-header>
               <ion-card-content class="template-card__body">
                 <p class="template-message">{{ personalizeTemplateMessage(tpl) }}</p>
+                @if (unresolvedTemplateTokens(tpl).length > 0) {
+                  <p class="form-feedback form-feedback--error" role="alert">
+                    Completa el contexto antes de enviar: {{ unresolvedTemplateTokens(tpl).join(', ') }}.
+                  </p>
+                }
                 <div class="template-footer appt-actions">
                   <ion-note class="template-date"
                     >Actualizado {{ tpl.updatedAt | formatDate }}</ion-note
@@ -1261,6 +1256,7 @@
                     size="small"
                     class="template-wa-btn"
                     [href]="getTemplateWhatsAppUrl(tpl)"
+                    [disabled]="unresolvedTemplateTokens(tpl).length > 0"
                     target="_blank"
                     rel="noopener noreferrer"
                   >
@@ -1344,6 +1340,7 @@
           }
         }
       </div>
+    }
     }
   </main>
 
