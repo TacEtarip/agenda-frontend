@@ -67,3 +67,8 @@ Thumbs.db
 /.angular-serve.*.log
 client.err.log
 client.out.log
+
+# Playwright
+/test-results/
+/playwright-report/
+/playwright/.cache/

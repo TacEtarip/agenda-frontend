@@ -4,7 +4,7 @@
   "cli": {
     "packageManager": "npm",
     "analytics": "64218712-5abf-4ee5-b0ce-33af8a5b45f0",
-    "schematicCollections": ["@ionic/angular-toolkit"]
+    "schematicCollections": ["@ionic/angular-toolkit", "playwright-ng-schematics"]
   },
   "newProjectRoot": "projects",
   "projects": {
@@ -138,6 +138,17 @@
           "configurations": {
             "production": {
               "browserTarget": "frontend:build:production"
+            }
+          }
+        },
+        "e2e": {
+          "builder": "playwright-ng-schematics:playwright",
+          "options": {
+            "devServerTarget": "frontend:serve"
+          },
+          "configurations": {
+            "production": {
+              "devServerTarget": "frontend:serve:production"
             }
           }
         }
