@@ -11,10 +11,7 @@ class TestPage {}
 
 const token = (payload: object): string => {
   const encode = (value: object) =>
-    btoa(JSON.stringify(value))
-      .replace(/=/g, '')
-      .replace(/\+/g, '-')
-      .replace(/\//g, '_');
+    btoa(JSON.stringify(value)).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
   return `${encode({ alg: 'none', typ: 'JWT' })}.${encode(payload)}.signature`;
 };
 
@@ -43,7 +40,12 @@ describe('authentication routing', () => {
   it('redirects the root and login to dashboard with a valid session', async () => {
     localStorage.setItem(
       TOKEN_KEY,
-      token({ sub: 'user-1', email: 'user@test.dev', exp: 4_102_444_800 }),
+      token({
+        sub: 'user-1',
+        companyId: 'company-1',
+        email: 'user@test.dev',
+        exp: 4_102_444_800,
+      }),
     );
     const harness = await RouterTestingHarness.create('/');
     expect(TestBed.inject(Router).url).toBe('/dashboard');
@@ -71,17 +73,20 @@ describe('authentication routing', () => {
   it('reconstructs a coherent user from the valid JWT', async () => {
     localStorage.setItem(
       TOKEN_KEY,
-      token({ sub: 'jwt-user', email: 'jwt@test.dev', exp: 4_102_444_800 }),
+      token({
+        sub: 'jwt-user',
+        companyId: 'company-1',
+        email: 'jwt@test.dev',
+        exp: 4_102_444_800,
+      }),
     );
-    localStorage.setItem(
-      USER_KEY,
-      JSON.stringify({ userId: 'stale-user', email: 'old@test.dev' }),
-    );
+    localStorage.setItem(USER_KEY, JSON.stringify({ userId: 'stale-user', email: 'old@test.dev' }));
 
     await RouterTestingHarness.create('/dashboard');
 
     expect(JSON.parse(localStorage.getItem(USER_KEY)!)).toEqual({
       userId: 'jwt-user',
+      companyId: 'company-1',
       email: 'jwt@test.dev',
     });
   });

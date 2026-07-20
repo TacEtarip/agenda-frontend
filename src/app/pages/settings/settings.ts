@@ -48,6 +48,7 @@ import { UserApiService } from '../../core/services/user-api.service';
 import { UserMenuComponent } from '../../shared/components/user-menu/user-menu';
 import { GoogleIntegrationApiService } from '../../core/services/google-integration-api.service';
 import { IGoogleIntegrationStatus } from '../../core/interfaces/google-integration-status.interface';
+import { PaymentStore } from '../../shared/stores/payment.store';
 
 @Component({
   selector: 'app-settings',
@@ -77,6 +78,7 @@ export class SettingsPage {
   private readonly whatsappApi = inject(WhatsAppApiService);
   private readonly userApi = inject(UserApiService);
   private readonly googleIntegrationApi = inject(GoogleIntegrationApiService);
+  private readonly payments = inject(PaymentStore);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
@@ -90,6 +92,17 @@ export class SettingsPage {
     email: ['', [Validators.required, Validators.email]],
     phone: [''],
   });
+
+  readonly yapeForm = this.fb.nonNullable.group({
+    enabled: [false],
+    phone: ['', [Validators.pattern(/^9\d{8}$/)]],
+    accountName: ['', [Validators.maxLength(120)]],
+  });
+  readonly yapeQrImage = signal<string | null>(null);
+  readonly isYapeLoading = signal(false);
+  readonly isYapeSaving = signal(false);
+  readonly yapeMessage = signal<string | null>(null);
+  readonly yapeError = signal<string | null>(null);
 
   readonly currentIntegration = signal<IntegrationProvider>(
     this.storedSettings.integrationProvider,
@@ -176,6 +189,107 @@ export class SettingsPage {
     this.loadProfile();
     this.handleGoogleCallbackResult();
     this.loadGoogleStatus();
+    this.loadYapeConfiguration();
+  }
+
+  loadYapeConfiguration(): void {
+    this.isYapeLoading.set(true);
+    this.yapeError.set(null);
+    this.payments
+      .getYapeConfiguration()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (configuration) => {
+          this.yapeForm.reset(
+            {
+              enabled: configuration.enabled,
+              phone: configuration.phone ?? '',
+              accountName: configuration.accountName ?? '',
+            },
+            { emitEvent: false },
+          );
+          this.yapeQrImage.set(configuration.qrImageDataUrl ?? null);
+          this.yapeForm.markAsPristine();
+          this.isYapeLoading.set(false);
+        },
+        error: () => {
+          this.isYapeLoading.set(false);
+          this.yapeError.set('No se pudo cargar la configuración de Yape.');
+        },
+      });
+  }
+
+  selectYapeQr(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    input.value = '';
+    if (!file) return;
+    if (!['image/png', 'image/jpeg', 'image/webp'].includes(file.type)) {
+      this.yapeError.set('Selecciona una imagen PNG, JPG o WebP.');
+      return;
+    }
+    if (file.size > 700_000) {
+      this.yapeError.set('La imagen del QR debe pesar menos de 700 KB.');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      const value = typeof reader.result === 'string' ? reader.result : null;
+      this.yapeQrImage.set(value);
+      this.yapeForm.markAsDirty();
+      this.yapeError.set(null);
+    };
+    reader.onerror = () => this.yapeError.set('No se pudo leer la imagen seleccionada.');
+    reader.readAsDataURL(file);
+  }
+
+  removeYapeQr(): void {
+    this.yapeQrImage.set(null);
+    this.yapeForm.markAsDirty();
+  }
+
+  saveYapeConfiguration(): void {
+    const value = this.yapeForm.getRawValue();
+    const phone = value.phone.trim();
+    const accountName = value.accountName.trim();
+    if (value.enabled && (!phone || !accountName)) {
+      this.yapeError.set('Ingresa el número y el nombre del titular para habilitar Yape.');
+      this.yapeForm.markAllAsTouched();
+      return;
+    }
+    if (this.yapeForm.invalid || this.isYapeSaving()) {
+      this.yapeForm.markAllAsTouched();
+      return;
+    }
+    this.isYapeSaving.set(true);
+    this.yapeMessage.set(null);
+    this.yapeError.set(null);
+    this.payments
+      .updateYapeConfiguration({
+        enabled: value.enabled,
+        phone: phone || undefined,
+        accountName: accountName || undefined,
+        qrImageDataUrl: this.yapeQrImage() ?? undefined,
+      })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (configuration) => {
+          this.isYapeSaving.set(false);
+          this.yapeQrImage.set(configuration.qrImageDataUrl ?? null);
+          this.yapeForm.markAsPristine();
+          this.yapeMessage.set(
+            configuration.enabled
+              ? 'Yape quedó listo para recibir solicitudes de pago.'
+              : 'El cobro directo por Yape quedó desactivado.',
+          );
+        },
+        error: (response) => {
+          this.isYapeSaving.set(false);
+          this.yapeError.set(
+            response?.error?.message || 'No se pudo guardar la configuración de Yape.',
+          );
+        },
+      });
   }
 
   connectGoogle(): void {
@@ -477,7 +591,9 @@ export class SettingsPage {
           this.integrationSettings.set(this.lastPersistedSettings.integrationSettings);
           this.enablePayments.set(this.lastPersistedSettings.enablePayments);
           this.isSavingIntegration.set(false);
-          this.integrationErrorMessage.set('No se pudieron guardar los ajustes. Se restauró la última configuración guardada.');
+          this.integrationErrorMessage.set(
+            'No se pudieron guardar los ajustes. Se restauró la última configuración guardada.',
+          );
         },
       });
   }

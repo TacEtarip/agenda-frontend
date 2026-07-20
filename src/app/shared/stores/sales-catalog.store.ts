@@ -6,11 +6,13 @@ import { ProductType } from '../../enums/product-type.enum';
 import { IClientProduct } from '../../interfaces/client-product.interface';
 import { IProduct } from '../../interfaces/product.interface';
 import { ICreateClientProductInput } from './interfaces/create-client-product-input.interface';
+import { TenantSessionStateService } from '../../core/services/tenant-session-state.service';
 
 @Injectable({ providedIn: 'root' })
 export class SalesCatalogStore {
   private readonly productApi = inject(ProductApiService);
   private readonly clientProductApi = inject(ClientProductApiService);
+  private readonly tenantSessionState = inject(TenantSessionStateService);
   private productsLoadRequestId = 0;
   private clientProductsLoadRequestId = 0;
 
@@ -31,6 +33,10 @@ export class SalesCatalogStore {
   readonly clientProductsMutating = this.clientProductsMutatingState.asReadonly();
   readonly productsError = this.productsErrorState.asReadonly();
   readonly clientProductsError = this.clientProductsErrorState.asReadonly();
+
+  constructor() {
+    this.tenantSessionState.registerReset(() => this.reset());
+  }
 
   loadProducts(): void {
     const requestId = ++this.productsLoadRequestId;
@@ -62,17 +68,29 @@ export class SalesCatalogStore {
       },
       error: () => {
         if (requestId !== this.clientProductsLoadRequestId) return;
-        this.clientProductsErrorState.set('No se pudo cargar la relación de productos del cliente.');
+        this.clientProductsErrorState.set(
+          'No se pudo cargar la relación de productos del cliente.',
+        );
         this.clientProductsLoadingState.set(false);
       },
     });
   }
 
-  addProduct(input: { name: string; description?: string; price?: number; type?: ProductType }): Observable<IProduct> {
+  addProduct(input: {
+    name: string;
+    description?: string;
+    price?: number;
+    type?: ProductType;
+  }): Observable<IProduct> {
+    const generation = this.tenantSessionState.generation;
     this.productsErrorState.set(null);
     this.productsMutatingState.set(true);
     return this.productApi.create(input).pipe(
-      tap((product) => this.productsState.update((products) => [product, ...products])),
+      tap((product) => {
+        if (this.tenantSessionState.isCurrent(generation)) {
+          this.productsState.update((products) => [product, ...products]);
+        }
+      }),
       catchError((error: unknown) => {
         this.productsErrorState.set('No se pudo crear el producto.');
         return throwError(() => error);
@@ -82,10 +100,17 @@ export class SalesCatalogStore {
   }
 
   updateProduct(productId: string, updates: Partial<IProduct>): Observable<IProduct> {
+    const generation = this.tenantSessionState.generation;
     this.productsErrorState.set(null);
     this.productsMutatingState.set(true);
     return this.productApi.update(productId, updates).pipe(
-      tap((updated) => this.productsState.update((products) => products.map((product) => product.id === productId ? updated : product))),
+      tap((updated) => {
+        if (this.tenantSessionState.isCurrent(generation)) {
+          this.productsState.update((products) =>
+            products.map((product) => (product.id === productId ? updated : product)),
+          );
+        }
+      }),
       catchError((error: unknown) => {
         this.productsErrorState.set('No se pudo actualizar el producto.');
         return throwError(() => error);
@@ -95,12 +120,18 @@ export class SalesCatalogStore {
   }
 
   deleteProduct(productId: string): Observable<void> {
+    const generation = this.tenantSessionState.generation;
     this.productsErrorState.set(null);
     this.productsMutatingState.set(true);
     return this.productApi.remove(productId).pipe(
       tap(() => {
-        this.productsState.update((products) => products.filter((product) => product.id !== productId));
-        this.clientProductsState.update((offers) => offers.filter((offer) => offer.productId !== productId));
+        if (!this.tenantSessionState.isCurrent(generation)) return;
+        this.productsState.update((products) =>
+          products.filter((product) => product.id !== productId),
+        );
+        this.clientProductsState.update((offers) =>
+          offers.filter((offer) => offer.productId !== productId),
+        );
       }),
       catchError((error: unknown) => {
         this.productsErrorState.set('No se pudo eliminar el producto.');
@@ -111,10 +142,15 @@ export class SalesCatalogStore {
   }
 
   createClientProduct(input: ICreateClientProductInput): Observable<IClientProduct> {
+    const generation = this.tenantSessionState.generation;
     this.clientProductsErrorState.set(null);
     this.clientProductsMutatingState.set(true);
     return this.clientProductApi.create(input).pipe(
-      tap((offer) => this.clientProductsState.update((offers) => [offer, ...offers])),
+      tap((offer) => {
+        if (this.tenantSessionState.isCurrent(generation)) {
+          this.clientProductsState.update((offers) => [offer, ...offers]);
+        }
+      }),
       catchError((error: unknown) => {
         this.clientProductsErrorState.set('No se pudo vincular el producto al cliente.');
         return throwError(() => error);
@@ -123,34 +159,66 @@ export class SalesCatalogStore {
     );
   }
 
-  updateClientProduct(offerId: string, updates: Partial<IClientProduct>): Observable<IClientProduct> {
+  updateClientProduct(
+    offerId: string,
+    updates: Partial<IClientProduct>,
+  ): Observable<IClientProduct> {
+    const generation = this.tenantSessionState.generation;
     this.clientProductsErrorState.set(null);
     this.clientProductsMutatingState.set(true);
-    return this.clientProductApi.update(offerId, {
-      status: updates.status,
-      notes: updates.notes,
-      customPrice: updates.customPrice,
-      quantity: updates.quantity,
-    }).pipe(
-      tap((updated) => this.clientProductsState.update((offers) => offers.map((offer) => offer.id === offerId ? updated : offer))),
-      catchError((error: unknown) => {
-        this.clientProductsErrorState.set('No se pudo actualizar el producto del cliente.');
-        return throwError(() => error);
-      }),
-      finalize(() => this.clientProductsMutatingState.set(false)),
-    );
+    return this.clientProductApi
+      .update(offerId, {
+        status: updates.status,
+        notes: updates.notes,
+        customPrice: updates.customPrice,
+        quantity: updates.quantity,
+      })
+      .pipe(
+        tap((updated) => {
+          if (this.tenantSessionState.isCurrent(generation)) {
+            this.clientProductsState.update((offers) =>
+              offers.map((offer) => (offer.id === offerId ? updated : offer)),
+            );
+          }
+        }),
+        catchError((error: unknown) => {
+          this.clientProductsErrorState.set('No se pudo actualizar el producto del cliente.');
+          return throwError(() => error);
+        }),
+        finalize(() => this.clientProductsMutatingState.set(false)),
+      );
   }
 
   deleteClientProduct(offerId: string): Observable<void> {
+    const generation = this.tenantSessionState.generation;
     this.clientProductsErrorState.set(null);
     this.clientProductsMutatingState.set(true);
     return this.clientProductApi.remove(offerId).pipe(
-      tap(() => this.clientProductsState.update((offers) => offers.filter((offer) => offer.id !== offerId))),
+      tap(() => {
+        if (this.tenantSessionState.isCurrent(generation)) {
+          this.clientProductsState.update((offers) =>
+            offers.filter((offer) => offer.id !== offerId),
+          );
+        }
+      }),
       catchError((error: unknown) => {
         this.clientProductsErrorState.set('No se pudo eliminar el producto del cliente.');
         return throwError(() => error);
       }),
       finalize(() => this.clientProductsMutatingState.set(false)),
     );
+  }
+
+  reset(): void {
+    this.productsLoadRequestId += 1;
+    this.clientProductsLoadRequestId += 1;
+    this.productsState.set([]);
+    this.clientProductsState.set([]);
+    this.productsLoadingState.set(false);
+    this.clientProductsLoadingState.set(false);
+    this.productsMutatingState.set(false);
+    this.clientProductsMutatingState.set(false);
+    this.productsErrorState.set(null);
+    this.clientProductsErrorState.set(null);
   }
 }

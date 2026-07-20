@@ -7,11 +7,13 @@ import { environment } from '../../../environments/environment';
 import { IAuthUser } from '../interfaces/auth-user.interface';
 import { ILoginResponse } from '../interfaces/login-response.interface';
 import { TOKEN_KEY, USER_KEY } from '../constants/auth-storage.constants';
+import { TenantSessionStateService } from './tenant-session-state.service';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
+  private readonly tenantSessionState = inject(TenantSessionStateService);
   private readonly baseUrl = `${environment.apiUrl}/auth`;
 
   private readonly _token = signal<string | null>(null);
@@ -71,6 +73,7 @@ export class AuthService {
   }
 
   clearSession(): void {
+    this.tenantSessionState.invalidate();
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(USER_KEY);
     this._token.set(null);
@@ -98,6 +101,7 @@ export class AuthService {
       return;
     }
 
+    this.tenantSessionState.invalidate();
     localStorage.setItem(TOKEN_KEY, res.accessToken);
     localStorage.setItem(USER_KEY, JSON.stringify(user));
     this._token.set(res.accessToken);
@@ -114,11 +118,13 @@ export class AuthService {
       const payload = JSON.parse(atob(padded)) as {
         sub?: string;
         email?: string;
+        companyId?: string;
         companyName?: string;
         exp?: number;
       };
       if (
         !payload.sub ||
+        !payload.companyId ||
         typeof payload.exp !== 'number' ||
         payload.exp <= Math.floor(Date.now() / 1000)
       ) {
@@ -126,6 +132,7 @@ export class AuthService {
       }
       return {
         userId: payload.sub,
+        companyId: payload.companyId,
         email: payload.email ?? '',
         companyName: payload.companyName,
       };
@@ -148,5 +155,3 @@ export class AuthService {
     localStorage.setItem(USER_KEY, JSON.stringify(user));
   }
 }
-
-

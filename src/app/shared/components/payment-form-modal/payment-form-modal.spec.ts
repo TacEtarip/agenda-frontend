@@ -1,4 +1,5 @@
 import { TestBed } from '@angular/core/testing';
+import { AlertController } from '@ionic/angular/standalone';
 import { of, Subject } from 'rxjs';
 import { describe, expect, it, vi } from 'vitest';
 import { PaymentMethod } from '../../../enums/payment-method.enum';
@@ -9,22 +10,41 @@ import { PaymentStore } from '../../stores/payment.store';
 import { PaymentFormModal } from './payment-form-modal';
 
 describe('PaymentFormModal', () => {
-  it('prefills the product price and generates a link with the selected source', async () => {
+  it('prefills the product price and creates a direct Yape request', async () => {
     const payment = {
-      id: 'payment-1', companyId: 'company-1', clientId: 'client-1',
-      clientProductId: 'offer-1', sourceType: PaymentSourceType.CLIENT_PRODUCT,
-      sourceId: 'offer-1', amount: 120, currency: 'PEN', description: 'Servicio',
-      status: PaymentStatus.PENDING, origin: PaymentOrigin.PAYMENT_LINK,
-      method: PaymentMethod.ONLINE, checkoutUrl: 'https://pay.test/1',
-      createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
+      id: 'payment-1',
+      companyId: 'company-1',
+      clientId: 'client-1',
+      clientProductId: 'offer-1',
+      sourceType: PaymentSourceType.CLIENT_PRODUCT,
+      sourceId: 'offer-1',
+      amount: 120,
+      currency: 'PEN',
+      description: 'Servicio',
+      status: PaymentStatus.PENDING,
+      origin: PaymentOrigin.DIRECT_YAPE,
+      method: PaymentMethod.YAPE,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     };
     const store = {
-      createLink: vi.fn().mockReturnValue(of(payment)),
+      getYapeConfiguration: vi.fn().mockReturnValue(
+        of({
+          enabled: true,
+          phone: '987654321',
+          accountName: 'Negocio Demo',
+        }),
+      ),
+      createYapeRequest: vi.fn().mockReturnValue(of(payment)),
+      createLink: vi.fn(),
       registerManual: vi.fn(),
     };
     await TestBed.configureTestingModule({
       imports: [PaymentFormModal],
-      providers: [{ provide: PaymentStore, useValue: store }],
+      providers: [
+        { provide: PaymentStore, useValue: store },
+        { provide: AlertController, useValue: { create: vi.fn() } },
+      ],
     }).compileComponents();
     const fixture = TestBed.createComponent(PaymentFormModal);
     fixture.componentRef.setInput('opened', true);
@@ -39,18 +59,30 @@ describe('PaymentFormModal', () => {
     fixture.componentInstance.submit();
 
     expect(fixture.componentInstance.amount()).toBe('120.00');
-    expect(store.createLink).toHaveBeenCalledWith(expect.objectContaining({
-      sourceType: PaymentSourceType.CLIENT_PRODUCT,
-      sourceId: 'offer-1',
-      amount: 120,
-    }));
+    expect(store.createYapeRequest).toHaveBeenCalledWith(
+      expect.objectContaining({
+        sourceType: PaymentSourceType.CLIENT_PRODUCT,
+        sourceId: 'offer-1',
+        amount: 120,
+      }),
+    );
   });
 
   it('rejects an invalid amount without calling the API', async () => {
-    const store = { createLink: vi.fn(), registerManual: vi.fn() };
+    const store = {
+      getYapeConfiguration: vi
+        .fn()
+        .mockReturnValue(of({ enabled: true, phone: '987654321', accountName: 'Negocio Demo' })),
+      createYapeRequest: vi.fn(),
+      createLink: vi.fn(),
+      registerManual: vi.fn(),
+    };
     await TestBed.configureTestingModule({
       imports: [PaymentFormModal],
-      providers: [{ provide: PaymentStore, useValue: store }],
+      providers: [
+        { provide: PaymentStore, useValue: store },
+        { provide: AlertController, useValue: { create: vi.fn() } },
+      ],
     }).compileComponents();
     const fixture = TestBed.createComponent(PaymentFormModal);
     fixture.componentRef.setInput('opened', true);
@@ -63,16 +95,26 @@ describe('PaymentFormModal', () => {
     fixture.componentInstance.amount.set('0');
     fixture.componentInstance.submit();
 
-    expect(store.createLink).not.toHaveBeenCalled();
+    expect(store.createYapeRequest).not.toHaveBeenCalled();
     expect(fixture.componentInstance.error()).toContain('mayor a cero');
   });
 
   it('cannot be dismissed and does not emit close while submitting', async () => {
     const request = new Subject<never>();
-    const store = { createLink: vi.fn().mockReturnValue(request), registerManual: vi.fn() };
+    const store = {
+      getYapeConfiguration: vi
+        .fn()
+        .mockReturnValue(of({ enabled: true, phone: '987654321', accountName: 'Negocio Demo' })),
+      createYapeRequest: vi.fn().mockReturnValue(request),
+      createLink: vi.fn(),
+      registerManual: vi.fn(),
+    };
     await TestBed.configureTestingModule({
       imports: [PaymentFormModal],
-      providers: [{ provide: PaymentStore, useValue: store }],
+      providers: [
+        { provide: PaymentStore, useValue: store },
+        { provide: AlertController, useValue: { create: vi.fn() } },
+      ],
     }).compileComponents();
     const fixture = TestBed.createComponent(PaymentFormModal);
     fixture.componentRef.setInput('opened', true);

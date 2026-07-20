@@ -1,9 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
-import {
-  HttpTestingController,
-  provideHttpClientTesting,
-} from '@angular/common/http/testing';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { TOKEN_KEY, USER_KEY } from '../constants/auth-storage.constants';
@@ -56,5 +53,19 @@ describe('AuthService registration', () => {
     expect(localStorage.getItem(TOKEN_KEY)).toBeNull();
     expect(localStorage.getItem(USER_KEY)).toBeNull();
     expect(service.isAuthenticated()).toBe(false);
+  });
+
+  it('rejects a restored token that has no company claim', () => {
+    const encode = (value: unknown) =>
+      btoa(JSON.stringify(value)).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+    const token = `${encode({ alg: 'none' })}.${encode({
+      sub: 'orphan-user',
+      email: 'orphan@example.test',
+      exp: Math.floor(Date.now() / 1000) + 3600,
+    })}.signature`;
+    localStorage.setItem(TOKEN_KEY, token);
+
+    expect(service.hasValidSession()).toBe(false);
+    expect(localStorage.getItem(TOKEN_KEY)).toBeNull();
   });
 });

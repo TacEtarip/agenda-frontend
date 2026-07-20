@@ -8,6 +8,7 @@ import { AuthService } from '../../core/services/auth.service';
 import { GoogleIntegrationApiService } from '../../core/services/google-integration-api.service';
 import { UserApiService } from '../../core/services/user-api.service';
 import { WhatsAppApiService } from '../../core/services/whatsapp-api.service';
+import { PaymentStore } from '../../shared/stores/payment.store';
 import { SETTINGS_STORAGE_KEY } from './constants/settings.constants';
 import { SettingsPage } from './settings';
 
@@ -23,10 +24,20 @@ describe('SettingsPage persistence', () => {
     await TestBed.configureTestingModule({
       imports: [SettingsPage],
       providers: [
-        { provide: AuthService, useValue: { currentUser: signal(null), updateCurrentUser: vi.fn() } },
+        {
+          provide: AuthService,
+          useValue: { currentUser: signal(null), updateCurrentUser: vi.fn() },
+        },
         { provide: UserApiService, useValue: userApi },
-        { provide: WhatsAppApiService, useValue: { getStatus: () => of({ status: 'CONNECTED' }), getQrCode: vi.fn() } },
-        { provide: GoogleIntegrationApiService, useValue: { getStatus: () => of({ configured: false, connected: false, scopes: [] }) } },
+        {
+          provide: WhatsAppApiService,
+          useValue: { getStatus: () => of({ status: 'CONNECTED' }), getQrCode: vi.fn() },
+        },
+        {
+          provide: GoogleIntegrationApiService,
+          useValue: { getStatus: () => of({ configured: false, connected: false, scopes: [] }) },
+        },
+        { provide: PaymentStore, useValue: { getYapeConfiguration: () => of({ enabled: false }) } },
         { provide: ActivatedRoute, useValue: { snapshot: { queryParamMap: { get: () => null } } } },
         { provide: Router, useValue: { navigate: vi.fn() } },
         { provide: AlertController, useValue: { create: vi.fn() } },

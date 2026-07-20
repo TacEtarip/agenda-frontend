@@ -239,7 +239,9 @@
                 @if (googleError()) {
                   <div class="integration-status" role="alert">
                     <p>{{ googleError() }}</p>
-                    <ion-button fill="outline" size="small" (click)="loadGoogleStatus()">Reintentar</ion-button>
+                    <ion-button fill="outline" size="small" (click)="loadGoogleStatus()"
+                      >Reintentar</ion-button
+                    >
                   </div>
                 }
               </div>
@@ -369,7 +371,9 @@
               @if (whatsappError()) {
                 <div class="integration-status" role="alert">
                   <p>{{ whatsappError() }}</p>
-                  <ion-button fill="outline" size="small" (click)="checkWhatsappStatus()">Reintentar</ion-button>
+                  <ion-button fill="outline" size="small" (click)="checkWhatsappStatus()"
+                    >Reintentar</ion-button
+                  >
                 </div>
               }
 
@@ -393,7 +397,9 @@
                   @if (whatsappQrError()) {
                     <div role="alert">
                       <p>{{ whatsappQrError() }}</p>
-                      <ion-button fill="outline" size="small" (click)="checkWhatsappStatus()">Reintentar QR</ion-button>
+                      <ion-button fill="outline" size="small" (click)="checkWhatsappStatus()"
+                        >Reintentar QR</ion-button
+                      >
                     </div>
                   }
                 </div>
@@ -424,25 +430,119 @@
               ></ion-icon>
               <div>
                 <h2>Integración de Pagos</h2>
-                <p>Genera links de pago para tus servicios B2B2C.</p>
+                <p>Configura cómo recibirás los cobros de tus clientes.</p>
               </div>
             </div>
 
-            <div class="integration-config integration-config--spaced">
-              <ion-list lines="none">
-                <ion-item>
-                  <ion-icon slot="start" name="cash-outline" aria-hidden="true"></ion-icon>
-                  <ion-label>Habilitar cobro por Link de Pago</ion-label>
+            @if (isYapeLoading()) {
+              <div class="payment-configuration-loading" aria-live="polite">
+                <ion-spinner name="crescent"></ion-spinner>
+                <span>Cargando configuración de Yape…</span>
+              </div>
+            } @else {
+              <form class="yape-form" [formGroup]="yapeForm" (ngSubmit)="saveYapeConfiguration()">
+                <div class="yape-form__heading">
+                  <div>
+                    <h3>Yape directo</h3>
+                    <p>
+                      El dinero llegará al Yape del negocio y tú confirmarás la recepción
+                      manualmente.
+                    </p>
+                  </div>
                   <ion-toggle
-                    slot="end"
-                    aria-label="Habilitar cobro por enlace de pago"
-                    [checked]="enablePayments()"
-                    (ionChange)="updatePaymentSetting($event)"
-                  >
-                  </ion-toggle>
-                </ion-item>
-              </ion-list>
-            </div>
+                    formControlName="enabled"
+                    aria-label="Habilitar cobro directo por Yape"
+                  ></ion-toggle>
+                </div>
+
+                <div class="yape-form__fields">
+                  <ion-input
+                    formControlName="phone"
+                    label="Número asociado a Yape"
+                    labelPlacement="floating"
+                    fill="outline"
+                    inputmode="numeric"
+                    maxlength="9"
+                    autocomplete="tel"
+                  ></ion-input>
+                  <ion-input
+                    formControlName="accountName"
+                    label="Nombre que verá el cliente"
+                    labelPlacement="floating"
+                    fill="outline"
+                    maxlength="120"
+                    autocomplete="name"
+                  ></ion-input>
+                </div>
+
+                @if (yapeForm.controls.phone.touched && yapeForm.controls.phone.invalid) {
+                  <p class="field-error" role="alert">
+                    Ingresa un celular peruano de 9 dígitos que empiece con 9.
+                  </p>
+                }
+
+                <div class="yape-qr-field">
+                  <div class="yape-qr-field__copy">
+                    <h3>QR de Yape</h3>
+                    <p>
+                      Sube la imagen descargada desde Yape. El cliente deberá ingresar el monto
+                      mostrado en Agenda.
+                    </p>
+                    <label class="yape-file-button">
+                      <input
+                        type="file"
+                        accept="image/png,image/jpeg,image/webp"
+                        (change)="selectYapeQr($event)"
+                      />
+                      {{ yapeQrImage() ? 'Cambiar QR' : 'Seleccionar QR' }}
+                    </label>
+                  </div>
+                  @if (yapeQrImage()) {
+                    <div class="yape-qr-preview">
+                      <img
+                        [src]="yapeQrImage()"
+                        alt="Vista previa del QR de Yape del negocio"
+                        width="180"
+                        height="180"
+                      />
+                      <ion-button
+                        type="button"
+                        fill="clear"
+                        color="danger"
+                        size="small"
+                        (click)="removeYapeQr()"
+                      >
+                        Quitar QR
+                      </ion-button>
+                    </div>
+                  }
+                </div>
+
+                <div class="culqi-preview" aria-label="Próxima integración de pagos">
+                  <strong>Culqi</strong>
+                  <span>Se habilitará después como modalidad de pago automático.</span>
+                </div>
+
+                @if (yapeMessage()) {
+                  <p class="status-message" role="status" aria-live="polite">
+                    <ion-icon name="checkmark-circle-outline" aria-hidden="true"></ion-icon>
+                    {{ yapeMessage() }}
+                  </p>
+                }
+                @if (yapeError()) {
+                  <p class="integration-error" role="alert" aria-live="assertive">
+                    <ion-icon name="information-circle-outline" aria-hidden="true"></ion-icon>
+                    {{ yapeError() }}
+                  </p>
+                }
+
+                <div class="actions-row actions-row--start">
+                  <ion-button type="submit" [disabled]="isYapeSaving() || yapeForm.invalid">
+                    {{ isYapeSaving() ? 'Guardando…' : 'Guardar Yape' }}
+                  </ion-button>
+                </div>
+              </form>
+            }
           </ion-card-content>
         </ion-card>
       </section>

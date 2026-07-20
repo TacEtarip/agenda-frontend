@@ -1,4 +1,11 @@
-<ion-modal class="app-modal payment-modal" [isOpen]="opened()" [canDismiss]="canDismiss" [backdropDismiss]="!submitting()" (didPresent)="reset()" (didDismiss)="requestClose()">
+<ion-modal
+  class="app-modal payment-modal"
+  [isOpen]="opened()"
+  [canDismiss]="canDismiss"
+  [backdropDismiss]="!submitting()"
+  (didPresent)="reset()"
+  (didDismiss)="requestClose()"
+>
   <ng-template>
     <ion-header>
       <ion-toolbar>
@@ -19,72 +26,284 @@
               <div class="app-modal-copy">
                 <p class="app-modal-eyebrow">Cobros</p>
                 <h2>{{ concept() }}</h2>
-                <p>Registra el pago de {{ clientName() }} o genera un enlace para compartir.</p>
+                <p>Cobra por Yape, registra un pago recibido o prepara una pasarela automática.</p>
               </div>
             </div>
 
             <div class="app-modal-body payment-modal__body">
-      @if (!generatedPayment()) {
-        <ion-segment [value]="mode()" (ionChange)="changeMode($event)" aria-label="Tipo de cobro">
-          <ion-segment-button value="LINK"><ion-label>Generar enlace</ion-label></ion-segment-button>
-          <ion-segment-button value="MANUAL"><ion-label>Registrar pago</ion-label></ion-segment-button>
-        </ion-segment>
+              @if (!generatedPayment()) {
+                <ion-segment
+                  [value]="mode()"
+                  (ionChange)="changeMode($event)"
+                  aria-label="Tipo de cobro"
+                >
+                  <ion-segment-button value="YAPE"><ion-label>Yape</ion-label></ion-segment-button>
+                  <ion-segment-button value="LINK" disabled="true"
+                    ><ion-label>Culqi</ion-label></ion-segment-button
+                  >
+                  <ion-segment-button value="MANUAL"
+                    ><ion-label>Registrar pago</ion-label></ion-segment-button
+                  >
+                </ion-segment>
 
-        <ion-input class="payment-modal__field payment-modal__amount" label="Monto" labelPlacement="floating" fill="outline"
-          name="paymentAmount" autocomplete="off" type="text" inputmode="decimal" [value]="amount()"
-          (ionInput)="setAmount($event)" (ionBlur)="formatAmount()">
-          <span slot="start" aria-hidden="true">S/</span>
-        </ion-input>
-        <ion-textarea class="payment-modal__field" label="Descripción" labelPlacement="floating" fill="outline"
-          name="paymentDescription" autocomplete="off" autoGrow="true" [value]="description()"
-          (ionInput)="setText('description', $event)" />
+                @if (mode() === 'YAPE') {
+                  @if (loadingYapeConfiguration()) {
+                    <div class="yape-configuration-state" aria-live="polite">
+                      Consultando la configuración de Yape…
+                    </div>
+                  } @else if (!yapeConfiguration()?.enabled) {
+                    <ion-note color="warning" role="status">
+                      Configura y habilita el Yape del negocio desde Ajustes antes de crear este
+                      cobro.
+                    </ion-note>
+                  } @else {
+                    <div class="yape-recipient">
+                      <ion-icon name="qr-code-outline" aria-hidden="true" />
+                      <div>
+                        <strong>{{ yapeConfiguration()!.accountName }}</strong>
+                        <span>{{ yapeConfiguration()!.phone }}</span>
+                      </div>
+                      <small>La confirmación del ingreso será manual.</small>
+                    </div>
+                  }
+                }
 
-        @if (mode() === 'MANUAL') {
-          <ion-select class="payment-modal__field" label="Método" labelPlacement="floating" fill="outline"
-            name="paymentMethod" [value]="method()" (ionChange)="setMethod($event)">
-              @for (option of methods; track option) { <ion-select-option [value]="option">{{ methodLabel(option) }}</ion-select-option> }
-          </ion-select>
-          <div class="payment-modal__date-card">
-            <p class="payment-modal__date-title">Fecha del pago</p>
-            <ion-datetime-button datetime="payment-date-picker" />
-          </div>
-          <ion-modal [keepContentsMounted]="true" class="app-modal app-modal--picker">
-            <ng-template>
-              <ion-datetime id="payment-date-picker" presentation="date" [preferWheel]="false"
-                [value]="paidAt()" (ionChange)="setPaidAt($event)" />
-            </ng-template>
-          </ion-modal>
-          <ion-input class="payment-modal__field" label="Referencia (opcional)" labelPlacement="floating" fill="outline"
-            name="paymentReference" autocomplete="off" [value]="reference()"
-            (ionInput)="setText('reference', $event)" />
-        }
+                <ion-input
+                  class="payment-modal__field payment-modal__amount"
+                  label="Monto"
+                  labelPlacement="floating"
+                  fill="outline"
+                  name="paymentAmount"
+                  autocomplete="off"
+                  type="text"
+                  inputmode="decimal"
+                  [value]="amount()"
+                  (ionInput)="setAmount($event)"
+                  (ionBlur)="formatAmount()"
+                >
+                  <span slot="start" aria-hidden="true">S/</span>
+                </ion-input>
+                <ion-textarea
+                  class="payment-modal__field"
+                  label="Descripción"
+                  labelPlacement="floating"
+                  fill="outline"
+                  name="paymentDescription"
+                  autocomplete="off"
+                  autoGrow="true"
+                  [value]="description()"
+                  (ionInput)="setText('description', $event)"
+                />
 
-        @if (error()) { <ion-note color="danger" role="alert" aria-live="assertive">{{ error() }}</ion-note> }
-        <div class="app-modal-actions">
-          <ion-button fill="outline" color="medium" (click)="requestClose()" [disabled]="submitting()">Cancelar</ion-button>
-          <ion-button class="submit-payment" (click)="submit()" [disabled]="submitting()">
-            <ion-icon slot="start" [name]="mode() === 'LINK' ? 'link-outline' : 'cash-outline'" aria-hidden="true" />
-            {{ submitting() ? 'Procesando…' : mode() === 'LINK' ? 'Generar enlace' : 'Registrar pago' }}
-          </ion-button>
-        </div>
-      } @else {
-        <div class="payment-result" role="status" aria-live="polite">
-          <ion-icon [name]="mode() === 'LINK' ? 'link-outline' : 'cash-outline'" aria-hidden="true" />
-          <h2>{{ mode() === 'LINK' ? 'Enlace generado' : 'Pago registrado' }}</h2>
-          <p>{{ generatedPayment()!.amount | formatPrice }} · {{ generatedPayment()!.description }}</p>
-          @if (mode() === 'LINK') {
-          <a [href]="generatedPayment()!.checkoutUrl" target="_blank" rel="noopener noreferrer">{{ generatedPayment()!.checkoutUrl }}</a>
-          @if (error()) { <ion-note color="danger" role="alert">{{ error() }}</ion-note> }
-          <ion-button expand="block" fill="outline" (click)="copyLink()">
-            <ion-icon slot="start" name="copy-outline" aria-hidden="true" />{{ copied() ? 'Copiado' : 'Copiar enlace' }}
-          </ion-button>
-          <ion-button expand="block" color="success" (click)="sendWhatsApp()" [disabled]="!clientPhone()">
-            <ion-icon slot="start" name="logo-whatsapp" aria-hidden="true" />Enviar por WhatsApp
-          </ion-button>
-          }
-          <ion-button expand="block" [fill]="mode() === 'LINK' ? 'clear' : 'solid'" (click)="requestClose()">Finalizar</ion-button>
-        </div>
-      }
+                @if (mode() === 'MANUAL') {
+                  <ion-select
+                    class="payment-modal__field"
+                    label="Método"
+                    labelPlacement="floating"
+                    fill="outline"
+                    name="paymentMethod"
+                    [value]="method()"
+                    (ionChange)="setMethod($event)"
+                  >
+                    @for (option of methods; track option) {
+                      <ion-select-option [value]="option">{{
+                        methodLabel(option)
+                      }}</ion-select-option>
+                    }
+                  </ion-select>
+                  <div class="payment-modal__date-card">
+                    <p class="payment-modal__date-title">Fecha del pago</p>
+                    <ion-datetime-button datetime="payment-date-picker" />
+                  </div>
+                  <ion-modal [keepContentsMounted]="true" class="app-modal app-modal--picker">
+                    <ng-template>
+                      <ion-datetime
+                        id="payment-date-picker"
+                        presentation="date"
+                        [preferWheel]="false"
+                        [value]="paidAt()"
+                        (ionChange)="setPaidAt($event)"
+                      />
+                    </ng-template>
+                  </ion-modal>
+                  <ion-input
+                    class="payment-modal__field"
+                    label="Referencia (opcional)"
+                    labelPlacement="floating"
+                    fill="outline"
+                    name="paymentReference"
+                    autocomplete="off"
+                    [value]="reference()"
+                    (ionInput)="setText('reference', $event)"
+                  />
+                }
+
+                @if (error()) {
+                  <ion-note color="danger" role="alert" aria-live="assertive">{{
+                    error()
+                  }}</ion-note>
+                }
+                <div class="app-modal-actions">
+                  <ion-button
+                    fill="outline"
+                    color="medium"
+                    (click)="requestClose()"
+                    [disabled]="submitting()"
+                    >Cancelar</ion-button
+                  >
+                  <ion-button
+                    class="submit-payment"
+                    (click)="submit()"
+                    [disabled]="
+                      submitting() ||
+                      (mode() === 'YAPE' &&
+                        (loadingYapeConfiguration() || !yapeConfiguration()?.enabled))
+                    "
+                  >
+                    <ion-icon
+                      slot="start"
+                      [name]="
+                        mode() === 'LINK'
+                          ? 'link-outline'
+                          : mode() === 'YAPE'
+                            ? 'qr-code-outline'
+                            : 'cash-outline'
+                      "
+                      aria-hidden="true"
+                    />
+                    {{
+                      submitting()
+                        ? 'Procesando…'
+                        : mode() === 'LINK'
+                          ? 'Generar enlace'
+                          : mode() === 'YAPE'
+                            ? 'Crear cobro Yape'
+                            : 'Registrar pago'
+                    }}
+                  </ion-button>
+                </div>
+              } @else {
+                <div class="payment-result" role="status" aria-live="polite">
+                  <ion-icon
+                    [name]="
+                      mode() === 'LINK'
+                        ? 'link-outline'
+                        : mode() === 'YAPE'
+                          ? 'qr-code-outline'
+                          : 'cash-outline'
+                    "
+                    aria-hidden="true"
+                  />
+                  <h2>
+                    {{
+                      mode() === 'LINK'
+                        ? 'Enlace generado'
+                        : mode() === 'YAPE'
+                          ? 'Cobro Yape preparado'
+                          : 'Pago registrado'
+                    }}
+                  </h2>
+                  <p>
+                    {{ generatedPayment()!.amount | formatPrice }} ·
+                    {{ generatedPayment()!.description }}
+                  </p>
+                  @if (mode() === 'LINK') {
+                    <a
+                      [href]="generatedPayment()!.checkoutUrl"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      >{{ generatedPayment()!.checkoutUrl }}</a
+                    >
+                    @if (error()) {
+                      <ion-note color="danger" role="alert">{{ error() }}</ion-note>
+                    }
+                    <ion-button expand="block" fill="outline" (click)="copyLink()">
+                      <ion-icon slot="start" name="copy-outline" aria-hidden="true" />{{
+                        copied() ? 'Copiado' : 'Copiar enlace'
+                      }}
+                    </ion-button>
+                    <ion-button
+                      expand="block"
+                      color="success"
+                      (click)="sendWhatsApp()"
+                      [disabled]="!clientPhone()"
+                    >
+                      <ion-icon slot="start" name="logo-whatsapp" aria-hidden="true" />Enviar por
+                      WhatsApp
+                    </ion-button>
+                  }
+                  @if (mode() === 'YAPE') {
+                    <div class="yape-payment-result">
+                      @if (yapeConfiguration()?.qrImageDataUrl) {
+                        <img
+                          [src]="yapeConfiguration()!.qrImageDataUrl"
+                          alt="QR de Yape para realizar el pago"
+                          width="240"
+                          height="240"
+                        />
+                        <p>
+                          Escanea el QR e ingresa exactamente
+                          <strong>{{ generatedPayment()!.amount | formatPrice }}</strong
+                          >.
+                        </p>
+                      } @else {
+                        <p>
+                          Yapea al <strong>{{ yapeConfiguration()?.phone }}</strong
+                          >, a nombre de <strong>{{ yapeConfiguration()?.accountName }}</strong
+                          >.
+                        </p>
+                      }
+                    </div>
+                    @if (error()) {
+                      <ion-note color="danger" role="alert">{{ error() }}</ion-note>
+                    }
+                    <ion-button expand="block" fill="outline" (click)="copyYapeInstructions()">
+                      <ion-icon slot="start" name="copy-outline" aria-hidden="true" />{{
+                        copied() ? 'Instrucciones copiadas' : 'Copiar instrucciones'
+                      }}
+                    </ion-button>
+                    @if (yapeConfiguration()?.qrImageDataUrl) {
+                      <ion-button expand="block" fill="outline" (click)="downloadYapeQr()">
+                        <ion-icon
+                          slot="start"
+                          name="download-outline"
+                          aria-hidden="true"
+                        />Descargar QR
+                      </ion-button>
+                    }
+                    <ion-button
+                      expand="block"
+                      color="success"
+                      (click)="sendWhatsApp()"
+                      [disabled]="!clientPhone()"
+                    >
+                      <ion-icon slot="start" name="logo-whatsapp" aria-hidden="true" />Enviar
+                      instrucciones por WhatsApp
+                    </ion-button>
+                    @if (generatedPayment()!.status === 'PAID') {
+                      <p class="yape-confirmed" role="status">
+                        <ion-icon name="checkmark-circle-outline" aria-hidden="true" />Pago
+                        confirmado
+                      </p>
+                    } @else {
+                      <ion-button
+                        expand="block"
+                        (click)="confirmYapePayment()"
+                        [disabled]="submitting()"
+                      >
+                        <ion-icon slot="start" name="checkmark-circle-outline" aria-hidden="true" />
+                        {{ submitting() ? 'Confirmando…' : 'Confirmar que recibí el pago' }}
+                      </ion-button>
+                    }
+                  }
+                  <ion-button
+                    expand="block"
+                    [fill]="mode() === 'MANUAL' ? 'solid' : 'clear'"
+                    (click)="requestClose()"
+                    >Finalizar</ion-button
+                  >
+                </div>
+              }
             </div>
           </ion-card-content>
         </ion-card>

@@ -6,7 +6,7 @@
 
 ion-segment {
   min-height: 3rem;
-  margin-bottom: .15rem;
+  margin-bottom: 0.15rem;
   touch-action: manipulation;
 }
 
@@ -18,38 +18,82 @@ ion-segment {
 .payment-modal__amount span[slot='start'] {
   color: var(--ion-color-medium);
   font-weight: 700;
-  margin-inline-end: .35rem;
+  margin-inline-end: 0.35rem;
+}
+
+.yape-configuration-state,
+.yape-recipient {
+  border: 1px solid var(--ion-color-light-shade);
+  border-radius: 0.75rem;
+  background: rgb(255 255 255 / 72%);
+}
+
+.yape-configuration-state {
+  padding: 0.9rem 1rem;
+  color: var(--ion-color-medium-shade);
+  font-size: 0.8rem;
+}
+
+.yape-recipient {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.85rem 1rem;
+
+  > ion-icon {
+    color: var(--ion-color-primary);
+    font-size: 1.4rem;
+  }
+
+  div {
+    display: grid;
+    gap: 0.15rem;
+    min-width: 0;
+    text-align: left;
+  }
+
+  strong {
+    color: var(--ion-color-dark);
+    font-size: 0.84rem;
+  }
+
+  span,
+  small {
+    color: var(--ion-color-medium-shade);
+    font-size: 0.74rem;
+  }
 }
 
 .payment-modal__date-card {
   display: grid;
   grid-template-columns: 1fr auto;
   align-items: center;
-  gap: .75rem;
+  gap: 0.75rem;
   min-width: 0;
   min-height: 4.5rem;
-  padding: .85rem 1rem;
+  padding: 0.85rem 1rem;
   border: 1px solid var(--ion-color-light-shade);
-  border-radius: .75rem;
+  border-radius: 0.75rem;
   background: rgb(255 255 255 / 72%);
 }
 
 .payment-modal__date-title {
   margin: 0;
   color: var(--ion-color-medium-shade);
-  font-size: .8rem;
+  font-size: 0.8rem;
   font-weight: 700;
 }
 
 ion-note {
   display: block;
-  padding: .8rem 1rem;
-  border-radius: .7rem;
-  background: rgba(var(--ion-color-danger-rgb), .08);
+  padding: 0.8rem 1rem;
+  border-radius: 0.7rem;
+  background: rgba(var(--ion-color-danger-rgb), 0.08);
 }
 
 .app-modal-actions {
-  margin-top: .25rem;
+  margin-top: 0.25rem;
   padding-top: 1.15rem;
   border-top: 1px solid var(--ion-color-light-shade);
 }
@@ -65,15 +109,52 @@ ion-note {
   gap: 1rem;
   min-width: 0;
   text-align: center;
-  padding: 1.5rem .25rem .25rem;
+  padding: 1.5rem 0.25rem 0.25rem;
 }
-.payment-result > ion-icon { margin: auto; font-size: 3rem; color: var(--ion-color-primary); }
-.payment-result h2, .payment-result p { margin: 0; }
+.payment-result > ion-icon {
+  margin: auto;
+  font-size: 3rem;
+  color: var(--ion-color-primary);
+}
+.payment-result h2,
+.payment-result p {
+  margin: 0;
+}
 .payment-result p,
-.payment-result a { overflow-wrap: anywhere; }
+.payment-result a {
+  overflow-wrap: anywhere;
+}
+
+.yape-payment-result {
+  display: grid;
+  justify-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  border: 1px solid var(--ion-color-light-shade);
+  border-radius: 0.8rem;
+  background: rgb(255 255 255 / 72%);
+
+  img {
+    width: min(15rem, 100%);
+    height: auto;
+    aspect-ratio: 1;
+    object-fit: contain;
+    border-radius: 0.65rem;
+    background: white;
+  }
+}
+
+.yape-confirmed {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  color: var(--ion-color-success);
+  font-weight: 700;
+}
 
 :is(ion-button, ion-segment-button, ion-datetime-button):focus-visible {
-  outline: 3px solid rgba(var(--ion-color-primary-rgb), .35);
+  outline: 3px solid rgba(var(--ion-color-primary-rgb), 0.35);
   outline-offset: 2px;
 }
 
@@ -90,6 +171,14 @@ ion-note {
 
   .payment-modal__date-card {
     grid-template-columns: 1fr;
+  }
+
+  .yape-recipient {
+    grid-template-columns: auto 1fr;
+
+    small {
+      grid-column: 1 / -1;
+    }
   }
 
   .app-modal-actions {
