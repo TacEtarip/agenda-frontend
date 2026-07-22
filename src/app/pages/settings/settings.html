@@ -518,11 +518,6 @@
                   }
                 </div>
 
-                <div class="culqi-preview" aria-label="Próxima integración de pagos">
-                  <strong>Culqi</strong>
-                  <span>Se habilitará después como modalidad de pago automático.</span>
-                </div>
-
                 @if (yapeMessage()) {
                   <p class="status-message" role="status" aria-live="polite">
                     <ion-icon name="checkmark-circle-outline" aria-hidden="true"></ion-icon>
@@ -542,6 +537,151 @@
                   </ion-button>
                 </div>
               </form>
+
+              <details
+                class="advanced-payment-settings"
+                (toggle)="toggleAdvancedPaymentSettings($event)"
+              >
+                <summary>
+                  <span>
+                    <strong>Configuración avanzada</strong>
+                    <small>Credenciales de pasarelas y automatización de pagos</small>
+                  </span>
+                </summary>
+
+                @if (advancedPaymentSettingsOpened()) {
+                  <div class="advanced-payment-settings__content">
+                    @if (isCulqiLoading()) {
+                      <div class="payment-configuration-loading" aria-live="polite">
+                        <ion-spinner name="crescent"></ion-spinner>
+                        <span>Cargando configuración de Culqi…</span>
+                      </div>
+                    } @else if (!culqiConfigurationLoaded()) {
+                      <div class="advanced-payment-settings__error" role="alert">
+                        <p>{{ culqiError() || 'No se pudo consultar la configuración.' }}</p>
+                        <ion-button type="button" fill="outline" (click)="loadCulqiConfiguration()">
+                          Reintentar
+                        </ion-button>
+                      </div>
+                    } @else {
+                      <form
+                        class="yape-form culqi-form"
+                        [formGroup]="culqiForm"
+                        (ngSubmit)="saveCulqiConfiguration()"
+                      >
+                        <div class="yape-form__heading">
+                          <div>
+                            <h3>Culqi del negocio</h3>
+                            <p>
+                              Cada empresa conecta sus propias llaves. Los cobros usarán
+                              exclusivamente la cuenta Culqi de este negocio.
+                            </p>
+                          </div>
+                          <ion-toggle
+                            formControlName="enabled"
+                            aria-label="Habilitar la cuenta Culqi de este negocio"
+                          ></ion-toggle>
+                        </div>
+
+                        @if (!culqiEncryptionReady()) {
+                          <p class="integration-error" role="alert">
+                            <ion-icon
+                              name="information-circle-outline"
+                              aria-hidden="true"
+                            ></ion-icon>
+                            Antes de guardar llaves, configura PAYMENT_CREDENTIAL_ENCRYPTION_KEY en
+                            el servidor.
+                          </p>
+                        }
+
+                        <div class="culqi-key-grid">
+                          <ion-input
+                            formControlName="publicKey"
+                            label="Llave pública de Culqi"
+                            labelPlacement="floating"
+                            fill="outline"
+                            maxlength="255"
+                            autocomplete="off"
+                            placeholder="pk_test_… o pk_live_…"
+                          ></ion-input>
+                          <ion-input
+                            formControlName="privateKey"
+                            type="password"
+                            label="Llave privada de Culqi"
+                            labelPlacement="floating"
+                            fill="outline"
+                            maxlength="255"
+                            autocomplete="new-password"
+                            [placeholder]="
+                              culqiPrivateKeyConfigured()
+                                ? 'Configurada; deja vacío para conservarla'
+                                : 'sk_test_… o sk_live_…'
+                            "
+                          ></ion-input>
+                        </div>
+
+                        @if (
+                          (culqiForm.controls.publicKey.touched &&
+                            culqiForm.controls.publicKey.invalid) ||
+                          (culqiForm.controls.privateKey.touched &&
+                            culqiForm.controls.privateKey.invalid)
+                        ) {
+                          <p class="field-error" role="alert">
+                            Usa llaves Culqi válidas del mismo ambiente: test o producción.
+                          </p>
+                        }
+
+                        <div class="culqi-credential-status" aria-live="polite">
+                          <span>
+                            Llave privada:
+                            <strong>
+                              {{
+                                culqiPrivateKeyConfigured() ? 'configurada y cifrada' : 'pendiente'
+                              }}
+                            </strong>
+                          </span>
+                          @if (culqiEnvironment()) {
+                            <span>
+                              Ambiente:
+                              <strong>{{
+                                culqiEnvironment() === 'live' ? 'producción' : 'pruebas'
+                              }}</strong>
+                            </span>
+                          }
+                          <small>
+                            La llave privada nunca se devuelve al navegador después de guardarla.
+                          </small>
+                        </div>
+
+                        @if (culqiMessage()) {
+                          <p class="status-message" role="status">
+                            <ion-icon name="checkmark-circle-outline" aria-hidden="true"></ion-icon>
+                            {{ culqiMessage() }}
+                          </p>
+                        }
+                        @if (culqiError()) {
+                          <p class="integration-error" role="alert">
+                            <ion-icon
+                              name="information-circle-outline"
+                              aria-hidden="true"
+                            ></ion-icon>
+                            {{ culqiError() }}
+                          </p>
+                        }
+
+                        <div class="actions-row actions-row--start">
+                          <ion-button
+                            type="submit"
+                            [disabled]="isCulqiSaving() || culqiForm.invalid"
+                          >
+                            {{ isCulqiSaving() ? 'Guardando…' : 'Guardar Culqi' }}
+                          </ion-button>
+                        </div>
+                      </form>
+                    }
+                  </div>
+                }
+              </details>
             }
           </ion-card-content>
         </ion-card>

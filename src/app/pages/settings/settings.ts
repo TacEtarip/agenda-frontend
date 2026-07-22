@@ -49,6 +49,7 @@ import { UserMenuComponent } from '../../shared/components/user-menu/user-menu';
 import { GoogleIntegrationApiService } from '../../core/services/google-integration-api.service';
 import { IGoogleIntegrationStatus } from '../../core/interfaces/google-integration-status.interface';
 import { PaymentStore } from '../../shared/stores/payment.store';
+import { CulqiEnvironment } from '../../interfaces/culqi-configuration.interface';
 
 @Component({
   selector: 'app-settings',
@@ -103,6 +104,21 @@ export class SettingsPage {
   readonly isYapeSaving = signal(false);
   readonly yapeMessage = signal<string | null>(null);
   readonly yapeError = signal<string | null>(null);
+
+  readonly culqiForm = this.fb.nonNullable.group({
+    enabled: [false],
+    publicKey: ['', [Validators.maxLength(255), Validators.pattern(/^pk_(test|live)_.+$/)]],
+    privateKey: ['', [Validators.maxLength(255), Validators.pattern(/^sk_(test|live)_.+$/)]],
+  });
+  readonly advancedPaymentSettingsOpened = signal(false);
+  readonly culqiConfigurationLoaded = signal(false);
+  readonly culqiPrivateKeyConfigured = signal(false);
+  readonly culqiEncryptionReady = signal(false);
+  readonly culqiEnvironment = signal<CulqiEnvironment | null>(null);
+  readonly isCulqiLoading = signal(false);
+  readonly isCulqiSaving = signal(false);
+  readonly culqiMessage = signal<string | null>(null);
+  readonly culqiError = signal<string | null>(null);
 
   readonly currentIntegration = signal<IntegrationProvider>(
     this.storedSettings.integrationProvider,
@@ -190,6 +206,107 @@ export class SettingsPage {
     this.handleGoogleCallbackResult();
     this.loadGoogleStatus();
     this.loadYapeConfiguration();
+  }
+
+  toggleAdvancedPaymentSettings(event: Event): void {
+    const opened = (event.currentTarget as HTMLDetailsElement).open;
+    this.advancedPaymentSettingsOpened.set(opened);
+    if (opened && !this.culqiConfigurationLoaded() && !this.isCulqiLoading()) {
+      this.loadCulqiConfiguration();
+    }
+  }
+
+  loadCulqiConfiguration(): void {
+    if (this.isCulqiLoading()) return;
+    this.isCulqiLoading.set(true);
+    this.culqiError.set(null);
+    this.payments
+      .getCulqiConfiguration()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (configuration) => {
+          this.culqiForm.reset(
+            {
+              enabled: configuration.enabled,
+              publicKey: configuration.publicKey ?? '',
+              privateKey: '',
+            },
+            { emitEvent: false },
+          );
+          this.culqiPrivateKeyConfigured.set(configuration.privateKeyConfigured);
+          this.culqiEncryptionReady.set(configuration.encryptionReady);
+          this.culqiEnvironment.set(configuration.environment ?? null);
+          this.culqiConfigurationLoaded.set(true);
+          this.culqiForm.markAsPristine();
+          this.isCulqiLoading.set(false);
+        },
+        error: () => {
+          this.culqiConfigurationLoaded.set(false);
+          this.isCulqiLoading.set(false);
+          this.culqiError.set('No se pudo cargar la configuración de Culqi.');
+        },
+      });
+  }
+
+  saveCulqiConfiguration(): void {
+    const value = this.culqiForm.getRawValue();
+    const publicKey = value.publicKey.trim();
+    const privateKey = value.privateKey.trim();
+    if (value.enabled && (!publicKey || (!privateKey && !this.culqiPrivateKeyConfigured()))) {
+      this.culqiError.set(
+        'Ingresa las llaves pública y privada del negocio antes de habilitar Culqi.',
+      );
+      this.culqiForm.markAllAsTouched();
+      return;
+    }
+    if ((value.enabled || privateKey) && !this.culqiEncryptionReady()) {
+      this.culqiError.set(
+        'El servidor todavía no tiene configurado el cifrado para credenciales de pago.',
+      );
+      return;
+    }
+    if (this.culqiForm.invalid || this.isCulqiSaving()) {
+      this.culqiForm.markAllAsTouched();
+      return;
+    }
+    this.isCulqiSaving.set(true);
+    this.culqiMessage.set(null);
+    this.culqiError.set(null);
+    this.payments
+      .updateCulqiConfiguration({
+        enabled: value.enabled,
+        publicKey: publicKey || undefined,
+        privateKey: privateKey || undefined,
+      })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (configuration) => {
+          this.isCulqiSaving.set(false);
+          this.culqiForm.reset(
+            {
+              enabled: configuration.enabled,
+              publicKey: configuration.publicKey ?? '',
+              privateKey: '',
+            },
+            { emitEvent: false },
+          );
+          this.culqiPrivateKeyConfigured.set(configuration.privateKeyConfigured);
+          this.culqiEncryptionReady.set(configuration.encryptionReady);
+          this.culqiEnvironment.set(configuration.environment ?? null);
+          this.culqiForm.markAsPristine();
+          this.culqiMessage.set(
+            configuration.enabled
+              ? 'La cuenta Culqi de este negocio quedó preparada.'
+              : 'La integración Culqi quedó desactivada; sus llaves se conservaron.',
+          );
+        },
+        error: (response) => {
+          this.isCulqiSaving.set(false);
+          this.culqiError.set(
+            response?.error?.message || 'No se pudo guardar la configuración de Culqi.',
+          );
+        },
+      });
   }
 
   loadYapeConfiguration(): void {

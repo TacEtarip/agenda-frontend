@@ -9,6 +9,18 @@ import { ILoginResponse } from '../interfaces/login-response.interface';
 import { TOKEN_KEY, USER_KEY } from '../constants/auth-storage.constants';
 import { TenantSessionStateService } from './tenant-session-state.service';
 
+export interface ICompanyRegistration {
+  companyName: string;
+  firstName: string;
+  lastName: string;
+  phone: string;
+  email: string;
+  password: string;
+  yapeEnabled?: boolean;
+  yapePhone?: string;
+  yapeAccountName?: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly http = inject(HttpClient);
@@ -49,21 +61,21 @@ export class AuthService {
       .pipe(tap((res) => this._persist(res)));
   }
 
-  register(
-    companyName: string,
-    adminFirstName: string,
-    adminLastName: string,
-    phone: string,
-    email: string,
-    password: string,
-  ): Observable<ILoginResponse> {
+  register(input: ICompanyRegistration): Observable<ILoginResponse> {
     return this.http.post<ILoginResponse>(`${this.baseUrl}/register-company`, {
-      companyName,
-      firstName: adminFirstName,
-      lastName: adminLastName,
-      phone: phone.trim(),
-      email,
-      password,
+      companyName: input.companyName,
+      firstName: input.firstName,
+      lastName: input.lastName,
+      phone: input.phone.trim(),
+      email: input.email,
+      password: input.password,
+      ...(input.yapeEnabled
+        ? {
+            yapeEnabled: true,
+            yapePhone: input.yapePhone?.trim(),
+            yapeAccountName: input.yapeAccountName?.trim(),
+          }
+        : {}),
     });
   }
 

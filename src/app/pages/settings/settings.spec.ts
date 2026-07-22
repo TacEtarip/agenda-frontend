@@ -16,6 +16,13 @@ describe('SettingsPage persistence', () => {
   beforeEach(() => localStorage.removeItem(SETTINGS_STORAGE_KEY));
 
   it('reverts the payment toggle and exposes an error when saving fails', async () => {
+    const getCulqiConfiguration = vi.fn().mockReturnValue(
+      of({
+        enabled: false,
+        privateKeyConfigured: false,
+        encryptionReady: false,
+      }),
+    );
     const userApi = {
       updateMySettings: vi.fn().mockReturnValue(throwError(() => new Error('network'))),
       updateMyProfile: vi.fn(),
@@ -37,13 +44,30 @@ describe('SettingsPage persistence', () => {
           provide: GoogleIntegrationApiService,
           useValue: { getStatus: () => of({ configured: false, connected: false, scopes: [] }) },
         },
-        { provide: PaymentStore, useValue: { getYapeConfiguration: () => of({ enabled: false }) } },
+        {
+          provide: PaymentStore,
+          useValue: {
+            getYapeConfiguration: () => of({ enabled: false }),
+            getCulqiConfiguration,
+          },
+        },
         { provide: ActivatedRoute, useValue: { snapshot: { queryParamMap: { get: () => null } } } },
         { provide: Router, useValue: { navigate: vi.fn() } },
         { provide: AlertController, useValue: { create: vi.fn() } },
       ],
     }).compileComponents();
-    const page = TestBed.createComponent(SettingsPage).componentInstance;
+    const fixture = TestBed.createComponent(SettingsPage);
+    const page = fixture.componentInstance;
+
+    expect(page.advancedPaymentSettingsOpened()).toBe(false);
+    expect(getCulqiConfiguration).not.toHaveBeenCalled();
+
+    page.toggleAdvancedPaymentSettings({
+      currentTarget: { open: true },
+    } as unknown as Event);
+
+    expect(getCulqiConfiguration).toHaveBeenCalledOnce();
+    expect(page.culqiConfigurationLoaded()).toBe(true);
 
     page.updatePaymentSetting({ detail: { checked: true } } as unknown as Event);
 

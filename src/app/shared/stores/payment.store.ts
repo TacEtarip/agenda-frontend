@@ -7,6 +7,10 @@ import { IPayment } from '../../interfaces/payment.interface';
 import { ICreatePaymentLinkPayload } from '../../interfaces/create-payment-link-payload.interface';
 import { IRegisterManualPaymentPayload } from '../../interfaces/register-manual-payment-payload.interface';
 import { IYapeConfiguration } from '../../interfaces/yape-configuration.interface';
+import {
+  ICulqiConfiguration,
+  IUpdateCulqiConfiguration,
+} from '../../interfaces/culqi-configuration.interface';
 import { TenantSessionStateService } from '../../core/services/tenant-session-state.service';
 
 @Injectable({ providedIn: 'root' })
@@ -69,6 +73,16 @@ export class PaymentStore {
 
   updateYapeConfiguration(configuration: IYapeConfiguration): Observable<IYapeConfiguration> {
     return this.api.updateYapeConfiguration(configuration);
+  }
+
+  getCulqiConfiguration(): Observable<ICulqiConfiguration> {
+    return this.api.getCulqiConfiguration();
+  }
+
+  updateCulqiConfiguration(
+    configuration: IUpdateCulqiConfiguration,
+  ): Observable<ICulqiConfiguration> {
+    return this.api.updateCulqiConfiguration(configuration);
   }
 
   createYapeRequest(payload: ICreatePaymentLinkPayload): Observable<IPayment> {

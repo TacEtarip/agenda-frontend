@@ -42,6 +42,10 @@ import { FormatPricePipe } from '../../shared/pipes/format-price.pipe';
 import { PaymentStore } from '../../shared/stores/payment.store';
 import { UserMenuComponent } from '../../shared/components/user-menu/user-menu';
 import { buildPaymentCancellationAlert } from '../../shared/payment-cancellation.utils';
+import {
+  buildYapePaymentConfirmationAlert,
+  isConfirmableYapePayment,
+} from '../../shared/yape-payment-confirmation.utils';
 
 type PaymentSegment = PaymentStatus.PENDING | PaymentStatus.PAID;
 
@@ -92,6 +96,7 @@ export class PaymentsPage {
   readonly loading = this.paymentsStore.loading;
   readonly loadError = this.paymentsStore.error;
   readonly cancellingPaymentId = signal<string | null>(null);
+  readonly confirmingPaymentId = signal<string | null>(null);
   readonly regeneratingPaymentId = signal<string | null>(null);
   readonly actionSuccess = signal<string | null>(null);
   readonly actionError = signal<string | null>(null);
@@ -102,6 +107,7 @@ export class PaymentsPage {
   readonly sourceType = PaymentSourceType;
   readonly fromFilterLabel = computed(() => this.formatFilterDate(this.fromFilter()));
   readonly toFilterLabel = computed(() => this.formatFilterDate(this.toFilter()));
+  readonly isConfirmableYapePayment = isConfirmableYapePayment;
 
   constructor() {
     addIcons({
@@ -223,6 +229,35 @@ export class PaymentsPage {
     const message = `Hola ${client.firstName}. Te compartimos el enlace de pago por ${payment.description} (${payment.amount.toFixed(2)} PEN): ${payment.checkoutUrl}`;
     window.open(`https://wa.me/${client.phone.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`, '_blank', 'noopener');
     this.actionSuccess.set('Se abrió WhatsApp con el enlace listo para enviar.');
+  }
+
+  async confirmYape(payment: IPayment): Promise<void> {
+    if (!isConfirmableYapePayment(payment) || this.confirmingPaymentId()) return;
+    const alert = await this.alertCtrl.create(
+      buildYapePaymentConfirmationAlert(
+        this.clientName(payment),
+        payment.amount,
+        () => this.performYapeConfirmation(payment),
+      ),
+    );
+    await alert.present();
+  }
+
+  private performYapeConfirmation(payment: IPayment): void {
+    this.actionError.set(null);
+    this.actionSuccess.set(null);
+    this.confirmingPaymentId.set(payment.id);
+    this.paymentsStore.confirmYape(payment.id).subscribe({
+      next: () => {
+        this.confirmingPaymentId.set(null);
+        this.actionSuccess.set('Pago por Yape confirmado.');
+        this.load();
+      },
+      error: () => {
+        this.confirmingPaymentId.set(null);
+        this.actionError.set('No se pudo confirmar el pago. Inténtalo nuevamente.');
+      },
+    });
   }
 
   async cancel(payment: IPayment): Promise<void> {

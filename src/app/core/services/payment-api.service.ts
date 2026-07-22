@@ -8,6 +8,10 @@ import { IPaymentListResult } from '../../interfaces/payment-list-result.interfa
 import { ICreatePaymentLinkPayload } from '../../interfaces/create-payment-link-payload.interface';
 import { IRegisterManualPaymentPayload } from '../../interfaces/register-manual-payment-payload.interface';
 import { IYapeConfiguration } from '../../interfaces/yape-configuration.interface';
+import {
+  ICulqiConfiguration,
+  IUpdateCulqiConfiguration,
+} from '../../interfaces/culqi-configuration.interface';
 import { IPaymentListFilters } from '../interfaces/payment-list-filters.interface';
 
 @Injectable({ providedIn: 'root' })
@@ -38,6 +42,16 @@ export class PaymentApiService {
 
   updateYapeConfiguration(configuration: IYapeConfiguration): Observable<IYapeConfiguration> {
     return this.http.patch<IYapeConfiguration>(`${this.url}/configuration/yape`, configuration);
+  }
+
+  getCulqiConfiguration(): Observable<ICulqiConfiguration> {
+    return this.http.get<ICulqiConfiguration>(`${this.url}/configuration/culqi`);
+  }
+
+  updateCulqiConfiguration(
+    configuration: IUpdateCulqiConfiguration,
+  ): Observable<ICulqiConfiguration> {
+    return this.http.patch<ICulqiConfiguration>(`${this.url}/configuration/culqi`, configuration);
   }
 
   createYapeRequest(payload: ICreatePaymentLinkPayload): Observable<IPayment> {

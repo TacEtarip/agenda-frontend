@@ -26,6 +26,7 @@ import {
   IonButton,
   IonIcon,
   IonSpinner,
+  IonToggle,
 } from '@ionic/angular/standalone';
 import { AuthService } from '../../../core/services/auth.service';
 
@@ -53,6 +54,7 @@ export const passwordsMatchValidator: ValidatorFn = (
     IonButton,
     IonIcon,
     IonSpinner,
+    IonToggle,
   ],
   templateUrl: './login.html',
   styleUrl: './login.scss',
@@ -76,6 +78,15 @@ export class LoginPage {
       firstName: [''],
       lastName: [''],
       phone: [''],
+      yapeEnabled: [false],
+      yapePhone: this.fb.nonNullable.control(
+        { value: '', disabled: true },
+        [Validators.required, Validators.pattern(PERU_PHONE_PATTERN)],
+      ),
+      yapeAccountName: this.fb.nonNullable.control(
+        { value: '', disabled: true },
+        [Validators.required, Validators.maxLength(120), Validators.pattern(/\S/)],
+      ),
       email: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required, Validators.minLength(8)]],
       confirmPassword: [''],
@@ -119,6 +130,7 @@ export class LoginPage {
     confirmPassword.updateValueAndValidity();
     this.form.updateValueAndValidity();
     this.form.reset();
+    this.setYapeControlsEnabled(false);
   }
 
   togglePasswordVisibility(): void {
@@ -126,11 +138,26 @@ export class LoginPage {
   }
 
   // Peru mobile numbers are always 9 digits (e.g. 987654321); strip anything else as the user types.
-  sanitizePhoneInput(event: CustomEvent): void {
+  sanitizePhoneInput(event: CustomEvent, controlName: 'phone' | 'yapePhone' = 'phone'): void {
     const rawValue = (event.detail as { value?: string | null }).value ?? '';
     const digitsOnly = rawValue.replace(/\D/g, '').slice(0, 9);
     if (digitsOnly !== rawValue) {
-      this.form.controls.phone.setValue(digitsOnly);
+      this.form.controls[controlName].setValue(digitsOnly);
+    }
+  }
+
+  toggleYapeSetup(event: CustomEvent<{ checked: boolean }>): void {
+    const enabled = event.detail.checked;
+    this.setYapeControlsEnabled(enabled);
+
+    if (!enabled) return;
+
+    const { phone, firstName, lastName, yapePhone, yapeAccountName } = this.form.controls;
+    if (!yapePhone.value && PERU_PHONE_PATTERN.test(phone.value)) {
+      yapePhone.setValue(phone.value);
+    }
+    if (!yapeAccountName.value) {
+      yapeAccountName.setValue(`${firstName.value} ${lastName.value}`.trim());
     }
   }
 
@@ -144,19 +171,32 @@ export class LoginPage {
     this.errorMessage.set(null);
     this.successMessage.set(null);
 
-    const { email, password, firstName, lastName, phone, companyName } = this.form.getRawValue();
+    const {
+      email,
+      password,
+      firstName,
+      lastName,
+      phone,
+      companyName,
+      yapeEnabled,
+      yapePhone,
+      yapeAccountName,
+    } = this.form.getRawValue();
     const isLogin = this.isLoginMode();
 
     const request$ = isLogin
       ? this.authService.login(email, password)
-      : this.authService.register(
+      : this.authService.register({
           companyName,
           firstName,
           lastName,
-          `${this.phonePrefix}${phone}`,
+          phone: `${this.phonePrefix}${phone}`,
           email,
           password,
-        );
+          yapeEnabled,
+          yapePhone: yapeEnabled ? yapePhone : undefined,
+          yapeAccountName: yapeEnabled ? yapeAccountName : undefined,
+        });
 
     request$.subscribe({
       next: () => {
@@ -177,6 +217,18 @@ export class LoginPage {
         this.errorMessage.set(this.resolveAuthErrorMessage(err));
       },
     });
+  }
+
+  private setYapeControlsEnabled(enabled: boolean): void {
+    const { yapePhone, yapeAccountName } = this.form.controls;
+    if (enabled) {
+      yapePhone.enable({ emitEvent: false });
+      yapeAccountName.enable({ emitEvent: false });
+      return;
+    }
+
+    yapePhone.disable({ emitEvent: false });
+    yapeAccountName.disable({ emitEvent: false });
   }
 
   private focusFirstInvalidField(): void {

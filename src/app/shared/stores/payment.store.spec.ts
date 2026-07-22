@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { Subject } from 'rxjs';
+import { of, Subject } from 'rxjs';
 import { PaymentApiService } from '../../core/services/payment-api.service';
 import { TenantSessionStateService } from '../../core/services/tenant-session-state.service';
 import { PaymentMethod } from '../../enums/payment-method.enum';
@@ -49,5 +49,35 @@ describe('PaymentStore tenant session isolation', () => {
     store.load();
     tenantBResponse.next({ items: [payment('company-b')], total: 1, page: 1, limit: 20 });
     expect(store.payments().map((item) => item.companyId)).toEqual(['company-b']);
+  });
+
+  it('replaces a pending Yape payment with its confirmed version', () => {
+    const pendingPayment: IPayment = {
+      ...payment('company-a'),
+      origin: PaymentOrigin.DIRECT_YAPE,
+      method: PaymentMethod.YAPE,
+    };
+    const confirmedPayment: IPayment = {
+      ...pendingPayment,
+      status: PaymentStatus.PAID,
+      paidAt: new Date().toISOString(),
+    };
+    const api = {
+      list: vi.fn().mockReturnValue(
+        of({ items: [pendingPayment], total: 1, page: 1, limit: 20 }),
+      ),
+      confirmYape: vi.fn().mockReturnValue(of(confirmedPayment)),
+    } as unknown as PaymentApiService;
+
+    TestBed.configureTestingModule({
+      providers: [{ provide: PaymentApiService, useValue: api }],
+    });
+    const store = TestBed.inject(PaymentStore);
+    store.load();
+
+    store.confirmYape(pendingPayment.id).subscribe();
+
+    expect(api.confirmYape).toHaveBeenCalledWith(pendingPayment.id, undefined);
+    expect(store.payments()).toEqual([confirmedPayment]);
   });
 });

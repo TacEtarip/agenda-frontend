@@ -93,6 +93,10 @@ import { IPayment } from '../../interfaces/payment.interface';
 import { PaymentFormModal } from '../../shared/components/payment-form-modal/payment-form-modal';
 import { IPaymentModalTarget } from './interfaces/payment-modal-target.interface';
 import { buildPaymentCancellationAlert } from '../../shared/payment-cancellation.utils';
+import {
+  buildYapePaymentConfirmationAlert,
+  isConfirmableYapePayment,
+} from '../../shared/yape-payment-confirmation.utils';
 import { UserMenuComponent } from '../../shared/components/user-menu/user-menu';
 import {
   APPOINTMENT_FILTER_OPTIONS,
@@ -162,6 +166,8 @@ export class ClientDetailPage {
 
   readonly activeSegment = signal<ClientDetailSegment>(ClientDetailSegment.NOTES);
   readonly cancellingPaymentId = signal<string | null>(null);
+  readonly confirmingPaymentId = signal<string | null>(null);
+  readonly paymentActionSuccess = signal<string | null>(null);
   readonly clientProductStatus = ClientProductStatus;
   readonly products = this.salesCatalogStore.products;
   readonly draftProductId = signal('');
@@ -206,6 +212,7 @@ export class ClientDetailPage {
   readonly paymentModalTarget = signal<IPaymentModalTarget | null>(null);
   readonly paymentSourceType = PaymentSourceType;
   readonly paymentStatus = PaymentStatus;
+  readonly isConfirmableYapePayment = isConfirmableYapePayment;
   readonly productType = ProductType;
   readonly payments = this.paymentStore.payments;
 
@@ -1609,6 +1616,35 @@ export class ClientDetailPage {
     const phone = this.client().phone.replace(/\D/g, '');
     const message = `Hola ${this.client().firstName}. Te compartimos el enlace de pago por ${payment.description} (${payment.amount.toFixed(2)} PEN): ${payment.checkoutUrl}`;
     window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, '_blank', 'noopener');
+  }
+
+  async confirmYapePayment(payment: IPayment): Promise<void> {
+    if (!isConfirmableYapePayment(payment) || this.confirmingPaymentId()) return;
+    const client = this.client();
+    const clientName = `${client.firstName} ${client.lastName}`.trim();
+    const alert = await this.alertCtrl.create(
+      buildYapePaymentConfirmationAlert(clientName, payment.amount, () =>
+        this.performYapePaymentConfirmation(payment),
+      ),
+    );
+    await alert.present();
+  }
+
+  private performYapePaymentConfirmation(payment: IPayment): void {
+    this.actionError.set(null);
+    this.paymentActionSuccess.set(null);
+    this.confirmingPaymentId.set(payment.id);
+    this.paymentStore.confirmYape(payment.id).subscribe({
+      next: (confirmedPayment) => {
+        this.confirmingPaymentId.set(null);
+        this.paymentActionSuccess.set('Pago por Yape confirmado.');
+        this.onPaymentCompleted(confirmedPayment);
+      },
+      error: () => {
+        this.confirmingPaymentId.set(null);
+        this.actionError.set('No se pudo confirmar el pago. Intenta nuevamente.');
+      },
+    });
   }
 
   async cancelPayment(payment: IPayment): Promise<void> {

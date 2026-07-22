@@ -124,6 +124,11 @@
     @if (actionError()) {
       <p class="form-feedback form-feedback--error">{{ actionError() }}</p>
     }
+    @if (paymentActionSuccess()) {
+      <p class="form-feedback form-feedback--success" role="status" aria-live="polite">
+        {{ paymentActionSuccess() }}
+      </p>
+    }
 
     @defer (when isClientEditModalOpen()) {
       <ion-modal
@@ -441,6 +446,15 @@
                       </div>
                       @if (payment.status === paymentStatus.PENDING) {
                         <div class="payment-state__actions">
+                          @if (isConfirmableYapePayment(payment)) {
+                          <ion-button
+                            fill="clear"
+                            size="small"
+                            color="success"
+                            (click)="confirmYapePayment(payment)"
+                            [disabled]="confirmingPaymentId() !== null || cancellingPaymentId() !== null"
+                          >{{ confirmingPaymentId() === payment.id ? 'Confirmando…' : 'Confirmar recibido' }}</ion-button>
+                          } @else {
                           <ion-button fill="clear" size="small" (click)="copyPaymentLink(payment)"
                             >Copiar enlace</ion-button
                           >
@@ -451,12 +465,13 @@
                             (click)="sendPaymentLink(payment)"
                             >WhatsApp</ion-button
                           >
+                          }
                           <ion-button
                             fill="clear"
                             size="small"
                             color="danger"
                             (click)="cancelPayment(payment)"
-                            [disabled]="cancellingPaymentId() !== null"
+                            [disabled]="cancellingPaymentId() !== null || confirmingPaymentId() !== null"
                             >{{
                               cancellingPaymentId() === payment.id
                                 ? 'Cancelando…'
@@ -1070,6 +1085,15 @@
                       </div>
                       @if (payment.status === paymentStatus.PENDING) {
                         <div class="payment-state__actions">
+                          @if (isConfirmableYapePayment(payment)) {
+                          <ion-button
+                            fill="clear"
+                            size="small"
+                            color="success"
+                            (click)="confirmYapePayment(payment)"
+                            [disabled]="confirmingPaymentId() !== null || cancellingPaymentId() !== null"
+                          >{{ confirmingPaymentId() === payment.id ? 'Confirmando…' : 'Confirmar recibido' }}</ion-button>
+                          } @else {
                           <ion-button fill="clear" size="small" (click)="copyPaymentLink(payment)"
                             >Copiar enlace</ion-button
                           >
@@ -1080,12 +1104,13 @@
                             (click)="sendPaymentLink(payment)"
                             >WhatsApp</ion-button
                           >
+                          }
                           <ion-button
                             fill="clear"
                             size="small"
                             color="danger"
                             (click)="cancelPayment(payment)"
-                            [disabled]="cancellingPaymentId() !== null"
+                            [disabled]="cancellingPaymentId() !== null || confirmingPaymentId() !== null"
                             >{{
                               cancellingPaymentId() === payment.id
                                 ? 'Cancelando…'

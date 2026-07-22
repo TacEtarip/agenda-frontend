@@ -85,6 +85,80 @@
               (ej.: 987654321).</p>
             }
           </div>
+
+          <section class="yape-setup" aria-labelledby="yape-setup-title">
+            <div class="yape-setup__heading">
+              <div>
+                <div class="yape-setup__title-row">
+                  <h2 id="yape-setup-title">Configurar Yape</h2>
+                  <span>Opcional</span>
+                </div>
+                <p>Recibe pagos directamente en el Yape de tu negocio.</p>
+              </div>
+              <ion-toggle
+                formControlName="yapeEnabled"
+                aria-label="Configurar Yape durante el registro"
+                (ionChange)="toggleYapeSetup($event)"
+              ></ion-toggle>
+            </div>
+
+            @if (form.controls.yapeEnabled.value) {
+            <div class="yape-setup__fields">
+              <div class="form-field">
+                <ion-input
+                  formControlName="yapePhone"
+                  type="tel"
+                  inputmode="numeric"
+                  name="yape-phone"
+                  autocomplete="tel-national"
+                  maxlength="9"
+                  placeholder="Ej.: 987654321"
+                  label="Número afiliado a Yape"
+                  labelPlacement="floating"
+                  fill="outline"
+                  shape="round"
+                  class="custom-input phone-input"
+                  aria-describedby="yapePhone-error"
+                  [attr.aria-invalid]="form.controls.yapePhone.touched && form.controls.yapePhone.invalid"
+                  (ionInput)="sanitizePhoneInput($event, 'yapePhone')"
+                >
+                  <div slot="start" class="phone-prefix">{{ phonePrefix }}</div>
+                </ion-input>
+                @if (form.controls.yapePhone.touched && form.controls.yapePhone.invalid) {
+                <p id="yapePhone-error" class="field-validation-msg" aria-live="polite">
+                  Ingresa los 9 dígitos del celular afiliado a Yape.
+                </p>
+                }
+              </div>
+
+              <div class="form-field">
+                <ion-input
+                  formControlName="yapeAccountName"
+                  name="yape-account-name"
+                  autocomplete="name"
+                  maxlength="120"
+                  label="Nombre del titular de Yape"
+                  labelPlacement="floating"
+                  fill="outline"
+                  shape="round"
+                  class="custom-input"
+                  aria-describedby="yapeAccountName-error"
+                  [attr.aria-invalid]="form.controls.yapeAccountName.touched && form.controls.yapeAccountName.invalid"
+                ></ion-input>
+                @if (form.controls.yapeAccountName.touched && form.controls.yapeAccountName.invalid) {
+                <p id="yapeAccountName-error" class="field-validation-msg" aria-live="polite">
+                  Ingresa el nombre que verá el cliente.
+                </p>
+                }
+              </div>
+
+              <p class="yape-setup__notice">
+                Agenda preparará las instrucciones de pago, pero deberás verificar y confirmar el abono manualmente.
+                Podrás agregar el QR después desde Ajustes.
+              </p>
+            </div>
+            }
+          </section>
           }
 
           <div class="form-field">

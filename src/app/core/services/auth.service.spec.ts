@@ -27,14 +27,14 @@ describe('AuthService registration', () => {
 
   it('creates the account without starting a session', async () => {
     const response = firstValueFrom(
-      service.register(
-        'Agenda Test',
-        'Ada',
-        'Lovelace',
-        '+51987654321',
-        'ada@example.test',
-        'password123',
-      ),
+      service.register({
+        companyName: 'Agenda Test',
+        firstName: 'Ada',
+        lastName: 'Lovelace',
+        phone: '+51987654321',
+        email: 'ada@example.test',
+        password: 'password123',
+      }),
     );
 
     const request = http.expectOne('http://localhost:3000/auth/register-company');
@@ -53,6 +53,34 @@ describe('AuthService registration', () => {
     expect(localStorage.getItem(TOKEN_KEY)).toBeNull();
     expect(localStorage.getItem(USER_KEY)).toBeNull();
     expect(service.isAuthenticated()).toBe(false);
+  });
+
+  it('includes the optional Yape configuration during registration', async () => {
+    const response = firstValueFrom(
+      service.register({
+        companyName: 'Agenda Test',
+        firstName: 'Ada',
+        lastName: 'Lovelace',
+        phone: '+51987654321',
+        email: 'ada@example.test',
+        password: 'password123',
+        yapeEnabled: true,
+        yapePhone: '987654321',
+        yapeAccountName: 'Ada Lovelace',
+      }),
+    );
+
+    const request = http.expectOne('http://localhost:3000/auth/register-company');
+    expect(request.request.body).toEqual(
+      expect.objectContaining({
+        yapeEnabled: true,
+        yapePhone: '987654321',
+        yapeAccountName: 'Ada Lovelace',
+      }),
+    );
+    request.flush({ accessToken: 'registration-token' });
+
+    await response;
   });
 
   it('rejects a restored token that has no company claim', () => {

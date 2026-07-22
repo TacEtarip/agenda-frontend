@@ -434,6 +434,10 @@ ion-toolbar ion-button {
   &--error {
     color: var(--ion-color-danger);
   }
+
+  &--success {
+    color: var(--ion-color-success);
+  }
 }
 
 .appointment-list-toolbar {

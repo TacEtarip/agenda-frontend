@@ -125,10 +125,22 @@
               </div>
               @if (payment.status === paymentStatus.PENDING) {
                 <div class="payment-card__actions">
+                  @if (isConfirmableYapePayment(payment)) {
+                  <ion-button
+                    size="small"
+                    color="success"
+                    (click)="confirmYape(payment)"
+                    [disabled]="confirmingPaymentId() !== null || cancellingPaymentId() !== null"
+                  >
+                    <ion-icon slot="start" name="checkmark-circle-outline" aria-hidden="true" />
+                    {{ confirmingPaymentId() === payment.id ? 'Confirmando…' : 'Confirmar recibido' }}
+                  </ion-button>
+                  } @else {
                   <ion-button size="small" color="success" (click)="sendLink(payment)" [disabled]="!payment.checkoutUrl"><ion-icon slot="start" name="logo-whatsapp" aria-hidden="true" />WhatsApp</ion-button>
                   <ion-button fill="outline" size="small" (click)="copyLink(payment)" [disabled]="!payment.checkoutUrl"><ion-icon slot="start" name="copy-outline" aria-hidden="true" />Copiar</ion-button>
                   <ion-button fill="clear" size="small" (click)="regenerate(payment)" [disabled]="regeneratingPaymentId() !== null"><ion-icon slot="start" name="refresh-outline" aria-hidden="true" />{{ regeneratingPaymentId() === payment.id ? 'Regenerando…' : 'Regenerar' }}</ion-button>
-                  <ion-button fill="clear" size="small" color="danger" (click)="cancel(payment)" [disabled]="cancellingPaymentId() !== null"><ion-icon slot="start" name="trash-outline" aria-hidden="true" />{{ cancellingPaymentId() === payment.id ? 'Cancelando…' : 'Cancelar' }}</ion-button>
+                  }
+                  <ion-button fill="clear" size="small" color="danger" (click)="cancel(payment)" [disabled]="cancellingPaymentId() !== null || confirmingPaymentId() !== null"><ion-icon slot="start" name="trash-outline" aria-hidden="true" />{{ cancellingPaymentId() === payment.id ? 'Cancelando…' : 'Cancelar' }}</ion-button>
                 </div>
               }
             </ion-card-content>
