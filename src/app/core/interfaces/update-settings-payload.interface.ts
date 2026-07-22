@@ -4,4 +4,5 @@ export interface IUpdateSettingsPayload {
   syncContacts?: boolean;
   sendDailyDigest?: boolean;
   paymentEnabled?: boolean;
+  onboardingCompleted?: boolean;
 }

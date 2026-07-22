@@ -1,7 +1,9 @@
 import { Component } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+import { AuthService } from '../../../core/services/auth.service';
+import { OnboardingService } from '../../../core/services/onboarding.service';
 import { AppShell } from './app-shell';
 
 @Component({ template: '<p>Dashboard</p>' })
@@ -11,7 +13,20 @@ describe('AppShell', () => {
   it('renders the responsive destinations and marks the active route', async () => {
     TestBed.configureTestingModule({
       imports: [AppShell],
-      providers: [provideRouter([{ path: 'dashboard', component: DashboardStub }])],
+      providers: [
+        provideRouter([{ path: 'dashboard', component: DashboardStub }]),
+        { provide: AuthService, useValue: { currentUser: () => null } },
+        {
+          provide: OnboardingService,
+          useValue: {
+            initialize: vi.fn(),
+            isOpen: () => false,
+            mode: () => 'replay',
+            isSaving: () => false,
+            error: () => null,
+          },
+        },
+      ],
     });
     const router = TestBed.inject(Router);
     await router.navigateByUrl('/dashboard');

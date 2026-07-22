@@ -1,0 +1,205 @@
+@if (onboarding.isOpen()) {
+  @if (!isContextualStep()) {
+    <div class="guide-backdrop">
+      <section
+        #guideDialog
+        class="guide-dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="guide-title"
+        aria-describedby="guide-description"
+        tabindex="-1"
+      >
+        <header class="guide-header">
+          <span class="guide-brand" aria-label="TacEtarip">
+            <span class="guide-brand__mark" aria-hidden="true">T</span>
+            <span>TacEtarip</span>
+          </span>
+          <span class="guide-progress-copy">Recorrido guiado</span>
+          <button
+            type="button"
+            class="guide-dismiss"
+            [disabled]="onboarding.isSaving()"
+            (click)="dismiss()"
+          >
+            @if (onboarding.mode() === 'replay') {
+              <ion-icon name="close-outline" aria-hidden="true" />
+              <span>Cerrar</span>
+            } @else {
+              <span>Omitir guía</span>
+            }
+          </button>
+        </header>
+
+        <div class="guide-main">
+          <div class="guide-visual" data-tone="welcome" aria-hidden="true">
+            <span class="guide-shape guide-shape--one"></span>
+            <span class="guide-shape guide-shape--two"></span>
+            <div class="guide-preview">
+              <div class="guide-preview__topline">
+                <span class="guide-preview__icon"><ion-icon name="sparkles-outline" /></span>
+                <span class="guide-live-badge">Recorrido real</span>
+              </div>
+              <strong>Aprende sobre la misma aplicación</strong>
+              <small>Cada paso señalará el lugar exacto que debes usar.</small>
+              <div class="guide-preview__rows">
+                <span><i></i><b></b></span>
+                <span><i></i><b></b></span>
+                <span><i></i><b></b></span>
+              </div>
+            </div>
+            <div class="guide-floating-note guide-floating-note--top">
+              <ion-icon name="checkmark-circle-outline" />
+              <span>Menú señalado</span>
+            </div>
+            <div class="guide-floating-note guide-floating-note--bottom">
+              <span class="guide-avatar">AP</span>
+              <span>Sabes dónde empezar</span>
+            </div>
+          </div>
+
+          <article class="guide-copy">
+            <p class="guide-eyebrow">{{ activeStep().eyebrow }}</p>
+            <h2 id="guide-title" data-guide-title tabindex="-1">{{ activeStep().title }}</h2>
+            <p id="guide-description" class="guide-description">
+              {{ activeStep().description }}
+            </p>
+            <ul class="guide-benefits">
+              @for (benefit of activeStep().benefits; track benefit) {
+                <li>
+                  <ion-icon name="checkmark-circle-outline" aria-hidden="true" />
+                  <span>{{ benefit }}</span>
+                </li>
+              }
+            </ul>
+            @if (onboarding.error()) {
+              <p class="guide-error" role="alert">{{ onboarding.error() }}</p>
+            }
+          </article>
+        </div>
+
+        <footer class="guide-footer">
+          <span class="guide-footer__hint">Puedes salir cuando quieras</span>
+          <button
+            type="button"
+            class="guide-button guide-button--primary"
+            [disabled]="onboarding.isSaving()"
+            (click)="next()"
+          >
+            Empezar recorrido
+            <ion-icon name="arrow-forward-outline" aria-hidden="true" />
+          </button>
+        </footer>
+      </section>
+    </div>
+  } @else {
+    <div class="tour-layer" [class.tour-layer--locating]="!spotlightRect()">
+      @if (spotlightRect(); as rect) {
+        <div
+          class="tour-spotlight"
+          [attr.data-tone]="activeStep().tone"
+          [style.left.px]="rect.left"
+          [style.top.px]="rect.top"
+          [style.width.px]="rect.width"
+          [style.height.px]="rect.height"
+          aria-hidden="true"
+        ></div>
+      }
+
+      <section
+        #coachCard
+        class="tour-coach"
+        [attr.data-tone]="activeStep().tone"
+        [attr.data-placement]="coachPosition().placement"
+        [style.left.px]="coachPosition().left"
+        [style.top.px]="coachPosition().top"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="tour-title"
+        aria-describedby="tour-description"
+        tabindex="-1"
+      >
+        <header class="tour-coach__header">
+          <span class="tour-coach__progress">
+            Paso {{ currentStep() + 1 }} de {{ steps.length }}
+          </span>
+          <button
+            type="button"
+            class="tour-coach__close"
+            [attr.aria-label]="onboarding.mode() === 'replay' ? 'Cerrar guía' : 'Omitir guía'"
+            [disabled]="onboarding.isSaving()"
+            (click)="dismiss()"
+          >
+            <ion-icon name="close-outline" aria-hidden="true" />
+          </button>
+        </header>
+
+        <div class="tour-coach__menu-reference">
+          <span class="tour-coach__icon" aria-hidden="true">
+            <ion-icon [name]="activeStep().icon" />
+          </span>
+          <span>
+            <small>Ahora estás viendo</small>
+            <strong>{{ activeStep().menuLabel }}</strong>
+          </span>
+        </div>
+
+        <p class="tour-coach__eyebrow">{{ activeStep().eyebrow }}</p>
+        <h2 id="tour-title" data-guide-title tabindex="-1">{{ activeStep().title }}</h2>
+        <p id="tour-description" class="tour-coach__description">
+          {{ activeStep().description }}
+        </p>
+        <p class="tour-coach__tip">
+          <ion-icon name="checkmark-circle-outline" aria-hidden="true" />
+          <span>{{ activeStep().tip }}</span>
+        </p>
+
+        @if (onboarding.error()) {
+          <p class="guide-error" role="alert">{{ onboarding.error() }}</p>
+        }
+
+        <nav class="tour-progress" aria-label="Progreso de la guía">
+          @for (step of steps; track step.title; let index = $index) {
+            <button
+              type="button"
+              [class.tour-progress__step--active]="index === currentStep()"
+              [class.tour-progress__step--complete]="index < currentStep()"
+              [attr.aria-current]="index === currentStep() ? 'step' : null"
+              [attr.aria-label]="'Ir al paso ' + (index + 1) + ': ' + step.eyebrow"
+              (click)="goTo(index)"
+            ></button>
+          }
+        </nav>
+
+        <footer class="tour-coach__actions">
+          <button
+            type="button"
+            class="guide-button guide-button--secondary"
+            [disabled]="onboarding.isSaving()"
+            (click)="previous()"
+          >
+            <ion-icon name="arrow-back-outline" aria-hidden="true" />
+            Anterior
+          </button>
+          <button
+            type="button"
+            class="guide-button guide-button--primary"
+            [disabled]="onboarding.isSaving()"
+            (click)="next()"
+          >
+            @if (onboarding.isSaving()) {
+              <ion-spinner name="crescent" aria-hidden="true" />
+              Guardando…
+            } @else if (currentStep() === steps.length - 1) {
+              Terminar guía
+              <ion-icon name="checkmark-circle-outline" aria-hidden="true" />
+            } @else {
+              Siguiente
+              <ion-icon name="arrow-forward-outline" aria-hidden="true" />
+            }
+          </button>
+        </footer>
+      </section>
+    </div>
+  }
+}

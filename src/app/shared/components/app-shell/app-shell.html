@@ -19,7 +19,9 @@
           ariaCurrentWhenActive="page"
           [routerLinkActiveOptions]="{ exact: true }"
           [attr.aria-label]="item.label"
-          [title]="item.label">
+          [attr.data-guide-target]="item.guideTarget"
+          [title]="item.label"
+        >
           <ion-icon [name]="item.icon" aria-hidden="true" />
           <span>{{ item.label }}</span>
         </a>
@@ -39,10 +41,14 @@
         routerLinkActive="app-shell__bottom-link--active"
         ariaCurrentWhenActive="page"
         [routerLinkActiveOptions]="{ exact: true }"
-        [attr.aria-label]="item.label">
+        [attr.aria-label]="item.label"
+        [attr.data-guide-target]="item.guideTarget"
+      >
         <ion-icon [name]="item.icon" aria-hidden="true" />
         <span>{{ item.shortLabel }}</span>
       </a>
     }
   </nav>
 </div>
+
+<app-first-run-guide />

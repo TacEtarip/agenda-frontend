@@ -11,11 +11,13 @@ import {
 import { addIcons } from 'ionicons';
 import {
   gridOutline,
+  helpCircleOutline,
   logOutOutline,
   personCircleOutline,
   settingsOutline,
 } from 'ionicons/icons';
 import { AuthService } from '../../../core/services/auth.service';
+import { OnboardingService } from '../../../core/services/onboarding.service';
 
 @Component({
   selector: 'app-user-menu',
@@ -25,6 +27,7 @@ import { AuthService } from '../../../core/services/auth.service';
 })
 export class UserMenuComponent {
   private readonly authService = inject(AuthService);
+  private readonly onboarding = inject(OnboardingService);
 
   readonly isOpen = signal(false);
   readonly menuEvent = signal<Event | undefined>(undefined);
@@ -34,7 +37,13 @@ export class UserMenuComponent {
   });
 
   constructor() {
-    addIcons({ gridOutline, logOutOutline, personCircleOutline, settingsOutline });
+    addIcons({
+      gridOutline,
+      helpCircleOutline,
+      logOutOutline,
+      personCircleOutline,
+      settingsOutline,
+    });
   }
 
   open(event: Event): void {
@@ -49,5 +58,10 @@ export class UserMenuComponent {
   logout(): void {
     this.close();
     this.authService.logout();
+  }
+
+  openGuide(): void {
+    this.close();
+    this.onboarding.openReplay();
   }
 }

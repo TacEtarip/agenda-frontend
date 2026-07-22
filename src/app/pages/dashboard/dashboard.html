@@ -14,335 +14,417 @@
 
 <ion-content class="dashboard-content">
   <main id="dashboard-main" class="dashboard-main" tabindex="-1">
-  <div class="visually-hidden" aria-live="polite" aria-atomic="true">{{ addClientStatusMessage() }}</div>
+    <div class="visually-hidden" aria-live="polite" aria-atomic="true">
+      {{ addClientStatusMessage() }}
+    </div>
 
-  @if (loadState() === 'error') {
-    <div class="load-feedback load-feedback--error" role="alert">{{ loadError() }}</div>
-  }
+    @if (loadState() === 'error') {
+      <div class="load-feedback load-feedback--error" role="alert">{{ loadError() }}</div>
+    }
 
-  <section class="dashboard-overview" aria-label="Resumen de hoy">
-    <section class="agenda-hero" aria-labelledby="agenda-title">
-      <div class="agenda-hero__header">
-        <div>
-          <span class="agenda-kicker">Agenda de hoy</span>
-          <h2 id="agenda-title">Tu día, de un vistazo</h2>
+    <section class="dashboard-overview" aria-label="Resumen de hoy">
+      <section class="agenda-hero" aria-labelledby="agenda-title">
+        <div class="agenda-hero__header">
+          <div>
+            <span class="agenda-kicker">Agenda de hoy</span>
+            <h2 id="agenda-title">Tu día, de un vistazo</h2>
+          </div>
+          <span class="agenda-count app-data">{{ upcomingAppointments().length }} citas</span>
         </div>
-        <span class="agenda-count app-data">{{ upcomingAppointments().length }} citas</span>
-      </div>
 
-      <div class="agenda-timeline">
-        @for (appt of upcomingAppointments(); track appt.id; let isFirst = $first) {
-          <article class="agenda-item" [class.agenda-item--next]="isFirst">
-            <time class="agenda-item__time" [attr.datetime]="appt.time">{{ appt.time }}</time>
-            <span class="agenda-item__marker" aria-hidden="true"></span>
-            <div class="agenda-item__body">
-              <div class="agenda-item__heading">
-                <div class="appt-avatar" aria-hidden="true">{{ appt.initials }}</div>
-                <div class="appt-info">
-                  <h3 class="appt-client-name">{{ appt.clientName }}</h3>
-                  <p class="appt-service">{{ appt.title }}</p>
+        <div class="agenda-timeline">
+          @for (appt of upcomingAppointments(); track appt.id; let isFirst = $first) {
+            <article class="agenda-item" [class.agenda-item--next]="isFirst">
+              <time class="agenda-item__time" [attr.datetime]="appt.time">{{ appt.time }}</time>
+              <span class="agenda-item__marker" aria-hidden="true"></span>
+              <div class="agenda-item__body">
+                <div class="agenda-item__heading">
+                  <div class="appt-avatar" aria-hidden="true">{{ appt.initials }}</div>
+                  <div class="appt-info">
+                    <h3 class="appt-client-name">{{ appt.clientName }}</h3>
+                    <p class="appt-service">{{ appt.title }}</p>
+                  </div>
+                </div>
+                <div class="agenda-item__status">
+                  @if (isFirst) {
+                    <span class="next-label">Próxima</span>
+                  }
+                  <ion-chip color="primary" class="appt-status-chip">{{
+                    appt.status | appointmentStatusLabel
+                  }}</ion-chip>
                 </div>
               </div>
-              <div class="agenda-item__status">
-                @if (isFirst) { <span class="next-label">Próxima</span> }
-                <ion-chip color="primary" class="appt-status-chip">{{ appt.status | appointmentStatusLabel }}</ion-chip>
+            </article>
+          } @empty {
+            <div class="appointments-empty" role="status">
+              <div class="appointments-empty__icon" aria-hidden="true">
+                <ion-icon name="calendar-outline" aria-hidden="true"></ion-icon>
+              </div>
+              <div>
+                <p class="appointments-empty__title">Tu agenda está libre hoy</p>
+                <p class="appointments-empty__text">
+                  Aprovecha el espacio para contactar clientes o preparar tu próxima cita.
+                </p>
               </div>
             </div>
-          </article>
-        } @empty {
-          <div class="appointments-empty" role="status">
-            <div class="appointments-empty__icon" aria-hidden="true">
-              <ion-icon name="calendar-outline" aria-hidden="true"></ion-icon>
+          }
+        </div>
+      </section>
+
+      <aside class="dashboard-summary" aria-label="Actividad del negocio">
+        <section class="stats-grid" aria-label="Resumen del negocio">
+          @for (stat of stats(); track stat.label) {
+            <div class="stat-card">
+              <div class="stat-icon {{ stat.color }}">
+                <ion-icon [name]="stat.icon" aria-hidden="true"></ion-icon>
+              </div>
+              <div>
+                <p class="stat-value">{{ stat.value }}</p>
+                <p class="stat-label">{{ stat.label }}</p>
+              </div>
             </div>
-            <div>
-              <p class="appointments-empty__title">Tu agenda está libre hoy</p>
-              <p class="appointments-empty__text">Aprovecha el espacio para contactar clientes o preparar tu próxima cita.</p>
-            </div>
-          </div>
+          }
+        </section>
+
+        @if (pendingPaymentCount() > 0) {
+          <a class="priority-action" routerLink="/payments">
+            <ion-icon name="cash-outline" aria-hidden="true"></ion-icon>
+            <span
+              ><strong>{{ pendingPaymentCount() }} pagos pendientes</strong
+              ><small>Requieren seguimiento.</small></span
+            >
+            <span class="priority-action__cta">Revisar</span>
+          </a>
         }
-      </div>
+
+        <section aria-labelledby="quick-actions-title">
+          <div class="section-header section-header--compact">
+            <h2 id="quick-actions-title" class="section-title">Acciones frecuentes</h2>
+          </div>
+          <div class="quick-links-grid">
+            <a class="quick-link-card" routerLink="/products"
+              ><ion-icon name="pricetag-outline" aria-hidden="true"></ion-icon><span>Productos</span
+              ><ion-icon name="chevron-forward-outline" aria-hidden="true"></ion-icon
+            ></a>
+            <a class="quick-link-card" routerLink="/message-templates"
+              ><ion-icon name="chatbubbles-outline" aria-hidden="true"></ion-icon
+              ><span>Plantillas</span
+              ><ion-icon name="chevron-forward-outline" aria-hidden="true"></ion-icon
+            ></a>
+            <a class="quick-link-card" routerLink="/payments"
+              ><ion-icon name="cash-outline" aria-hidden="true"></ion-icon><span>Pagos</span
+              ><ion-icon name="chevron-forward-outline" aria-hidden="true"></ion-icon
+            ></a>
+            <a class="quick-link-card" routerLink="/settings"
+              ><ion-icon name="settings-outline" aria-hidden="true"></ion-icon><span>Ajustes</span
+              ><ion-icon name="chevron-forward-outline" aria-hidden="true"></ion-icon
+            ></a>
+          </div>
+        </section>
+      </aside>
     </section>
 
-    <aside class="dashboard-summary" aria-label="Actividad del negocio">
-      <section class="stats-grid" aria-label="Resumen del negocio">
-        @for (stat of stats(); track stat.label) {
-          <div class="stat-card">
-            <div class="stat-icon {{ stat.color }}"><ion-icon [name]="stat.icon" aria-hidden="true"></ion-icon></div>
-            <div>
-              <p class="stat-value">{{ stat.value }}</p>
-              <p class="stat-label">{{ stat.label }}</p>
+    <!-- Clients -->
+    <div class="section-header" data-guide-target="clients">
+      <div class="section-header__row">
+        <h2 class="section-title">Clientes</h2>
+        <ion-badge color="primary" [attr.aria-label]="filteredClients().length + ' clientes'">
+          {{ filteredClients().length }}
+        </ion-badge>
+      </div>
+      <div class="filters-row">
+        <ion-searchbar
+          placeholder="Buscar clientes…"
+          aria-label="Buscar clientes"
+          [debounce]="200"
+          [value]="searchQuery()"
+          (ionInput)="onSearch($event)"
+          class="search-bar"
+        >
+        </ion-searchbar>
+        <ion-select
+          class="stage-filter-select"
+          [value]="stageFilter()"
+          (ionChange)="onStageFilterChange($event)"
+          interface="popover"
+          placeholder="Filtrar por etapa"
+          aria-label="Filtrar por etapa"
+        >
+          <ion-select-option value="ALL">Etapas</ion-select-option>
+          @for (option of stageOptions(); track option.value) {
+            <ion-select-option [value]="option.value">
+              {{ option.label }}
+            </ion-select-option>
+          }
+        </ion-select>
+      </div>
+    </div>
+
+    <div class="clients-context-action">
+      <ion-button
+        expand="block"
+        fill="outline"
+        class="contextual-create-btn"
+        (click)="openAddClientModal()"
+      >
+        <ion-icon slot="start" name="add-outline" aria-hidden="true"></ion-icon>
+        Agregar cliente
+      </ion-button>
+    </div>
+
+    <ion-list lines="inset" class="clients-list">
+      @for (client of pagedClients(); track client.id) {
+        <ion-item [routerLink]="['/clients', client.id]" detail="true" button>
+          <ion-avatar slot="start">
+            <div class="client-avatar {{ client.color }}">
+              {{ client.initials }}
             </div>
+          </ion-avatar>
+          <ion-label>
+            <h3 class="client-name">{{ client.firstName }} {{ client.lastName }}</h3>
+            <p class="client-email">{{ client.email }}</p>
+            <p class="client-phone">{{ client.phone }}</p>
+            <ion-chip [color]="client.stage | stageColor" class="client-stage-chip">
+              {{ client.stage | stageLabel }}
+            </ion-chip>
+          </ion-label>
+        </ion-item>
+      } @empty {
+        @if (searchQuery() || stageFilter() !== 'ALL') {
+          <div class="clients-empty" role="status">
+            <p>No hay clientes que coincidan con los filtros.</p>
+            <ion-button fill="clear" size="small" (click)="clearClientFilters()"
+              >Limpiar filtros</ion-button
+            >
+          </div>
+        } @else if (loadState() !== 'loading') {
+          <div class="clients-empty" role="status">
+            <p>Todavía no tienes clientes.</p>
+            <ion-button fill="clear" size="small" (click)="openAddClientModal()"
+              >Agregar cliente</ion-button
+            >
           </div>
         }
-      </section>
-
-      @if (pendingPaymentCount() > 0) {
-        <a class="priority-action" routerLink="/payments">
-          <ion-icon name="cash-outline" aria-hidden="true"></ion-icon>
-          <span><strong>{{ pendingPaymentCount() }} pagos pendientes</strong><small>Requieren seguimiento.</small></span>
-          <span class="priority-action__cta">Revisar</span>
-        </a>
       }
-
-      <section aria-labelledby="quick-actions-title">
-        <div class="section-header section-header--compact">
-          <h2 id="quick-actions-title" class="section-title">Acciones frecuentes</h2>
-        </div>
-        <div class="quick-links-grid">
-          <a class="quick-link-card" routerLink="/products"><ion-icon name="pricetag-outline" aria-hidden="true"></ion-icon><span>Productos</span><ion-icon name="chevron-forward-outline" aria-hidden="true"></ion-icon></a>
-          <a class="quick-link-card" routerLink="/message-templates"><ion-icon name="chatbubbles-outline" aria-hidden="true"></ion-icon><span>Plantillas</span><ion-icon name="chevron-forward-outline" aria-hidden="true"></ion-icon></a>
-          <a class="quick-link-card" routerLink="/payments"><ion-icon name="cash-outline" aria-hidden="true"></ion-icon><span>Pagos</span><ion-icon name="chevron-forward-outline" aria-hidden="true"></ion-icon></a>
-          <a class="quick-link-card" routerLink="/settings"><ion-icon name="settings-outline" aria-hidden="true"></ion-icon><span>Ajustes</span><ion-icon name="chevron-forward-outline" aria-hidden="true"></ion-icon></a>
-        </div>
-      </section>
-    </aside>
-  </section>
-
-  <!-- Clients -->
-  <div class="section-header">
-    <div class="section-header__row">
-      <h2 class="section-title">Clientes</h2>
-      <ion-badge color="primary" [attr.aria-label]="filteredClients().length + ' clientes'">
-        {{ filteredClients().length }}
-      </ion-badge>
-    </div>
-    <div class="filters-row">
-      <ion-searchbar
-        placeholder="Buscar clientes…"
-        aria-label="Buscar clientes"
-        [debounce]="200"
-        [value]="searchQuery()"
-        (ionInput)="onSearch($event)"
-        class="search-bar">
-      </ion-searchbar>
-      <ion-select
-        class="stage-filter-select"
-        [value]="stageFilter()"
-        (ionChange)="onStageFilterChange($event)"
-        interface="popover"
-        placeholder="Filtrar por etapa"
-        aria-label="Filtrar por etapa">
-        <ion-select-option value="ALL">Etapas</ion-select-option>
-        @for (option of stageOptions(); track option.value) {
-          <ion-select-option [value]="option.value">
-            {{ option.label }}
-          </ion-select-option>
-        }
-      </ion-select>
-    </div>
-  </div>
-
-  <div class="clients-context-action">
-    <ion-button
-      expand="block"
-      fill="outline"
-      class="contextual-create-btn"
-      (click)="openAddClientModal()">
-      <ion-icon slot="start" name="add-outline" aria-hidden="true"></ion-icon>
-      Agregar cliente
-    </ion-button>
-  </div>
-
-  <ion-list lines="inset" class="clients-list">
-    @for (client of pagedClients(); track client.id) {
-      <ion-item [routerLink]="['/clients', client.id]" detail="true" button>
-        <ion-avatar slot="start">
-          <div class="client-avatar {{ client.color }}">
-            {{ client.initials }}
-          </div>
-        </ion-avatar>
-        <ion-label>
-          <h3 class="client-name">{{ client.firstName }} {{ client.lastName }}</h3>
-          <p class="client-email">{{ client.email }}</p>
-          <p class="client-phone">{{ client.phone }}</p>
-          <ion-chip [color]="client.stage | stageColor" class="client-stage-chip">
-            {{ client.stage | stageLabel }}
-          </ion-chip>
-        </ion-label>
-      </ion-item>
-    }
-    @empty {
-      @if (searchQuery() || stageFilter() !== 'ALL') {
-        <div class="clients-empty" role="status">
-          <p>No hay clientes que coincidan con los filtros.</p>
-          <ion-button fill="clear" size="small" (click)="clearClientFilters()">Limpiar filtros</ion-button>
-        </div>
-      } @else if (loadState() !== 'loading') {
-        <div class="clients-empty" role="status">
-          <p>Todavía no tienes clientes.</p>
-          <ion-button fill="clear" size="small" (click)="openAddClientModal()">Agregar cliente</ion-button>
-        </div>
+      @if (loadState() === 'loading') {
+        <div class="load-feedback" role="status">Cargando clientes…</div>
       }
-    }
-    @if (loadState() === 'loading') {
-      <div class="load-feedback" role="status">Cargando clientes…</div>
-    }
-  </ion-list>
+    </ion-list>
 
-  <ion-infinite-scroll
-    (ionInfinite)="loadMoreClients($event)"
-    [disabled]="clientDisplayLimit() >= filteredClients().length">
-    <ion-infinite-scroll-content loadingText="Cargando clientes…"></ion-infinite-scroll-content>
-  </ion-infinite-scroll>
-
+    <ion-infinite-scroll
+      (ionInfinite)="loadMoreClients($event)"
+      [disabled]="clientDisplayLimit() >= filteredClients().length"
+    >
+      <ion-infinite-scroll-content loadingText="Cargando clientes…"></ion-infinite-scroll-content>
+    </ion-infinite-scroll>
   </main>
-
 </ion-content>
 
 @defer (when isAddClientModalOpen()) {
-<ion-modal
-  [isOpen]="isAddClientModalOpen()"
-  [canDismiss]="canDismissAddClient"
-  (didDismiss)="onAddClientModalDidDismiss()"
-  class="app-modal">
-  <ng-template>
-    <ion-header>
-      <ion-toolbar>
-        <ion-title>Agregar cliente</ion-title>
-        <ion-buttons slot="end">
-          <ion-button (click)="requestCloseAddClientModal()" aria-label="Cerrar modal">
-            <ion-icon slot="icon-only" name="close-outline" aria-hidden="true"></ion-icon>
-          </ion-button>
-        </ion-buttons>
-      </ion-toolbar>
-    </ion-header>
+  <ion-modal
+    [isOpen]="isAddClientModalOpen()"
+    [canDismiss]="canDismissAddClient"
+    (didDismiss)="onAddClientModalDidDismiss()"
+    class="app-modal"
+  >
+    <ng-template>
+      <ion-header>
+        <ion-toolbar>
+          <ion-title>Agregar cliente</ion-title>
+          <ion-buttons slot="end">
+            <ion-button (click)="requestCloseAddClientModal()" aria-label="Cerrar modal">
+              <ion-icon slot="icon-only" name="close-outline" aria-hidden="true"></ion-icon>
+            </ion-button>
+          </ion-buttons>
+        </ion-toolbar>
+      </ion-header>
 
-    <div class="app-modal-content">
-      <section class="app-modal-shell">
-        <ion-card class="app-modal-card">
-          <ion-card-content class="app-modal-card__content">
-            <div class="app-modal-header">
-              <div class="app-modal-icon">
-                <ion-icon name="people-outline" aria-hidden="true"></ion-icon>
+      <div class="app-modal-content">
+        <section class="app-modal-shell">
+          <ion-card class="app-modal-card">
+            <ion-card-content class="app-modal-card__content">
+              <div class="app-modal-header">
+                <div class="app-modal-icon">
+                  <ion-icon name="people-outline" aria-hidden="true"></ion-icon>
+                </div>
+
+                <div class="app-modal-copy">
+                  <p class="app-modal-eyebrow">Clientes</p>
+                  <h2>Agregar cliente</h2>
+                  <p>Crea un nuevo cliente y agrégalo a la lista principal del panel.</p>
+                </div>
               </div>
 
-              <div class="app-modal-copy">
-                <p class="app-modal-eyebrow">Clientes</p>
-                <h2>Agregar cliente</h2>
-                <p>Crea un nuevo cliente y agrégalo a la lista principal del panel.</p>
-              </div>
-            </div>
-
-            <form class="app-modal-body add-client-form" [formGroup]="addClientForm" (ngSubmit)="createClient()">
-              <div class="add-client-form__grid">
-                <div class="form-field">
-                <ion-input
-                  id="add-client-first-name"
-                  formControlName="firstName"
-                  name="firstName"
-                  autocomplete="given-name"
-                  label="Nombre"
-                  labelPlacement="floating"
-                  fill="outline"
-                  [attr.aria-describedby]="addClientForm.controls.firstName.touched && addClientForm.controls.firstName.invalid ? 'add-client-first-name-error' : null">
-                </ion-input>
-                @if (addClientForm.controls.firstName.touched && addClientForm.controls.firstName.invalid) {
-                  <p id="add-client-first-name-error" class="field-error">Ingresa el nombre del cliente.</p>
-                }
-                </div>
-
-                <div class="form-field">
-                <ion-input
-                  id="add-client-last-name"
-                  formControlName="lastName"
-                  name="lastName"
-                  autocomplete="family-name"
-                  label="Apellido"
-                  labelPlacement="floating"
-                  fill="outline"
-                  [attr.aria-describedby]="addClientForm.controls.lastName.touched && addClientForm.controls.lastName.invalid ? 'add-client-last-name-error' : null">
-                </ion-input>
-                @if (addClientForm.controls.lastName.touched && addClientForm.controls.lastName.invalid) {
-                  <p id="add-client-last-name-error" class="field-error">Ingresa el apellido del cliente.</p>
-                }
-                </div>
-
-                <div class="form-field">
-                <ion-input
-                  id="add-client-email"
-                  formControlName="email"
-                  name="email"
-                  autocomplete="email"
-                  type="email"
-                  inputmode="email"
-                  [spellcheck]="false"
-                  label="Correo electrónico"
-                  labelPlacement="floating"
-                  fill="outline"
-                  [attr.aria-describedby]="addClientForm.controls.email.touched && addClientForm.controls.email.invalid ? 'add-client-email-error' : null">
-                </ion-input>
-                @if (addClientForm.controls.email.touched && addClientForm.controls.email.invalid) {
-                  <p id="add-client-email-error" class="field-error">Ingresa un correo electrónico válido.</p>
-                }
-                </div>
-
-                <div class="form-field">
-                <ion-input
-                  id="add-client-phone"
-                  formControlName="phone"
-                  name="phone"
-                  autocomplete="tel"
-                  type="tel"
-                  inputmode="tel"
-                  label="Número de teléfono"
-                  labelPlacement="floating"
-                  fill="outline"
-                  [attr.aria-describedby]="addClientForm.controls.phone.touched && addClientForm.controls.phone.invalid ? 'add-client-phone-error' : null">
-                </ion-input>
-                @if (addClientForm.controls.phone.touched && addClientForm.controls.phone.invalid) {
-                  <p id="add-client-phone-error" class="field-error">Ingresa el teléfono del cliente.</p>
-                }
-                </div>
-
-                <div
-                  class="add-client-stage"
-                  [style.--stage-color]="'var(--ion-color-' + (addClientForm.controls.stage.value | stageColor) + ')'">
-                  <ion-select
-                    formControlName="stage"
-                    label="Etapa del cliente"
-                    labelPlacement="floating"
-                    fill="outline"
-                    aria-describedby="add-client-stage-context">
-                    @for (option of stageOptions(); track option.value) {
-                      <ion-select-option [value]="option.value">
-                        {{ option.label }}
-                      </ion-select-option>
+              <form
+                class="app-modal-body add-client-form"
+                [formGroup]="addClientForm"
+                (ngSubmit)="createClient()"
+              >
+                <div class="add-client-form__grid">
+                  <div class="form-field">
+                    <ion-input
+                      id="add-client-first-name"
+                      formControlName="firstName"
+                      name="firstName"
+                      autocomplete="given-name"
+                      label="Nombre"
+                      labelPlacement="floating"
+                      fill="outline"
+                      [attr.aria-describedby]="
+                        addClientForm.controls.firstName.touched &&
+                        addClientForm.controls.firstName.invalid
+                          ? 'add-client-first-name-error'
+                          : null
+                      "
+                    >
+                    </ion-input>
+                    @if (
+                      addClientForm.controls.firstName.touched &&
+                      addClientForm.controls.firstName.invalid
+                    ) {
+                      <p id="add-client-first-name-error" class="field-error">
+                        Ingresa el nombre del cliente.
+                      </p>
                     }
-                  </ion-select>
-                  <p id="add-client-stage-context" class="add-client-stage__context">
-                    <ion-icon name="pricetag-outline" aria-hidden="true"></ion-icon>
-                    Etapa inicial del seguimiento: <strong>{{ addClientForm.controls.stage.value | stageLabel }}</strong>
-                  </p>
+                  </div>
+
+                  <div class="form-field">
+                    <ion-input
+                      id="add-client-last-name"
+                      formControlName="lastName"
+                      name="lastName"
+                      autocomplete="family-name"
+                      label="Apellido"
+                      labelPlacement="floating"
+                      fill="outline"
+                      [attr.aria-describedby]="
+                        addClientForm.controls.lastName.touched &&
+                        addClientForm.controls.lastName.invalid
+                          ? 'add-client-last-name-error'
+                          : null
+                      "
+                    >
+                    </ion-input>
+                    @if (
+                      addClientForm.controls.lastName.touched &&
+                      addClientForm.controls.lastName.invalid
+                    ) {
+                      <p id="add-client-last-name-error" class="field-error">
+                        Ingresa el apellido del cliente.
+                      </p>
+                    }
+                  </div>
+
+                  <div class="form-field">
+                    <ion-input
+                      id="add-client-email"
+                      formControlName="email"
+                      name="email"
+                      autocomplete="email"
+                      type="email"
+                      inputmode="email"
+                      [spellcheck]="false"
+                      label="Correo electrónico"
+                      labelPlacement="floating"
+                      fill="outline"
+                      [attr.aria-describedby]="
+                        addClientForm.controls.email.touched && addClientForm.controls.email.invalid
+                          ? 'add-client-email-error'
+                          : null
+                      "
+                    >
+                    </ion-input>
+                    @if (
+                      addClientForm.controls.email.touched && addClientForm.controls.email.invalid
+                    ) {
+                      <p id="add-client-email-error" class="field-error">
+                        Ingresa un correo electrónico válido.
+                      </p>
+                    }
+                  </div>
+
+                  <div class="form-field">
+                    <ion-input
+                      id="add-client-phone"
+                      formControlName="phone"
+                      name="phone"
+                      autocomplete="tel"
+                      type="tel"
+                      inputmode="tel"
+                      label="Número de teléfono"
+                      labelPlacement="floating"
+                      fill="outline"
+                      [attr.aria-describedby]="
+                        addClientForm.controls.phone.touched && addClientForm.controls.phone.invalid
+                          ? 'add-client-phone-error'
+                          : null
+                      "
+                    >
+                    </ion-input>
+                    @if (
+                      addClientForm.controls.phone.touched && addClientForm.controls.phone.invalid
+                    ) {
+                      <p id="add-client-phone-error" class="field-error">
+                        Ingresa el teléfono del cliente.
+                      </p>
+                    }
+                  </div>
+
+                  <div
+                    class="add-client-stage"
+                    [style.--stage-color]="
+                      'var(--ion-color-' + (addClientForm.controls.stage.value | stageColor) + ')'
+                    "
+                  >
+                    <ion-select
+                      formControlName="stage"
+                      label="Etapa del cliente"
+                      labelPlacement="floating"
+                      fill="outline"
+                      aria-describedby="add-client-stage-context"
+                    >
+                      @for (option of stageOptions(); track option.value) {
+                        <ion-select-option [value]="option.value">
+                          {{ option.label }}
+                        </ion-select-option>
+                      }
+                    </ion-select>
+                    <p id="add-client-stage-context" class="add-client-stage__context">
+                      <ion-icon name="pricetag-outline" aria-hidden="true"></ion-icon>
+                      Etapa inicial del seguimiento:
+                      <strong>{{ addClientForm.controls.stage.value | stageLabel }}</strong>
+                    </p>
+                  </div>
                 </div>
-              </div>
 
-              <div class="form-status" aria-live="polite" aria-atomic="true">
-                {{ addClientStatusMessage() }}
-              </div>
+                <div class="form-status" aria-live="polite" aria-atomic="true">
+                  {{ addClientStatusMessage() }}
+                </div>
 
-              <div class="app-modal-actions">
-                <ion-button
-                  fill="clear"
-                  type="button"
-                  (click)="resetAddClientForm()"
-                  [disabled]="!addClientForm.dirty">
-                  Limpiar
-                </ion-button>
+                <div class="app-modal-actions">
+                  <ion-button
+                    fill="clear"
+                    type="button"
+                    (click)="resetAddClientForm()"
+                    [disabled]="!addClientForm.dirty"
+                  >
+                    Limpiar
+                  </ion-button>
 
-                <ion-button type="submit" [disabled]="isCreatingClient()">
-                  @if (isCreatingClient()) {
-                    <ion-spinner slot="start" name="crescent" aria-hidden="true"></ion-spinner>
-                  } @else {
-                    <ion-icon slot="start" name="add-outline" aria-hidden="true"></ion-icon>
-                  }
-                  {{ isCreatingClient() ? 'Creando…' : 'Agregar' }}
-                </ion-button>
-              </div>
-            </form>
-          </ion-card-content>
-        </ion-card>
-      </section>
-    </div>
-  </ng-template>
-</ion-modal>
+                  <ion-button type="submit" [disabled]="isCreatingClient()">
+                    @if (isCreatingClient()) {
+                      <ion-spinner slot="start" name="crescent" aria-hidden="true"></ion-spinner>
+                    } @else {
+                      <ion-icon slot="start" name="add-outline" aria-hidden="true"></ion-icon>
+                    }
+                    {{ isCreatingClient() ? 'Creando…' : 'Agregar' }}
+                  </ion-button>
+                </div>
+              </form>
+            </ion-card-content>
+          </ion-card>
+        </section>
+      </div>
+    </ng-template>
+  </ion-modal>
 }

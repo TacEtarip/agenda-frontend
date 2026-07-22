@@ -10,15 +10,23 @@ export class UserApiService {
   private readonly http = inject(HttpClient);
   private readonly baseUrl = `${environment.apiUrl}/users`;
 
-  updateMySettings(payload: IUpdateSettingsPayload): Observable<any> {
-    return this.http.patch(`${this.baseUrl}/me/settings`, payload);
+  updateMySettings(payload: IUpdateSettingsPayload): Observable<{
+    message: string;
+    settings: IUpdateSettingsPayload;
+  }> {
+    return this.http.patch<{ message: string; settings: IUpdateSettingsPayload }>(
+      `${this.baseUrl}/me/settings`,
+      payload,
+    );
   }
 
   getUser(id: string): Observable<IAuthUser> {
     return this.http.get<IAuthUser>(`${this.baseUrl}/${id}`);
   }
 
-  updateMyProfile(payload: Pick<IAuthUser, 'firstName' | 'lastName' | 'email' | 'phone'>): Observable<IAuthUser> {
+  updateMyProfile(
+    payload: Pick<IAuthUser, 'firstName' | 'lastName' | 'email' | 'phone'>,
+  ): Observable<IAuthUser> {
     return this.http.patch<IAuthUser>(`${this.baseUrl}/me/profile`, payload);
   }
 }

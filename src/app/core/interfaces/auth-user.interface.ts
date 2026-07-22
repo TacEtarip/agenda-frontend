@@ -6,4 +6,5 @@ export interface IAuthUser {
   firstName?: string;
   lastName?: string;
   phone?: string;
+  onboardingCompleted?: boolean;
 }
